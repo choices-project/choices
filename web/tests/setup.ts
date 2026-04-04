@@ -3,8 +3,8 @@
  *
  * Global test setup and configuration shared across all Jest projects.
  *
- * @created September 9, 2025
- * @migrated November 6, 2025 - Moved into web/tests to align with monorepo modules
+ * Established September 9, 2025. Last reviewed: April 4, 2026.
+ * Migrated November 6, 2025 — moved into web/tests to align with monorepo modules.
  */
 
 import '@testing-library/jest-dom';

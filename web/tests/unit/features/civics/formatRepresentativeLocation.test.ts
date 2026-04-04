@@ -33,6 +33,12 @@ describe('formatRepresentativeLocation', () => {
     ).toBe('Sacramento, CA • At-large');
   });
 
+  it('handles "District 0" as "At-large"', () => {
+    expect(
+      formatRepresentativeLocation({ state: 'CA', office_city: 'Sacramento', district: 'District 0' }),
+    ).toBe('Sacramento, CA • At-large');
+  });
+
   it('shows "Statewide" for senators', () => {
     expect(
       formatRepresentativeLocation({ state: 'CA', office_city: 'Sacramento', office: 'U.S. Senator' }),

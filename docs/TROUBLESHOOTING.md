@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-_Last updated: January 2026_
+_Last updated: April 4, 2026_
 
 This guide covers common issues and solutions when working with the Choices platform.
 
@@ -323,5 +323,5 @@ If you can't resolve the issue:
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

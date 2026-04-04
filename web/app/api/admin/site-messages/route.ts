@@ -9,6 +9,7 @@ import {
   withErrorHandling,
 } from '@/lib/api';
 import { SITE_MESSAGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -104,8 +105,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const parsedBody = await request.json().catch(() => null);
   const {
-    title,
-    message,
+    title: rawTitle,
+    message: rawMessage,
     priority,
     status,
     target_audience,
@@ -115,16 +116,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     is_active,
   } = parsedBody ?? {};
 
-  if (!title || !message) {
+  if (!rawTitle || !rawMessage) {
     const errors: Record<string, string> = {};
-    if (!title) {
+    if (!rawTitle) {
       errors.title = 'Title is required';
     }
-    if (!message) {
+    if (!rawMessage) {
       errors.message = 'Message is required';
     }
     return validationError(errors);
   }
+
+  const title = sanitizeInput(String(rawTitle).trim());
+  const message = sanitizeInput(String(rawMessage).trim());
 
   const adminSupabase = await getSupabaseAdminClient();
   const resolvedIsActive =

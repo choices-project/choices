@@ -18,7 +18,7 @@ GovInfo MCP provides powerful document access capabilities that can significantl
 
 2. **Financial Transparency System** (`web/lib/electoral/financial-transparency.ts`)
    - Financial influence dashboards
-   - "Bought off" indicators
+   - Finance / vote alignment indicators (evidence-based signals)
    - Issue influence analysis
    - Revolving door tracking
    - Corporate influence mapping
@@ -438,7 +438,7 @@ async generateEnhancedFinancialDashboard(
 - Show which bills top contributors care about
 - Highlight votes on bills with contributor interest
 - Enhanced transparency metrics
-- Better "bought off" indicators
+- Better evidence-based finance/vote alignment indicators
 
 ## Implementation Plan
 

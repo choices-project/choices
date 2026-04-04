@@ -1,18 +1,21 @@
 # Choices Platform Vision
 
-_Last updated: March 2026_
+_Last updated: April 4, 2026_
 
 ## Mission
 
-Choices is a privacy-first, open-source platform for participatory democracy that enables citizens to engage with polls, representatives, and civic actions in a transparent, accessible, and accountable way.
+Choices is a privacy-first, open-source platform for participatory democracy that helps citizens engage with polls, representatives, and civic actions using transparent, checkable public data—not hype or sealed “black boxes.”
 
 ## Core Principles
 
-1. **Privacy First** - User control over data, GDPR/CCPA compliant
-2. **Equal Voting** - "A vote is a vote. Period." - No weighted votes in results
-3. **Open Source** - Transparent and auditable codebase
-4. **Accessibility** - Inclusive design for all users
-5. **Performance** - Fast, reliable, and offline-capable
+1. **Privacy First** - User control over data; GDPR/CCPA aligned controls; we do not sell personal or row-level data
+2. **Equal Voting (poll tallies)** - Public poll results use equal weight per participant in the tallies we present; no paid vote multipliers in those surfaces
+3. **Trust Layer (optional)** - Verification tiers can signal legitimacy and reduce abuse; they complement—not replace—equal tabulation where the product promises it. See [TRUST_LAYER.md](TRUST_LAYER.md)
+4. **Open Source** - Transparent and auditable codebase
+5. **Accessibility** - Inclusive design for all users
+6. **Performance** - Fast, reliable, and offline-capable where feasible
+
+**Optional aggregate research:** Programs such as an “Insights Panel” may use **coarsened or aggregated** contributions only under explicit consent, with revocation and safeguards (minimum cell sizes, contracts). This is not the same as selling identifiable rows. Details live in [PRIVACY_POLICY.md](PRIVACY_POLICY.md) and [TRUST_LAYER.md](TRUST_LAYER.md).
 
 ## MVP Status (Complete)
 
@@ -28,7 +31,7 @@ The Choices platform MVP is **complete and production-ready**. All core features
 - ✅ Location Features - District-based filtering (privacy-first)
 - ✅ PWA - Offline-first, push notifications, installable
 - ✅ WebAuthn - Passwordless biometric authentication
-- ✅ Trust Tiers - T0-T3 verification (analytics only)
+- ✅ Trust Tiers - T0–T3 optional verification (signals and abuse resistance; see trust-layer doc)
 - ✅ Feed System - Personalized content with district filtering
 - ✅ Candidate Onboarding & Verification - Owner edit + publish, official email fast-track
 - ✅ Representative Overrides - Public-facing fields only; official records remain immutable
@@ -88,7 +91,7 @@ The Choices platform is built with:
 - **Contributing**: DCO-based - See [`CONTRIBUTING.md`](../CONTRIBUTING.md)
 - **Code of Conduct**: See [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md)
 - **Security**: Responsible disclosure - See [SECURITY.md](../SECURITY.md)
-- **Voting Integrity**: "A vote is a vote. Period." - No manipulation, no weighting
+- **Voting integrity**: Equal tabulation in public poll results we surface; optional verified-weight or analyst views, if ever exposed, must be labeled distinctly (see trust-layer doc)
 
 ## Getting Involved
 
@@ -140,5 +143,5 @@ For detailed current status, see [`ROADMAP.md`](ROADMAP.md).
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

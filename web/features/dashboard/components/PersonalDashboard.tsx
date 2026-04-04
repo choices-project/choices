@@ -145,7 +145,7 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
   // Load polls on mount to ensure data is available
   useEffect(() => {
     if (isMounted && loadPollsRef.current) {
-      loadPollsRef.current().catch(() => {});
+      loadPollsRef.current().catch(() => { /* intentionally ignore */ });
     }
   }, [isMounted]);
 
@@ -417,14 +417,14 @@ function StandardPersonalDashboard({ userId: _fallbackUserId }: PersonalDashboar
             canRetry={true}
             onRetry={() => {
               if (loadPollsRef.current) {
-                loadPollsRef.current().catch(() => {});
+                loadPollsRef.current().catch(() => { /* intentionally ignore */ });
               }
             }}
             primaryAction={{
               label: 'Try Again',
               onClick: () => {
                 if (loadPollsRef.current) {
-                  loadPollsRef.current().catch(() => {});
+                  loadPollsRef.current().catch(() => { /* intentionally ignore */ });
                 }
               },
               icon: <RefreshCw className="h-4 w-4" />,

@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: March 2026 (E2E curated for CI and production)_
+_Last updated: April 4, 2026 (E2E curated for CI and production)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -382,5 +382,5 @@ Philosophy: tests reveal issues → fix code → better UX. Do not weaken tests 
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-03-02 (suite audit; CI and production workflows aligned with existing specs)
+- **Last verified:** 2026-04-04 (documentation accuracy pass; last full testing-doc audit 2026-03-02 — CI/production workflows per existing specs)
 

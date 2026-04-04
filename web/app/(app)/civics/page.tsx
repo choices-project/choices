@@ -16,11 +16,14 @@ import {
   Users,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { Suspense, useMemo, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { Suspense, useMemo, useState, useEffect, useCallback, useRef } from 'react';
 
+import { VirtualizedRepresentativeGrid, VIRTUALIZATION_THRESHOLD } from '@/features/civics/components/representative/VirtualizedRepresentativeGrid';
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
 
 import { AnimatedCard } from '@/components/shared/AnimatedCard';
+import { BackToTop } from '@/components/shared/BackToTop';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
@@ -31,9 +34,11 @@ import { useIsMobile, useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useDebounce } from '@/hooks/useDebounce';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 import type { Representative } from '@/types/representative';
+
 
 const CIVICS_URL_FILTER_DEFAULTS = {
   state: 'CA' as string,
@@ -415,6 +420,39 @@ function CivicsPageContent() {
     });
   }, [representatives, debouncedSearchQuery]);
 
+  const router = useRouter();
+  const transformedRepsForVirtualization = useMemo(() => {
+    if (filteredRepresentatives.length <= VIRTUALIZATION_THRESHOLD) return [];
+    return filteredRepresentatives.map((r): Representative => ({
+      id: parseInt(r.id) ?? 0,
+      name: r.name,
+      party: r.party,
+      office: r.office,
+      level: r.level,
+      state: r.state,
+      division_ids: r.metadata?.division_ids ?? [],
+      ocdDivisionIds: r.metadata?.division_ids ?? [],
+      data_quality_score: r.dataQualityScore ?? 0,
+      verification_status: (r.verificationStatus === 'verified' ? 'verified' : r.verificationStatus === 'pending' ? 'pending' : 'failed') as 'verified' | 'pending' | 'failed',
+      data_sources: r.dataSource ?? [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      last_verified: r.lastVerified ?? new Date().toISOString(),
+      ...(r.district ? { district: r.district } : {}),
+      ...(r.office_city ? { office_city: r.office_city } : {}),
+      ...(r.office_zip ? { office_zip: r.office_zip } : {}),
+      primary_email: r.enhancedContacts?.find(c => c.type === 'email')?.value ?? '',
+      primary_phone: r.enhancedContacts?.find(c => c.type === 'phone')?.value ?? '',
+      primary_website: r.enhancedContacts?.find(c => c.type === 'website')?.value ?? '',
+      ...(r.twitter ? { twitter_handle: r.twitter } : {}),
+      ...(r.facebook ? { facebook_url: r.facebook } : {}),
+      ...(r.photoUrl ?? r.photo ? { primary_photo_url: r.photoUrl ?? r.photo } : {}),
+      ...(r.termStart ? { term_start_date: r.termStart } : {}),
+      ...(r.termEnd ? { term_end_date: r.termEnd } : {}),
+      ...(r.nextElection ? { next_election_date: r.nextElection } : {}),
+    }));
+  }, [filteredRepresentatives]);
+
   // Announce result count when filter/load completes
   useEffect(() => {
     const wasLoading = prevIsLoadingRef.current;
@@ -433,9 +471,47 @@ function CivicsPageContent() {
     return CIVICS_STATES.find((state) => state.code === selectedState)?.name ?? selectedState;
   }, [selectedState]);
 
+  const handleRefresh = useCallback(async () => {
+    await loadRepresentatives(false);
+  }, [loadRepresentatives]);
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const handleLoadMore = useCallback(() => {
+    if (hasMore && !isLoadingMore && !isLoading) {
+      void loadRepresentatives(true);
+    }
+  }, [hasMore, isLoadingMore, isLoading, loadRepresentatives]);
+  const handleLoadMoreRef = useRef(handleLoadMore);
+  useEffect(() => {
+    handleLoadMoreRef.current = handleLoadMore;
+  }, [handleLoadMore]);
+
+  useEffect(() => {
+    if (filteredRepresentatives.length === 0 || !hasMore || isLoadingMore || isLoading) return;
+    const sentinel = loadMoreRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          handleLoadMoreRef.current();
+        }
+      },
+      { rootMargin: '200px', threshold: 0 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredRepresentatives.length, hasMore, isLoadingMore, isLoading]);
+
+  const { containerRef: pullToRefreshRef, indicator: pullToRefreshIndicator } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    disabled: isLoading,
+  });
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div ref={pullToRefreshRef} className="min-h-screen bg-muted">
+      {pullToRefreshIndicator}
       {/* Page Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
         <div className="flex items-center justify-between">
@@ -456,8 +532,9 @@ function CivicsPageContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="sr-only">Representatives</h2>
         <div className="space-y-6">
-            {/* Search and Filters */}
-            <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
+            {/* Search and Filters - sticky on scroll */}
+            <div className="sticky top-0 z-10 py-3 bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/90 -mt-3 mb-2 rounded-b-lg">
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -496,6 +573,7 @@ function CivicsPageContent() {
                       setSelectedCity('');
                       setSelectedZip('');
                       setIsLoading(true);
+                      haptic('light');
                     }}
                   >
                     {CIVICS_STATES.map((state) => (
@@ -518,6 +596,7 @@ function CivicsPageContent() {
                       const newLevel = e.target.value as 'all' | 'federal' | 'state' | 'local';
                       urlFilters.setFilter('level', newLevel);
                       setIsLoading(true);
+                      haptic('light');
                     }}
                   >
                     <option value="all">All Levels</option>
@@ -598,6 +677,7 @@ function CivicsPageContent() {
                   </button>
                 </div>
               </form>
+              </div>
             </div>
 
             {/* Representatives Grid */}
@@ -652,14 +732,23 @@ function CivicsPageContent() {
                 {/* Superior Representative Feed */}
                 <div data-testid="representative-feed" className="space-y-6">
 
-                  {/* Comprehensive Candidate Cards */}
+                  {/* Comprehensive Candidate Cards - virtualized when > 50 to prevent DOM bloat */}
+                {filteredRepresentatives.length > VIRTUALIZATION_THRESHOLD ? (
+                  <VirtualizedRepresentativeGrid
+                    representatives={transformedRepsForVirtualization}
+                    variant={cardVariant === 'default' ? 'default' : cardVariant}
+                    onRepresentativeFollow={(rep) => handleFollow(rep.id.toString())}
+                    onRepresentativeContact={(rep) => handleContact(rep.id.toString(), 'email')}
+                    onRepresentativeClick={(rep) => router.push(`/representatives/${rep.id}`)}
+                    gridClassName={isMobile === true ? 'grid-cols-1 max-w-lg mx-auto' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}
+                  />
+                ) : (
                   <div className={`grid gap-8 ${
                     isMobile === true
                         ? 'grid-cols-1 max-w-lg mx-auto'
                         : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'
               }`}>
                 {filteredRepresentatives.map((representative, index) => {
-                  // Transform SuperiorRepresentativeData to Representative
                   const transformedRep: Representative = {
                     id: parseInt(representative.id) ?? 0,
                     name: representative.name,
@@ -703,19 +792,37 @@ function CivicsPageContent() {
                   );
                 })}
               </div>
+                )}
 
-                  {/* Load more */}
+                  {/* Load more - sentinel triggers infinite scroll when visible */}
                   {hasMore && !isLoading && (
-                    <div className="flex justify-center pt-4">
-                      <button
-                        type="button"
-                        onClick={() => void loadRepresentatives(true)}
-                        disabled={isLoadingMore}
-                        className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                        data-testid="civics-load-more"
-                      >
-                        {isLoadingMore ? 'Loading...' : 'Load more'}
-                      </button>
+                    <div
+                      ref={loadMoreRef}
+                      className="mt-6 flex min-h-[120px] items-center justify-center"
+                      role="status"
+                      aria-live="polite"
+                      aria-label="Load more representatives"
+                    >
+                      {isLoadingMore ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                          Loading more…
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            haptic('light');
+                            handleLoadMore();
+                          }}
+                          disabled={isLoadingMore}
+                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                          data-testid="civics-load-more"
+                          aria-label="Load more representatives"
+                        >
+                          Load more
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -723,6 +830,8 @@ function CivicsPageContent() {
             )}
         </div>
       </div>
+
+      <BackToTop />
 
       {/* Footer */}
       <div className="bg-card border-t border-border mt-12">

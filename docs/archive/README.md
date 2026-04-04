@@ -19,4 +19,4 @@ If the archived file still contains useful technical insight, consider extractin
 
 ### Archived-in-place (to preserve inbound links)
 
-- `docs/ROADMAP.md` — Redirect stub pointing to `docs/ROADMAP_SINGLE_SOURCE.md`. Kept in place to avoid breaking links; do not add new items.
+- `docs/ROADMAP.md` — **Canonical** product and engineering roadmap at repo root (not a redirect). Archived copies that mention `ROADMAP_SINGLE_SOURCE.md` describe an older layout; follow **`docs/ROADMAP.md`** for current planning.

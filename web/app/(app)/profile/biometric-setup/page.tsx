@@ -19,7 +19,7 @@ import {
 import { useProfileData } from '@/features/profile/hooks/use-profile';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 
 import { useI18n } from '@/hooks/useI18n';
 
@@ -70,11 +70,20 @@ export default function BiometricSetupPage() {
     // Error state already stored; no-op placeholder for future analytics.
   }, []);
 
-  if (isSupported === null || isAvailable === null || profileLoading || isUserLoading) {
+  const isHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+  const effectiveProfileLoading = isHarness ? false : profileLoading;
+  const effectiveUserLoading = isHarness ? false : isUserLoading;
+
+  if (isSupported === null || isAvailable === null || effectiveProfileLoading || effectiveUserLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div
+        className="min-h-screen bg-background flex items-center justify-center"
+        data-testid="biometric-setup-loading"
+        aria-busy="true"
+      >
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <h1 className="sr-only">{t('auth.passkey.setUpBiometricTitle')}</h1>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" aria-hidden />
           <p className="text-muted-foreground">{t('auth.passkey.checkingDeviceSupport')}</p>
         </div>
       </div>
@@ -83,11 +92,12 @@ export default function BiometricSetupPage() {
 
   if (!isSupported || !isAvailable) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4" data-testid="biometric-not-supported">
         <Card className="max-w-md w-full bg-card dark:bg-card border-border">
           <CardHeader className="text-center">
-            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <CardTitle className="text-2xl text-foreground">{t('auth.passkey.biometricNotSupported')}</CardTitle>
+            <h1 className="text-2xl font-bold text-foreground sr-only">{t('auth.passkey.setUpBiometricTitle')}</h1>
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" aria-hidden />
+            <h2 className="text-2xl font-semibold text-foreground">{t('auth.passkey.biometricNotSupported')}</h2>
             <CardDescription className="mt-2 text-muted-foreground">
               {t('auth.passkey.biometricNotSupportedDesc')}
             </CardDescription>
@@ -106,11 +116,11 @@ export default function BiometricSetupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" data-testid="biometric-setup-form">
       <Card className="max-w-md w-full bg-card dark:bg-card border-border">
         <CardHeader className="text-center">
-          <Fingerprint className="h-12 w-12 text-primary mx-auto mb-4" />
-          <CardTitle className="text-3xl text-foreground">{t('auth.passkey.setUpBiometricTitle')}</CardTitle>
+          <Fingerprint className="h-12 w-12 text-primary mx-auto mb-4" aria-hidden />
+          <h1 className="text-3xl font-semibold leading-none tracking-tight text-foreground">{t('auth.passkey.setUpBiometricTitle')}</h1>
           <CardDescription className="mt-2 text-muted-foreground">
             {t('auth.passkey.setUpBiometricDesc')}
           </CardDescription>

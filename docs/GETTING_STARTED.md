@@ -1,8 +1,8 @@
 # Getting Started with Choices
 
-_Last updated: March 2026_
+_Last updated: April 4, 2026_
 
-Welcome to the Choices platform! This guide will help you get the project running on your local machine in under 10 minutes.
+Welcome to the Choices platform! This guide targets **about 15 minutes** from clone to a running dev server (longer if you are new to Supabase).
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ supabase --version  # Should be installed
 
 ```bash
 git clone <repository-url>
-cd Choices
+cd Choices    # repo root: web/, supabase/, services/, docs/
 ```
 
 ### 2. Install Dependencies
@@ -56,9 +56,12 @@ For a complete list of environment variables, see [`ENVIRONMENT_VARIABLES.md`](E
 
 ### 4. Link to Supabase Project
 
+The `supabase/` directory is at the **repository root** (sibling of `web/`). Link from there:
+
 ```bash
-# From the web/ directory
+cd ..                    # from web/ → repo root
 supabase link --project-ref <your-project-id>
+cd web
 ```
 
 ### 5. Generate TypeScript Types
@@ -174,13 +177,18 @@ npm run governance:check # Verify roadmap/doc updates
 ## Project Structure
 
 ```
-web/
-├── app/              # Next.js App Router (pages, API routes)
-├── features/        # Feature modules (polls, analytics, etc.)
-├── lib/             # Shared utilities and Zustand stores
-├── components/      # Shared UI components
-├── tests/           # Test suites (Jest + Playwright)
-└── types/           # TypeScript type definitions
+Choices/                 # repository root
+├── web/                 # Next.js app (primary development tree)
+│   ├── app/             # App Router (pages, API routes)
+│   ├── features/        # Feature modules
+│   ├── lib/             # Stores, API helpers, config
+│   ├── components/      # Shared UI
+│   ├── scripts/         # One-off TS/ops scripts (see package.json)
+│   ├── tests/           # Jest + Playwright
+│   └── messages/        # i18n JSON
+├── supabase/            # Migrations and Supabase config
+├── services/            # Ancillary services (e.g. civics ingest)
+└── docs/                # Documentation you are reading
 ```
 
 For detailed structure, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
@@ -216,5 +224,5 @@ Welcome to the Choices platform! 🎉
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-03-13
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

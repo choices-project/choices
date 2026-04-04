@@ -6,6 +6,7 @@ import eslintComments from 'eslint-plugin-eslint-comments';
 import formatjs from 'eslint-plugin-formatjs';
 import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import jsdoc from 'eslint-plugin-jsdoc';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import unusedImports from 'eslint-plugin-unused-imports';
@@ -560,6 +561,18 @@ export default [
       'no-undef': 'off', // K6 globals
       'import/no-extraneous-dependencies': 'off',
       'no-console': 'off',
+    },
+  },
+
+  // JSDoc hygiene for privacy utilities only (warn-only; no require-jsdoc)
+  {
+    files: ['utils/privacy/**/*.{ts,tsx}'],
+    plugins: { jsdoc },
+    rules: {
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/check-param-names': 'warn',
+      'jsdoc/check-tag-names': 'warn',
+      'jsdoc/no-bad-blocks': 'warn',
     },
   },
 

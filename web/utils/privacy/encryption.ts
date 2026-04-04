@@ -4,7 +4,7 @@
  * This module provides user-controlled encryption for sensitive data.
  * All encryption keys are derived from user passwords and never stored server-side.
  * 
- * @created September 9, 2025
+ * Originated September 9, 2025. Last reviewed (trust-layer documentation): April 4, 2026.
  */
 
 export type EncryptionResult = {
@@ -24,7 +24,11 @@ export class UserEncryption {
   private salt: Uint8Array | null = null;
 
   /**
-   * Generate a user encryption key from password and salt
+   * Derive an AES-GCM key from the user's password and salt (PBKDF2).
+   *
+   * @param password - User passphrase; never stored by this class.
+   * @param salt - Random salt for key derivation; typically from {@link generateSalt}.
+   * @returns The derived {@link CryptoKey} for AES-GCM encrypt/decrypt.
    */
   async generateUserKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
     const keyMaterial = await crypto.subtle.importKey(
@@ -53,14 +57,20 @@ export class UserEncryption {
   }
 
   /**
-   * Generate a random salt for key derivation
+   * Create a random 16-byte salt for PBKDF2.
+   *
+   * @returns New cryptographically random salt.
    */
   generateSalt(): Uint8Array {
     return crypto.getRandomValues(new Uint8Array(16));
   }
 
   /**
-   * Encrypt data using the user's key
+   * Serialize `data` as JSON, encrypt with AES-GCM using the current user key.
+   *
+   * @param data - Any JSON-serializable value.
+   * @returns Ciphertext, salt (from key setup), and IV — salt may be empty if key not derived with salt stored here.
+   * @throws If `generateUserKey` was not called first.
    */
   async encryptData(data: unknown): Promise<EncryptionResult> {
     if (!this.userKey) {
@@ -84,10 +94,12 @@ export class UserEncryption {
   }
 
   /**
-   * Decrypt data using the user's key
-   * 
-   * Note: The salt parameter is part of the API signature for consistency with encryption,
-   * but is not used here since the key is already derived from the salt during key generation.
+   * Decrypt AES-GCM ciphertext with the current user key.
+   *
+   * @param encryptedData - Raw ciphertext from {@link encryptData}.
+   * @param _salt - Unused; kept for API symmetry with encryption (key already encodes salt).
+   * @param iv - Initialization vector used for this ciphertext.
+   * @returns Parsed JSON as `decryptedData` on success, or `success: false` with `error` message.
    */
   async decryptData(encryptedData: ArrayBuffer, _salt: Uint8Array, iv: Uint8Array): Promise<DecryptionResult> {
     try {
@@ -121,8 +133,10 @@ export class UserEncryption {
   }
 
   /**
-   * Create a hash of the user's encryption key for verification
-   * Since we can't export the derived key, we'll create a hash based on the salt and key properties
+   * Fingerprint the current key setup (algorithm metadata + salt) for verification; not a key export.
+   *
+   * @returns Lowercase hex SHA-256 digest of a JSON payload describing salt and algorithm.
+   * @throws If the user key or salt was not initialized.
    */
   async createKeyHash(): Promise<string> {
     if (!this.userKey || !this.salt) {
@@ -143,7 +157,7 @@ export class UserEncryption {
   }
 
   /**
-   * Clear the user key from memory
+   * Drop references to the derived key and salt from this instance.
    */
   clearKey(): void {
     this.userKey = null;
@@ -156,7 +170,8 @@ export class UserEncryption {
  */
 export class EncryptionUtils {
   /**
-   * Convert ArrayBuffer to base64 string for storage
+   * @param buffer - Raw binary data.
+   * @returns Base64-encoded string suitable for JSON/DB storage.
    */
   static arrayBufferToBase64(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
@@ -168,7 +183,8 @@ export class EncryptionUtils {
   }
 
   /**
-   * Convert base64 string back to ArrayBuffer
+   * @param base64 - Standard base64 string.
+   * @returns Decoded bytes as an `ArrayBuffer`.
    */
   static base64ToArrayBuffer(base64: string): ArrayBuffer {
     const binary = atob(base64);
@@ -180,14 +196,16 @@ export class EncryptionUtils {
   }
 
   /**
-   * Convert Uint8Array to base64 string
+   * @param array - Byte array (e.g. salt or IV).
+   * @returns Base64-encoded string.
    */
   static uint8ArrayToBase64(array: Uint8Array): string {
     return btoa(String.fromCharCode(...array));
   }
 
   /**
-   * Convert base64 string to Uint8Array
+   * @param base64 - Standard base64 string.
+   * @returns Decoded bytes as `Uint8Array`.
    */
   static base64ToUint8Array(base64: string): Uint8Array {
     const binary = atob(base64);
@@ -200,7 +218,10 @@ export class EncryptionUtils {
  */
 export class PrivacyUtils {
   /**
-   * Create demographic buckets to protect individual privacy
+   * Map a numeric age to a coarse bucket label for analytics.
+   *
+   * @param age - Age in years.
+   * @returns Bucket id string (e.g. `age_25_34`).
    */
   static createAgeBucket(age: number): string {
     if (age < 18) return 'under_18';
@@ -213,7 +234,10 @@ export class PrivacyUtils {
   }
 
   /**
-   * Create regional buckets to protect location privacy
+   * Map free-text location hints to a coarse U.S.-oriented region bucket.
+   *
+   * @param location - User-provided location string; may be partial.
+   * @returns Region bucket id or `region_other`.
    */
   static createRegionBucket(location: string): string {
     // Handle null/undefined values
@@ -260,7 +284,10 @@ export class PrivacyUtils {
   }
 
   /**
-   * Create education buckets
+   * Normalize education description to a coarse bucket.
+   *
+   * @param education - Free-text education level.
+   * @returns Education bucket id or `education_other`.
    */
   static createEducationBucket(education: string): string {
     // Handle null/undefined values
@@ -278,7 +305,10 @@ export class PrivacyUtils {
   }
 
   /**
-   * Anonymize user data for analytics
+   * Strip direct identifiers and replace granular fields with buckets.
+   *
+   * @param userData - Raw profile-like object with optional `age`, `location`, `education`.
+   * @returns Object safe for aggregate analytics (buckets only; ids nulled out).
    */
   static anonymizeForAnalytics(userData: Record<string, unknown>): Record<string, unknown> {
     const age = typeof userData.age === 'number' ? userData.age : 0;

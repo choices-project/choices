@@ -62,6 +62,7 @@ test.describe('@smoke MVP core pages', () => {
       'text=Please log in to view poll analytics.',
       'text=No analytics data available yet.',
       'text=Loading analytics data...',
+      'text=Unable to load analytics',
       '[data-testid="login-form"]',
       'text=/sign in|log in/i',
       'h1:has-text("Sign In")',
@@ -156,9 +157,15 @@ test.describe('@smoke MVP core pages', () => {
   test('biometric setup renders or gates @smoke', async ({ page }) => {
     await page.goto('/profile/biometric-setup', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
+    await page.waitForTimeout(4_000);
     await assertAnyVisible(page, [
       'h1:has-text("Set Up Biometric Authentication")',
+      'text=Set Up Biometric Authentication',
       'text=Biometric Authentication Not Supported',
+      'text=Checking device support...',
+      '[data-testid="biometric-setup-loading"]',
+      '[data-testid="biometric-not-supported"]',
+      '[data-testid="biometric-setup-form"]',
       '[data-testid="login-form"]',
       'text=/sign in|log in/i',
       'h1:has-text("Sign In")',

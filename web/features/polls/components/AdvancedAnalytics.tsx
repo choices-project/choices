@@ -15,7 +15,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BarChart3, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
-import { useCallback } from 'react';
+import dynamic from 'next/dynamic';
+import { useCallback, useMemo } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import type { AnalyticsType } from '@/lib/analytics/rate-limiter';
 import { useUser } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
+
+const RechartsBarImpl = dynamic(
+  () => import('@/components/charts/RechartsBarImpl').then((m) => m.default),
+  { ssr: false }
+);
 
 type AdvancedAnalyticsProps = {
   pollId: string;
@@ -70,6 +76,85 @@ const ANALYTICS_TYPES: Array<{ type: AnalyticsType; label: string; description: 
 type StatusData = { remaining: number | null; resetDate: Date | null; isAdmin: boolean };
 
 const STATUS_QUERY_KEY = ['advanced-analytics-status'] as const;
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function AdvancedAnalyticsResults({
+  data,
+  analyticsType,
+  remaining,
+}: {
+  data: any;
+  analyticsType: AnalyticsType;
+  remaining: number;
+}) {
+  const chartData = useMemo(() => {
+    if (!data) return null;
+    const raw = data.analytics?.['trust-tier'] ?? data.analytics?.['geographic'] ?? data.analytics?.['temporal'] ?? data;
+    if (raw?.overall_distribution && typeof raw.overall_distribution === 'object') {
+      return Object.entries(raw.overall_distribution).map(([name, value]) => ({
+        name,
+        value: Number(value),
+      }));
+    }
+    if (raw?.voting_patterns?.day_of_week_distribution && Array.isArray(raw.voting_patterns.day_of_week_distribution)) {
+      return raw.voting_patterns.day_of_week_distribution.map((value: number, i: number) => ({
+        name: DAY_NAMES[i] ?? `Day ${i}`,
+        value: Number(value),
+      }));
+    }
+    const geoBreakdown = raw?.country_distribution ?? raw?.state_distribution ?? raw?.geographic_breakdown;
+    if (geoBreakdown && typeof geoBreakdown === 'object') {
+      return Object.entries(geoBreakdown)
+        .map(([name, value]) => ({ name, value: Number(value) }))
+        .filter((d) => d.value > 0)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+    }
+    if (data.overall_distribution && typeof data.overall_distribution === 'object') {
+      return Object.entries(data.overall_distribution).map(([name, value]) => ({
+        name,
+        value: Number(value),
+      }));
+    }
+    return null;
+  }, [data]);
+
+  const label = ANALYTICS_TYPES.find((t) => t.type === analyticsType)?.label ?? 'Analysis';
+
+  return (
+    <div className="mt-6 p-4 bg-muted rounded-lg">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-semibold">{label} Analysis</h4>
+        <Badge variant="outline">{remaining} remaining</Badge>
+      </div>
+      {chartData && chartData.length > 0 ? (
+        <>
+          <div className="mb-4" role="img" aria-label={`Chart: ${label} distribution`}>
+            <RechartsBarImpl
+              data={chartData}
+              dataKey="value"
+              xAxisKey="name"
+              height={220}
+            />
+          </div>
+          <details className="mt-2">
+            <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+              View raw data
+            </summary>
+            <pre className="mt-2 p-3 bg-background rounded text-xs overflow-auto max-h-48">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </details>
+        </>
+      ) : (
+        <pre className="p-3 bg-background rounded text-xs overflow-auto max-h-64">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}
 
 export default function AdvancedAnalytics({
   pollId,
@@ -229,27 +314,11 @@ export default function AdvancedAnalytics({
 
         {/* Results Display */}
         {results && (
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold">
-                {ANALYTICS_TYPES.find((t) => t.type === results.analyticsType)?.label} Analysis
-              </h4>
-              <Badge variant="outline">
-                {results.remaining} remaining
-              </Badge>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <p className="mb-2">Analytics data loaded successfully.</p>
-              <p className="text-xs">
-                Note: Full visualization of this data will be implemented in a future update.
-                For now, the data is available via the API.
-              </p>
-            </div>
-            {/* Chart visualization deferred; data available via API (docs/ROADMAP.md §4) */}
-            <pre className="mt-4 p-3 bg-background rounded text-xs overflow-auto max-h-64">
-              {JSON.stringify(results.data, null, 2)}
-            </pre>
-          </div>
+          <AdvancedAnalyticsResults
+            data={results.data}
+            analyticsType={results.analyticsType}
+            remaining={results.remaining}
+          />
         )}
 
         {/* Loading State */}

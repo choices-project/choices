@@ -1,7 +1,10 @@
+import { z } from 'zod';
+
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse, validationError, authError } from '@/lib/api';
 import { HASHTAG_FLAG_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -82,15 +85,36 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Flag a hashtag
     if (action === 'flag') {
-      const body = await request.json();
+      const flagSchema = z.object({
+        hashtag: z.string().min(1, 'Hashtag ID is required').max(100).optional(),
+        hashtagId: z.string().min(1, 'Hashtag ID is required').max(100).optional(),
+        reason: z.string().min(1, 'Reason is required').max(500),
+      }).refine((d) => d.hashtag ?? d.hashtagId, { message: 'Hashtag or hashtagId is required' });
+      let body: z.infer<typeof flagSchema>;
+      try {
+        const raw = await request.json();
+        const parsed = flagSchema.safeParse(raw);
+        if (!parsed.success) {
+          const fieldErrors: Record<string, string> = {};
+          parsed.error.issues.forEach((issue) => {
+            const field = issue.path.join('.') || 'body';
+            fieldErrors[field] = issue.message;
+          });
+          return validationError(fieldErrors, 'Invalid flag data');
+        }
+        body = parsed.data;
+      } catch {
+        return validationError({ body: 'Request body must be valid JSON' });
+      }
 
+      const hashtagValue = (body.hashtag ?? body.hashtagId ?? '').trim();
       const { data, error } = await supabase
         .from('hashtag_flags')
         .insert([{
-          hashtag_id: body.hashtag,
+          hashtag_id: sanitizeInput(hashtagValue),
           flag_type: 'inappropriate',
-          reason: body.reason,
-          user_id: body.reporter_id,
+          reason: sanitizeInput(body.reason.trim()),
+          user_id: session.user.id,
           status: 'pending'
         }])
         .select(HASHTAG_FLAG_SELECT_COLUMNS);

@@ -4,7 +4,7 @@
  * Handles user consent for data collection and analytics.
  * All consent is user-controlled and granular.
  * 
- * @created September 9, 2025
+ * Originated September 9, 2025. Last reviewed (trust-layer documentation): April 4, 2026.
  */
 
 import { USER_CONSENT_SELECT_COLUMNS } from '@/lib/api/response-builders';
@@ -45,12 +45,15 @@ export type ConsentPreferences = {
 export class ConsentManager {
   private supabase: SupabaseClient<unknown>;
 
+  /**
+   * @param supabase - Authenticated Supabase client (RLS applies to `user_consent`).
+   */
   constructor(supabase: SupabaseClient<unknown>) {
     this.supabase = supabase;
   }
 
   /**
-   * Get all consent records for the current user
+   * @returns All consent rows for the signed-in user, newest first; empty on error.
    */
   async getUserConsent(): Promise<ConsentRecord[]> {
     const { data, error } = await this.supabase
@@ -67,7 +70,7 @@ export class ConsentManager {
   }
 
   /**
-   * Get current consent preferences as a simple object
+   * @returns Latest granted/revoked state per {@link ConsentType} as booleans.
    */
   async getConsentPreferences(): Promise<ConsentPreferences> {
     const consentRecords = await this.getUserConsent();
@@ -99,7 +102,10 @@ export class ConsentManager {
   }
 
   /**
-   * Grant consent for a specific type
+   * @param consentType - Category of processing.
+   * @param purpose - Human-readable purpose string stored with the record.
+   * @param dataTypes - Labels for data covered by this consent.
+   * @returns True if persisted (or localStorage fallback succeeded); false on failure.
    */
   async grantConsent(
     consentType: ConsentType,
@@ -128,7 +134,8 @@ export class ConsentManager {
   }
 
   /**
-   * Revoke consent for a specific type
+   * @param consentType - Category to clear.
+   * @returns True if removal succeeded; false on error.
    */
   async revokeConsent(consentType: ConsentType): Promise<boolean> {
     // Note: user_consent table needs to be created via migration
@@ -145,7 +152,8 @@ export class ConsentManager {
   }
 
   /**
-   * Update consent preferences in bulk
+   * @param preferences - Flags to set true (grant with defaults) or false (revoke).
+   * @returns True after processing all known keys present in `preferences`.
    */
   async updateConsentPreferences(preferences: Partial<ConsentPreferences>): Promise<boolean> {
     const consentTypes: ConsentType[] = [
@@ -166,7 +174,8 @@ export class ConsentManager {
   }
 
   /**
-   * Check if user has granted consent for a specific type
+   * @param consentType - Category to check.
+   * @returns Whether the latest record for that type is granted and not revoked.
    */
   async hasConsent(consentType: ConsentType): Promise<boolean> {
     const preferences = await this.getConsentPreferences();
@@ -174,7 +183,7 @@ export class ConsentManager {
   }
 
   /**
-   * Get consent summary for display
+   * @returns Counts and per-type booleans for dashboards or settings UI.
    */
   async getConsentSummary(): Promise<{
     totalConsents: number;
@@ -192,7 +201,7 @@ export class ConsentManager {
   }
 
   /**
-   * Export consent data for user
+   * @returns Same as {@link getUserConsent} — for GDPR-style export bundles.
    */
   async exportConsentData(): Promise<ConsentRecord[]> {
     return await this.getUserConsent();
@@ -234,7 +243,8 @@ export class ConsentManager {
  */
 export class ConsentUI {
   /**
-   * Generate consent description for UI
+   * @param consentType - Category to describe.
+   * @returns Localized-style copy payload for a single consent toggle block.
    */
   static getConsentDescription(consentType: ConsentType): {
     title: string;
@@ -309,7 +319,7 @@ export class ConsentUI {
   }
 
   /**
-   * Generate consent form data for all types
+   * @returns One entry per {@link ConsentType} with title, description, benefits, and data types.
    */
   static getAllConsentForms(): Array<{
     type: ConsentType;

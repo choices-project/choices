@@ -1,6 +1,6 @@
 # Choices Platform - Database Schema Documentation
 
-**Last Updated**: February 2026  
+**Last Updated**: April 4, 2026  
 **Source of Truth**: `/web/types/supabase.ts` (Supabase-generated types)  
 **Status**: ✅ Current (synced to latest generated types)
 
@@ -21,153 +21,39 @@ This document summarizes the Choices platform database schema. The authoritative
 
 ---
 
-## Schema Index (from current generated types)
+## Schema index (machine-generated)
 
-### Public Tables (current)
+**Authoritative alphabetical lists** for `public` tables, views, and RPCs live in **[`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md)**. That file is produced from `web/types/supabase.ts` so it cannot silently drift from generated types the way hand-copied bullet lists did (e.g. `idempotency_monitor` and `user_voting_history` are **views**, not tables).
 
-- `admin_activity_log`
-- `analytics_event_data`
-- `analytics_events`
-- `audit_logs`
-- `biometric_trust_scores`
-- `bot_detection_logs`
-- `cache_performance_log`
-- `candidate_email_challenges`
-- `candidate_onboarding`
-- `candidate_platforms`
-- `candidate_profile_audit`
-- `candidate_profiles`
-- `candidate_verifications`
-- `civic_action_metadata`
-- `civic_actions`
-- `civic_database_entries`
-- `civic_elections`
-- `contact_messages`
-- `contact_threads`
-- `feature_usage`
-- `feed_interactions`
-- `feed_items`
-- `feedback`
-- `feeds`
-- `hashtag_engagement`
-- `hashtag_flags`
-- `hashtag_usage`
-- `hashtag_user_preferences`
-- `hashtags`
-- `id_crosswalk`
-- `idempotency_keys`
-- `message_delivery_logs`
-- `narrative_analysis_results`
-- `notification_log`
-- `official_email_fast_track`
-- `openstates_people_contacts`
-- `openstates_people_data`
-- `openstates_people_identifiers`
-- `openstates_people_other_names`
-- `openstates_people_roles`
-- `openstates_people_social_media`
-- `openstates_people_sources`
-- `performance_metrics`
-- `permissions`
-- `platform_analytics`
-- `poll_demographic_insights`
-- `poll_options`
-- `poll_participation_analytics`
-- `poll_rankings`
-- `polls`
-- `push_subscriptions`
-- `query_performance_log`
-- `rate_limits`
-- `representative_activity`
-- `representative_campaign_finance`
-- `representative_committees`
-- `representative_contacts`
-- `representative_crosswalk_enhanced`
-- `representative_data_quality`
-- `representative_data_sources`
-- `representative_divisions`
-- `representative_enhanced_crosswalk`
-- `representative_follows`
-- `representative_overrides`
-- `representative_overrides_audit`
-- `representative_photos`
-- `representative_social_media`
-- `representatives_core`
-- `role_permissions`
-- `roles`
-- `site_messages`
-- `sync_log`
-- `system_health`
-- `trending_topics`
-- `trust_tier_analytics`
-- `trust_tier_progression`
-- `user_hashtags`
-- `user_profiles`
-- `user_roles`
-- `user_sessions`
-- `vote_trust_tiers`
-- `voter_registration_resources`
-- `votes`
-- `webauthn_challenges`
-- `webauthn_credentials`
-- `idempotency_monitor`
-- `user_voting_history`
+Regenerate after `npm run types:generate` (from `web/`):
 
-### Public Views (current)
+```bash
+# repository root
+npm run docs:public-schema-index
+npm run docs:surface-counts   # optional: prints JSON counts + Next.js route tally
+```
 
-- `openstates_people_current_roles_v`
-- `openstates_people_primary_contacts_v`
-- `openstates_people_social_v`
-- `openstates_people_sources_v`
-- `voter_registration_resources_view`
+**Counts** (as of last regeneration; verify with the commands above): **93** public tables, **7** public views, **63** RPC names under `Database['public']['Functions']`.
 
-### RPC Functions (current)
-
-- `analyze_narrative_divergence`
-- `analyze_polls_table`
-- `analyze_query_performance`
-- `calculate_trust_filtered_votes`
-- `calculate_trust_weighted_votes`
-- `calculate_user_trust_tier`
-- `cleanup_expired_data`
-- `create_audit_log`
-- `get_audit_log_stats`
-- `get_duplicate_canonical_ids`
-- `get_hashtag_trending_history`
-- `get_heatmap`
-- `get_performance_recommendations`
-- `get_personalized_recommendations`
-- `get_poll_results_by_trust_tier`
-- `get_poll_votes_by_trust_tier`
-- `get_real_time_analytics`
-- `get_table_columns`
-- `get_upcoming_elections`
-- `link_anonymous_votes_to_user`
-- `optimize_database_performance`
-- `run_maintenance_job`
-- `update_cache_performance_metrics`
-- `update_poll_demographic_insights`
-
-> Notes:
-> - Views are suffixed with `_v` or `_view`.
-> - The functions list is provided for discovery; consult `/web/types/supabase.ts` for exact signatures.
+For **`calculate_trust_weighted_votes`**: product policy forbids calling it—see [RPC Functions § `calculate_trust_weighted_votes`](#calculate_trust_weighted_votes-legacy--forbidden-for-product-use).
 
 ---
 
 ## Table of Contents
 
-1. [Core Tables](#core-tables)
-2. [Authentication & Trust](#authentication--trust)
-3. [Polls & Voting](#polls--voting)
-4. [Civic Engagement](#civic-engagement)
-5. [Representatives & Officials](#representatives--officials)
-6. [Analytics & Monitoring](#analytics--monitoring)
-7. [Hashtags & Trending](#hashtags--trending)
-8. [Feeds & Content](#feeds--content)
-9. [PWA & Notifications](#pwa--notifications)
-10. [Admin & Permissions](#admin--permissions)
-11. [Performance & Health](#performance--health)
-12. [RPC Functions](#rpc-functions)
+1. [Public schema index (generated, full lists)](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md)
+2. [Core Tables](#core-tables)
+3. [Authentication & Trust](#authentication--trust)
+4. [Polls & Voting](#polls--voting)
+5. [Civic Engagement](#civic-engagement)
+6. [Representatives & Officials](#representatives--officials)
+7. [Analytics & Monitoring](#analytics--monitoring)
+8. [Hashtags & Trending](#hashtags--trending)
+9. [Feeds & Content](#feeds--content)
+10. [PWA & Notifications](#pwa--notifications)
+11. [Admin & Permissions](#admin--permissions)
+12. [Performance & Health](#performance--health)
+13. [RPC Functions](#rpc-functions)
 
 ---
 
@@ -1116,51 +1002,43 @@ Feature usage tracking.
 
 ## RPC Functions
 
-The database includes 19 RPC (Remote Procedure Call) functions for complex operations:
+**Cardinality:** The generated Supabase client types expose **63** function names under `Database['public']['Functions']` in `web/types/supabase.ts`, alongside **93** public tables and **7** views. After regenerating types, refresh counts with `node scripts/doc-surface-counts.mjs` from the repository root.
 
-### Analytics Functions
-1. **`analyze_narrative_divergence`** - AI-powered narrative divergence analysis
-2. **`analyze_polls_table`** - Table-level poll analytics
-3. **`analyze_query_performance`** - Query performance analysis
-4. **`get_real_time_analytics`** - Real-time analytics aggregation
-5. **`get_poll_results_by_trust_tier`** - Poll results filtered by trust tier
-6. **`get_poll_votes_by_trust_tier`** - Vote breakdown by trust tier
-7. **`get_personalized_recommendations`** - AI recommendations for users
+The **complete alphabetical list** of all **63** `public` RPC names is in [`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md). The narrative subsections below highlight **commonly referenced** RPCs only; subsection headings are **not** sequential totals.
 
-### Trust & Voting Functions
-8. **`calculate_trust_filtered_votes`** - Vote counts filtered by trust tier
-9. **`calculate_user_trust_tier`** - Calculate user's trust tier score
-10. **`link_anonymous_votes_to_user`** - Link anonymous votes when user authenticates
+### Analytics (selected)
+- **`analyze_narrative_divergence`** — AI-powered narrative divergence analysis
+- **`analyze_polls_table`** — Table-level poll analytics
+- **`analyze_query_performance`** — Query performance analysis
+- **`get_real_time_analytics`** — Real-time analytics aggregation
+- **`get_poll_results_by_trust_tier`** — Poll results filtered by trust tier (display/analytics)
+- **`get_poll_votes_by_trust_tier`** — Vote breakdown by trust tier (display/analytics)
+- **`get_personalized_recommendations`** — Recommendations for users
 
-### ⚠️ REMOVED Functions (Historical Record)
-- ~~**`calculate_trust_weighted_votes`**~~ - **REMOVED - VIOLATED VOTING INTEGRITY**
-  - **Status**: ✅ REMOVED from database (November 5, 2025)
-  - **Issue**: Would have weighted votes by trust tier (1 vote ≠ 1 vote)
-  - **Policy**: "A vote is a vote. Period." - All votes count equally
-  - **Migration**: `remove-vote-weighting-function.sql` executed successfully
-  - **Alternative**: Use `calculate_trust_filtered_votes` for analytics DISPLAY only
-  - **Verified**: Function was NEVER used in codebase (clean before removal)
+### Trust & voting (selected)
+- **`calculate_trust_filtered_votes`** — Vote counts filtered by trust tier (**analytics / display**; does not change equal-weight tally policy)
+- **`calculate_user_trust_tier`** — User trust tier score
+- **`link_anonymous_votes_to_user`** — Link anonymous votes when a user authenticates
 
-### Hashtag Functions
-12. **`get_hashtag_trending_history`** - Historical trending data for hashtags
+### `calculate_trust_weighted_votes` (legacy — forbidden for product use)
+- **Policy:** Trust must not **weight** votes for official results (one vote, one count). See `docs/archive/reference/VOTING_INTEGRITY_POLICY.md`.
+- **Types vs database:** The identifier may still appear in `web/types/supabase.ts` if a remote database has not dropped the function or types were not regenerated after a migration. **Application code must not invoke it.** Use `calculate_trust_filtered_votes` only for segmented **display**, not for weighted tallies.
+- **Operational check:** After migrations, run `npm run types:generate` from `web/` and confirm the live schema (Supabase dashboard or `supabase db`) matches expectations.
 
-### Maintenance Functions
-13. **`cleanup_expired_data`** - Remove expired sessions, rate limits, etc.
-14. **`optimize_database_performance`** - Run VACUUM, ANALYZE, rebuild indexes
-15. **`run_maintenance_job`** - Scheduled maintenance tasks
+### Hashtags & maintenance (selected)
+- **`get_hashtag_trending_history`** — Historical trending data for hashtags
+- **`cleanup_expired_data`** — Remove expired sessions, rate limits, etc.
+- **`optimize_database_performance`** — Maintenance helpers (VACUUM/ANALYZE patterns—see migration comments)
+- **`run_maintenance_job`** — Scheduled maintenance tasks
 
-### Heatmap Function
-16. **`get_heatmap`** - District-level engagement heatmap (k-anonymity enforced)
-   - Parameters: `state_filter`, `level_filter`, `min_count`
-   - Returns: district engagement data with k-anonymity (min 5 users)
-   - Privacy-safe: Only shows aggregated district-level data
+### Heatmap
+- **`get_heatmap`** — District-level engagement heatmap (k-anonymity enforced)
+  - Parameters: `state_filter`, `level_filter`, `min_count`
+  - Returns: district engagement aggregates (minimum user threshold)
+  - Privacy-safe: no raw addresses
 
-### Analytics Updates
-17. **`update_cache_performance_metrics`** - Update cache performance statistics
-18. **`update_poll_demographic_insights`** - Calculate demographic insights for polls
-
-### Performance Functions
-19. **`get_performance_recommendations`** - Suggest performance optimizations
+### Other notable RPCs
+- **`update_cache_performance_metrics`**, **`update_poll_demographic_insights`**, **`get_performance_recommendations`** — Performance and poll insight pipelines
 
 ---
 
@@ -1223,9 +1101,9 @@ npx supabase gen types typescript --project-id muqwrehywjrbaeerjgfb > types/supa
 
 ---
 
-**Generated**: November 16, 2025  
-**Method**: Summarized from `/web/types/supabase.ts` (Supabase-generated)  
-**Confidence**: HIGH - Aligned with current generated types
+**Last regenerated**: April 4, 2026  
+**Method**: Narrative doc + [`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) from `/web/types/supabase.ts`  
+**Verify**: `npm run docs:public-schema-index` and `npm run docs:surface-counts` from repository root after `types:generate`
 
 ---
 
@@ -1851,5 +1729,5 @@ See detailed section above. Uniqueness: `(representative_id, source_name, source
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

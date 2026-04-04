@@ -1,5 +1,7 @@
 # WebAuthn (Passkeys) — Design & Implementation
 
+_Last updated: April 4, 2026_
+
 **Purpose:** Document WebAuthn architecture, security model, and implementation details. Passkeys provide strong proof-of-personhood (biometric/device-bound) and are critical for bot resistance and user experience.
 
 **Status:** ✅ Production-ready (with fixes applied Feb 2026)

@@ -12,10 +12,12 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
+import { BackToTop } from '@/components/shared/BackToTop';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { AnalyticsSkeleton } from '@/components/shared/Skeletons';
 import { Button } from '@/components/ui/button';
 
+import { haptic } from '@/lib/haptics';
 import {
   useAnalyticsDashboard,
   useAnalyticsLoading,
@@ -309,7 +311,7 @@ export default function AnalyticsPage() {
                   <Button
                     key={view.id}
                     variant="ghost"
-                    onClick={() => setSelectedView(view.id)}
+                    onClick={() => { haptic('light'); setSelectedView(view.id); }}
                     className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 rounded-none ${
                       selectedView === view.id
                         ? 'border-primary text-primary'
@@ -354,6 +356,8 @@ export default function AnalyticsPage() {
             <AdvancedView data={analyticsData} />
           )}
         </div>
+
+        <BackToTop />
       </div>
     </div>
   );
@@ -362,9 +366,9 @@ export default function AnalyticsPage() {
 // Overview View Component
 function OverviewView({ data }: { data: AnalyticsData }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" role="region" aria-label="Analytics overview">
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" role="group" aria-label="Key metrics">
         <MetricCard
           title="Total Polls"
           value={data?.overview?.totalPolls ?? 0}
@@ -400,8 +404,15 @@ function OverviewView({ data }: { data: AnalyticsData }) {
       </div>
 
       {/* Performance Indicators */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" role="group" aria-label="Performance indicators and quick actions">
+        <div
+          className="bg-card rounded-xl shadow-sm border border-border p-6"
+          role="img"
+          aria-labelledby="overview-perf-summary"
+        >
+          <p id="overview-perf-summary" className="sr-only">
+            Performance indicators: Session duration {data?.overview?.averageSessionDuration ?? 0} minutes, Bounce rate {data?.overview?.bounceRate ?? 0}%, Conversion rate {data?.overview?.conversionRate ?? 0}%.
+          </p>
           <h3 className="text-lg font-semibold text-foreground mb-4">Performance Indicators</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -447,11 +458,18 @@ function OverviewView({ data }: { data: AnalyticsData }) {
 // Trends View Component
 function TrendsView({ data: _data }: { data: AnalyticsData }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" role="region" aria-label="Voting trends">
       <div className="bg-card rounded-xl shadow-sm border border-border p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Voting Trends</h3>
-        <div className="h-64 bg-muted rounded-lg flex flex-col items-center justify-center gap-2">
-          <BarChart3 className="h-10 w-10 text-muted-foreground" />
+        <p id="trends-chart-summary" className="sr-only">
+          Voting trends chart placeholder. Trend data will appear here as you vote on polls.
+        </p>
+        <div
+          className="h-64 bg-muted rounded-lg flex flex-col items-center justify-center gap-2"
+          role="img"
+          aria-labelledby="trends-chart-summary"
+        >
+          <BarChart3 className="h-10 w-10 text-muted-foreground" aria-hidden />
           <p className="text-sm text-muted-foreground">Trend data will appear here as you vote on polls</p>
         </div>
       </div>
@@ -462,9 +480,16 @@ function TrendsView({ data: _data }: { data: AnalyticsData }) {
 // Demographics View Component
 function DemographicsView({ data }: { data: AnalyticsData }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" role="region" aria-label="Demographics analysis">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6" role="img" aria-labelledby="demographics-age-summary">
+          <p id="demographics-age-summary" className="sr-only">
+            Age distribution chart. {Object.entries(data?.demographics?.ageGroups ?? {}).length > 0
+              ? Object.entries(data?.demographics?.ageGroups ?? {})
+                  .map(([age, count]) => `${age}: ${count}`)
+                  .join(', ')
+              : 'No age data available.'}
+          </p>
           <h3 className="text-lg font-semibold text-foreground mb-4">Age Distribution</h3>
           <div className="space-y-3">
             {Object.entries(data?.demographics?.ageGroups ?? {}).map(([age, count]) => (
@@ -484,7 +509,14 @@ function DemographicsView({ data }: { data: AnalyticsData }) {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6" role="img" aria-labelledby="demographics-device-summary">
+          <p id="demographics-device-summary" className="sr-only">
+            Device types distribution. {Object.entries(data?.demographics?.deviceTypes ?? {}).length > 0
+              ? Object.entries(data?.demographics?.deviceTypes ?? {})
+                  .map(([device, pct]) => `${device}: ${typeof pct === 'number' ? pct : 0}%`)
+                  .join(', ')
+              : 'No device data available.'}
+          </p>
           <h3 className="text-lg font-semibold text-foreground mb-4">Device Types</h3>
           <div className="space-y-3">
             {Object.entries(data?.demographics?.deviceTypes ?? {}).map(([device, percentage]) => {
@@ -514,8 +546,15 @@ function DemographicsView({ data }: { data: AnalyticsData }) {
 // Performance View Component
 function PerformanceView({ data }: { data: AnalyticsData }) {
   return (
-    <div className="space-y-8">
-      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+    <div className="space-y-8" role="region" aria-label="Performance metrics">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6" role="img" aria-labelledby="performance-load-summary">
+        <p id="performance-load-summary" className="sr-only">
+          Page load times by route. {(data?.performance?.loadTimes?.length ?? 0) > 0
+            ? (data?.performance?.loadTimes ?? [])
+                .map((p) => `${p.page}: average ${p.averageLoadTime}ms, P95 ${p.p95LoadTime}ms`)
+                .join('. ')
+            : 'No load time data available.'}
+        </p>
         <h3 className="text-lg font-semibold text-foreground mb-4">Page Load Times</h3>
         <div className="space-y-4">
           {data?.performance?.loadTimes?.map((page: { page: string; averageLoadTime: number; p95LoadTime: number }) => (
@@ -536,8 +575,11 @@ function PerformanceView({ data }: { data: AnalyticsData }) {
 // Privacy View Component
 function PrivacyView({ data }: { data: AnalyticsData }) {
   return (
-    <div className="space-y-8">
-      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+    <div className="space-y-8" role="region" aria-label="Privacy and data protection metrics">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6" role="img" aria-labelledby="privacy-metrics-summary">
+        <p id="privacy-metrics-summary" className="sr-only">
+          Privacy metrics: Data collected {data?.privacy?.dataCollected ?? 0} fields, data shared {data?.privacy?.dataShared ?? 0} fields, anonymization {data?.privacy?.anonymizationLevel ?? 'N/A'}, encryption {data?.privacy?.encryptionEnabled ? 'enabled' : 'disabled'}, consent {data?.privacy?.userConsent ? 'granted' : 'pending'}.
+        </p>
         <h3 className="text-lg font-semibold text-foreground mb-4">Privacy Metrics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
@@ -575,9 +617,12 @@ function PrivacyView({ data }: { data: AnalyticsData }) {
 // Engagement View Component
 function EngagementView({ data }: { data: AnalyticsData }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" role="region" aria-label="User engagement metrics">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6" role="img" aria-labelledby="engagement-metrics-summary">
+          <p id="engagement-metrics-summary" className="sr-only">
+            User engagement: Active users {data?.engagement?.activeUsers ?? 0}, returning users {data?.engagement?.returningUsers ?? 0}, session duration {data?.engagement?.sessionDuration ?? 0} minutes, pages per session {data?.engagement?.pagesPerSession ?? 0}.
+          </p>
           <h3 className="text-lg font-semibold text-foreground mb-4">User Engagement</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -599,7 +644,14 @@ function EngagementView({ data }: { data: AnalyticsData }) {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6" role="img" aria-labelledby="feature-usage-summary">
+          <p id="feature-usage-summary" className="sr-only">
+            Feature usage distribution. {Object.entries(data?.engagement?.featureUsage ?? {}).length > 0
+              ? Object.entries(data?.engagement?.featureUsage ?? {})
+                  .map(([feature, pct]) => `${feature}: ${typeof pct === 'number' ? pct : 0}%`)
+                  .join(', ')
+              : 'No feature usage data available.'}
+          </p>
           <h3 className="text-lg font-semibold text-foreground mb-4">Feature Usage</h3>
           <div className="space-y-3">
             {Object.entries(data?.engagement?.featureUsage ?? {}).map(([feature, percentage]) => {
@@ -629,8 +681,11 @@ function EngagementView({ data }: { data: AnalyticsData }) {
 // Advanced View Component
 function AdvancedView({ data: _data }: { data: AnalyticsData }) {
   return (
-    <div className="space-y-8">
-      <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+    <div className="space-y-8" role="region" aria-label="Advanced analytics">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6" role="img" aria-labelledby="advanced-analytics-summary">
+        <p id="advanced-analytics-summary" className="sr-only">
+          Advanced analytics: predictive modeling, statistical analysis, and AI-powered insights. Features include forecast voting patterns, advanced statistical modeling, and machine learning powered recommendations.
+        </p>
         <h3 className="text-lg font-semibold text-foreground mb-4">Advanced Analytics</h3>
         <p className="text-muted-foreground mb-4">
           Advanced analytics features including predictive modeling, statistical analysis, and AI-powered insights are available when the AI features flag is enabled.

@@ -15,17 +15,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 
+
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
+import { BackToTop } from '@/components/shared/BackToTop';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
+import { ContactThreadListSkeleton } from '@/components/shared/Skeletons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+
 import { AVATAR_BLUR_DATA_URL } from '@/lib/constants/image';
+import { haptic } from '@/lib/haptics';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
+
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 type Thread = {
   id: string;
@@ -118,6 +125,15 @@ export default function ContactHistoryPage() {
       });
   }, [threads, filter, sortBy]);
 
+  const handleRefresh = useCallback(async () => {
+    await fetchThreads();
+  }, [fetchThreads]);
+
+  const { containerRef: pullToRefreshRef, indicator: pullToRefreshIndicator } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    disabled: loading,
+  });
+
   if (!contactSystemEnabled) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -143,12 +159,7 @@ export default function ContactHistoryPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Clock className="w-8 h-8 animate-pulse mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-600">Loading message history...</p>
-          </div>
-        </div>
+        <ContactThreadListSkeleton count={6} />
       </div>
     );
   }
@@ -162,10 +173,10 @@ export default function ContactHistoryPage() {
           details="We encountered an issue while loading your communication history. This might be a temporary network problem."
           tip="Check your internet connection and try again. If the problem persists, the service may be temporarily unavailable."
           canRetry={true}
-          onRetry={() => void fetchThreads()}
+          onRetry={() => { haptic('light'); void fetchThreads(); }}
           primaryAction={{
             label: 'Try Again',
-            onClick: () => void fetchThreads(),
+            onClick: () => { haptic('light'); void fetchThreads(); },
             icon: <RefreshCw className="h-4 w-4" />,
           }}
           secondaryAction={{
@@ -178,7 +189,8 @@ export default function ContactHistoryPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div ref={pullToRefreshRef} className="container mx-auto px-4 py-8">
+      {pullToRefreshIndicator}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
@@ -197,15 +209,15 @@ export default function ContactHistoryPage() {
         </Link>
       </div>
 
-      {/* Filters */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
+      {/* Filters - sticky on scroll */}
+      <div className="sticky top-0 z-10 py-3 mb-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40 flex flex-wrap items-center gap-4">
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">Filter:</span>
           <div className="flex space-x-2">
             {(['all', 'active', 'closed'] as const).map(filterOption => (
               <button
                 key={filterOption}
-                onClick={() => setFilter(filterOption)}
+                onClick={() => { haptic('light'); setFilter(filterOption); }}
                 className={`px-3 py-1 rounded-lg text-sm transition-colors ${
                   filter === filterOption
                     ? 'bg-blue-600 text-white'
@@ -223,7 +235,7 @@ export default function ContactHistoryPage() {
           <select
             id="sort-select"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'recent' | 'oldest')}
+            onChange={(e) => { haptic('light'); setSortBy(e.target.value as 'recent' | 'oldest'); }}
             className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="recent">Most Recent</option>
@@ -307,7 +319,7 @@ export default function ContactHistoryPage() {
                     )}
                   </div>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/contact/threads/${thread.id}`}>
+                    <Link href={`/contact/threads/${thread.id}`} onClick={() => haptic('light')}>
                       View Thread
                     </Link>
                   </Button>
@@ -317,6 +329,7 @@ export default function ContactHistoryPage() {
           ))}
         </div>
       )}
+      <BackToTop />
     </div>
   );
 }

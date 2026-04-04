@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Input } from '@/components/ui/input';
 
+import { haptic } from '@/lib/haptics';
 import {
   useHashtagActions,
   useHashtagStats,
@@ -139,6 +140,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
       setCurrentPageRef.current(1);
       setTrendingOnlyRef.current(nextTrending);
       setFiltersRef.current({ status });
+      haptic('light');
       void loadPollsRef.current();
     },
     [],
@@ -149,6 +151,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
       const category = categoryId === 'all' ? [] : [categoryId];
       setCurrentPageRef.current(1);
       setFiltersRef.current({ category });
+      haptic('light');
       void loadPollsRef.current();
     },
     [],

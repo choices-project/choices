@@ -11,6 +11,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { AdminUser } from '@/features/admin/types';
 
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
+import { UserEditModal } from '@/features/admin/components/UserEditModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +74,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   const { loadUsers, setError } = useAdminActions();
 
   const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
+  const [userToEdit, setUserToEdit] = useState<AdminUser | null>(null);
 
   const loadUsersRef = useRef(loadUsers);
   const setErrorRef = useRef(setError);
@@ -271,6 +273,12 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
 
   return (
     <div className="space-y-6" data-testid="user-management">
+      <UserEditModal
+        user={userToEdit}
+        open={!!userToEdit}
+        onOpenChange={(open) => !open && setUserToEdit(null)}
+        onSaved={(userId, updates) => onUserUpdate?.(userId, updates)}
+      />
       <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -466,15 +474,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => {
-                          // Role edit via prompt; full edit modal for other fields deferred (see docs/ROADMAP.md §4)
-                          const newRole = prompt(`Edit user role for ${user.email}:\n\nCurrent: ${user.role}\n\nEnter new role (user/moderator/admin):`, user.role);
-                          if (newRole && newRole !== user.role && ['user', 'moderator', 'admin'].includes(newRole)) {
-                            handleUserRoleChange(user.id, newRole);
-                            // onUserUpdate expects (userId, updates) signature
-                            onUserUpdate?.(user.id, { role: newRole as AdminUser['role'] });
-                          }
-                        }}
+                        onClick={() => setUserToEdit(user)}
                         className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                         aria-label={`Edit user ${user.email}`}
                       >

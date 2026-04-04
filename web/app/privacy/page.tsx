@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
             Your privacy matters. Learn how we protect your data and give you control over your information.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Last updated: January 15, 2025
+            Last updated: April 4, 2026
           </p>
         </div>
       </div>

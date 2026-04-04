@@ -75,6 +75,7 @@ export type PollsState = {
   preferences: PollPreferences;
   search: PollSearch;
   isLoading: boolean;
+  isLoadingMore: boolean;
   isSearching: boolean;
   isVoting: boolean;
   error: string | null;
@@ -85,6 +86,7 @@ export type PollsState = {
 export type PollsActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearError'> & {
   setVoting: (voting: boolean) => void;
   setSearching: (searching: boolean) => void;
+  setLoadingMore: (loading: boolean) => void;
   resetPollsState: () => void;
   setSearchQuery: (query: string) => void;
   setCurrentPage: (page: number) => void;
@@ -143,6 +145,8 @@ export type LoadPollsOptions = {
   viewMode?: PollPreferences['defaultView'];
   page?: number;
   trendingOnly?: boolean;
+  /** When true and page > 1, append new polls to existing list instead of replacing */
+  append?: boolean;
 };
 
 export type CreatePollOptions = {
@@ -187,6 +191,7 @@ export const initialPollsState: PollsState = {
   preferences: createDefaultPreferences(),
   search: createDefaultSearch(),
   isLoading: false,
+  isLoadingMore: false,
   isSearching: false,
   isVoting: false,
   error: null,
@@ -201,6 +206,7 @@ export const createInitialPollsState = (): PollsState => ({
   preferences: createDefaultPreferences(),
   search: createDefaultSearch(),
   isLoading: false,
+  isLoadingMore: false,
   isSearching: false,
   isVoting: false,
   error: null,
@@ -263,6 +269,11 @@ export const createPollsActions = (
       state.isSearching = searching;
     });
 
+  const setLoadingMore = (loading: boolean) =>
+    setState((state) => {
+      state.isLoadingMore = loading;
+    });
+
   const resetPollsState = () =>
     setState((state) => {
       // Use stable empty array references
@@ -272,6 +283,7 @@ export const createPollsActions = (
       state.preferences = createDefaultPreferences();
       state.search = createDefaultSearch();
       state.isLoading = false;
+      state.isLoadingMore = false;
       state.isSearching = false;
       state.isVoting = false;
       state.error = null;
@@ -723,7 +735,12 @@ export const createPollsActions = (
     });
 
   const loadPolls = async (options?: LoadPollsOptions) => {
-    setLoading(true);
+    const append = options?.append === true && (options?.page ?? get().search.currentPage) > 1;
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
     clearError();
 
     try {
@@ -832,7 +849,15 @@ export const createPollsActions = (
         throw new Error('Malformed polls response');
       }
 
-      setPolls(polls);
+      if (append) {
+        const existing = get().polls;
+        const existingIds = new Set(existing.map((p) => p.id));
+        const newPolls = polls.filter((p) => !existingIds.has(p.id));
+        setPolls([...existing, ...newPolls]);
+        setLoadingMore(false);
+      } else {
+        setPolls(polls);
+      }
       setState((state) => {
         const totalResults =
           typeof paginationMeta?.total === 'number'
@@ -877,7 +902,11 @@ export const createPollsActions = (
         setError('Request timeout - polls API took too long to respond');
       }
     } finally {
-      setLoading(false);
+      if (append) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -1052,6 +1081,7 @@ export const createPollsActions = (
     setError,
     clearError,
     setVoting,
+    setLoadingMore,
     setSearching,
     resetPollsState,
     setSearchQuery,
@@ -1115,6 +1145,7 @@ export const usePollsStore = create<PollsStore>()(
 
 export const usePolls = () => usePollsStore((state) => state.polls);
 export const usePollsLoading = () => usePollsStore((state) => state.isLoading);
+export const usePollsLoadingMore = () => usePollsStore((state) => state.isLoadingMore);
 export const usePollsError = () => usePollsStore((state) => state.error);
 export const usePollPreferences = () => usePollsStore((state) => state.preferences);
 export const usePollFilters = () => {

@@ -1,6 +1,6 @@
 # API Contracts & Envelope Standards
 
-_Last updated: 2025-11-16_
+_Last updated: April 4, 2026_
 
 ## Overview
 
@@ -152,18 +152,18 @@ Common metadata fields in API responses:
 
 ## Contract Testing
 
-All API contracts are verified via Jest contract tests in `web/tests/contracts/`. See `docs/archive/reference/testing/TESTING/api-contract-plan.md` for detailed coverage.
+All API contracts are verified via Jest contract tests in `web/tests/contracts/`. Current workflow and commands are in [`docs/TESTING.md`](../TESTING.md). A generated listing of every `route.ts` under `web/app/api/` is in [`inventory.md`](inventory.md) (refresh with `node scripts/generate-api-inventory.mjs`). The archived matrix at `docs/archive/reference/testing/TESTING/api-contract-plan.md` is historical context only.
 
 ## Governance
 
 When modifying API handlers:
 1. Update this file to document contract changes
 2. Update contract tests in `web/tests/contracts/`
-3. Update either `docs/archive/reference/testing/TESTING/api-contract-plan.md` or `docs/archive/release-notes/CHANGELOG.md`
+3. Update [`docs/TESTING.md`](../TESTING.md) or release notes (`docs/archive/release-notes/CHANGELOG.md`) as appropriate; regenerate [`inventory.md`](inventory.md) when routes change
 
 ## Ownership & Update Cadence
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

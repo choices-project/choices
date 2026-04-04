@@ -41,6 +41,7 @@ import { filterDivisionsForElections } from '@/features/civics/utils/divisions';
 import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 import { ContactSubmissionForm } from '@/features/contact';
 
+import { BackToTop } from '@/components/shared/BackToTop';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Badge } from '@/components/ui/badge';
 
@@ -422,6 +423,7 @@ function RepresentativeDetailPageContent() {
                 blurDataURL={AVATAR_BLUR_DATA_URL}
                 className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
                 priority
+                fetchPriority="high"
               />
             ) : (
               <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-blue-500 flex items-center justify-center">
@@ -820,6 +822,7 @@ function RepresentativeDetailPageContent() {
           )}
         </div>
       </div>
+      <BackToTop />
     </div>
   );
 }

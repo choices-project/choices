@@ -9,21 +9,26 @@
  */
 
 import { Users } from 'lucide-react';
-import React, { Suspense, lazy } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { Suspense, lazy, useCallback } from 'react';
 
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Skeleton } from '@/components/ui/skeleton';
 
+import { haptic } from '@/lib/haptics';
 import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
+import { VirtualizedRepresentativeGrid, VIRTUALIZATION_THRESHOLD } from './VirtualizedRepresentativeGrid';
+
 import type { Representative, RepresentativeListProps } from '@/types/representative';
+
 
 // Lazy load RepresentativeCard for better initial bundle size and performance
 // RepresentativeCard is a named export, so we wrap it as default for lazy()
-const RepresentativeCard = lazy(() => 
+const RepresentativeCard = lazy(() =>
   import('./RepresentativeCard').then(mod => ({ default: mod.RepresentativeCard }))
 );
 
@@ -48,6 +53,14 @@ export function RepresentativeList({
   const handleFollow = onRepresentativeFollow ?? ((rep: Representative) => {
     logger.info('Followed:', rep.name);
   });
+
+  const router = useRouter();
+  const handlePrefetch = useCallback(
+    (id: string | number) => {
+      router.prefetch(`/representatives/${id}`);
+    },
+    [router]
+  );
 
   if (loading) {
     return (
@@ -113,6 +126,22 @@ export function RepresentativeList({
     );
   }
 
+  if (representatives.length > VIRTUALIZATION_THRESHOLD) {
+    return (
+      <div className={className}>
+        <VirtualizedRepresentativeGrid
+          representatives={representatives}
+          variant={variant}
+          showActions={showActions}
+          onRepresentativeContact={handleContact}
+          onRepresentativeFollow={handleFollow}
+          {...(onRepresentativeClick && { onRepresentativeClick })}
+          gridClassName="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -132,18 +161,22 @@ export function RepresentativeList({
               </div>
             }
           >
-            <RepresentativeCard
-              representative={representative}
-              variant={variant}
-              showActions={showActions}
-              onFollow={handleFollow}
-              onContact={handleContact}
-              onClick={() => {
-                if (onRepresentativeClick) {
-                  onRepresentativeClick(representative);
-                }
-              }}
-            />
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- prefetch on hover only, not interactive */}
+            <div onMouseEnter={() => handlePrefetch(representative.id)}>
+              <RepresentativeCard
+                representative={representative}
+                variant={variant}
+                showActions={showActions}
+                onFollow={handleFollow}
+                onContact={handleContact}
+                onClick={() => {
+                  haptic('light');
+                  if (onRepresentativeClick) {
+                    onRepresentativeClick(representative);
+                  }
+                }}
+              />
+            </div>
           </Suspense>
         ))}
       </div>
@@ -176,6 +209,14 @@ export function RepresentativeGrid({
   const handleFollow = onRepresentativeFollow ?? ((rep: Representative) => {
     logger.info('Followed:', rep.name);
   });
+
+  const router = useRouter();
+  const handlePrefetch = useCallback(
+    (id: string | number) => {
+      router.prefetch(`/representatives/${id}`);
+    },
+    [router]
+  );
 
   if (loading) {
     return (
@@ -222,6 +263,22 @@ export function RepresentativeGrid({
     );
   }
 
+  if (representatives.length > VIRTUALIZATION_THRESHOLD) {
+    return (
+      <div className={className}>
+        <VirtualizedRepresentativeGrid
+          representatives={representatives}
+          variant={variant}
+          showActions={showActions}
+          onRepresentativeContact={handleContact}
+          onRepresentativeFollow={handleFollow}
+          {...(onRepresentativeClick && { onRepresentativeClick })}
+          gridClassName="grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
       {representatives.map((representative) => (
@@ -233,14 +290,17 @@ export function RepresentativeGrid({
             </div>
           }
         >
-          <RepresentativeCard
-            representative={representative}
-            variant={variant}
-            showActions={showActions}
-            onFollow={handleFollow}
-            onContact={handleContact}
-            {...(onRepresentativeClick && { onClick: () => onRepresentativeClick(representative) })}
-          />
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- prefetch on hover only, not interactive */}
+          <div onMouseEnter={() => handlePrefetch(representative.id)}>
+            <RepresentativeCard
+              representative={representative}
+              variant={variant}
+              showActions={showActions}
+              onFollow={handleFollow}
+              onContact={handleContact}
+              {...(onRepresentativeClick && { onClick: () => { haptic('light'); onRepresentativeClick(representative); } })}
+            />
+          </div>
         </Suspense>
       ))}
     </div>

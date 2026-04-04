@@ -1,6 +1,6 @@
 # State Management Guide
 
-_Last updated: March 2026_
+_Last updated: April 4, 2026_
 
 This document summarizes the agreed-on patterns for Zustand stores in the Choices web app. It replaces the scattered checklists under `scratch/gpt5-codex/store-roadmaps/` (see consolidation notes below).
 
@@ -198,13 +198,14 @@ If a store has only a few actions, you can return them directly without `useMemo
 
 When a user logs out or transitions to an unauthenticated state, related stores should reset to prevent stale data from persisting. The `userStore` orchestrates this cascade:
 
-- **User store actions that trigger cascade**: `setAuthenticated(false)`, `setUserAndAuth(..., false)`, `setSessionAndDerived(null)`, `initializeAuth(..., false)`, and `signOut()` all reset the user store and then call `useProfileStore.getState().resetProfile()` and `useAdminStore.getState().resetAdminState()`.
-- **Why this matters**: Without the cascade, profile preferences, admin notifications, and other user-specific state can persist after logout, causing confusion when a new user signs in or when testing auth flows. As of March 2026, the cascade resets **17 stores**: profile, admin, polls, feeds, analytics, hashtag, voting, contact, notification, onboarding, representative, election, PWA, widget, pollWizard, voterRegistration, and hashtagModeration — each with individual try/catch isolation.
+- **User store module count**: There are **21** `*Store.ts` modules under `web/lib/stores/` (verify: `ls web/lib/stores/*Store.ts | wc -l`). Only **17** of them are reset by **`cascadeDependentStoreReset()`** in `web/lib/stores/userStore.ts`. **`userStore`** itself is cleared via `resetUserState` before the cascade runs. **`appStore`**, **`deviceStore`**, and **`performanceStore`** are intentionally outside the cascade today—if they ever cache user-specific data, either subscribe to auth changes or add them to `cascadeDependentStoreReset()` with try/catch like the others.
+- **Actions that trigger the cascade**: `setAuthenticated(false)`, `setUserAndAuth(..., false)`, `setSessionAndDerived` when the session becomes null, `initializeAuth(..., false)`, and `signOut()` each clear user/session state when applicable, then call **`cascadeDependentStoreReset()`** (which resets, in order: profile, admin, polls, feeds, analytics, hashtag, voting, contact, notification, onboarding, representative, election, PWA, widget, poll wizard, voter registration, hashtag moderation).
+- **Why this matters**: Without the cascade, profile preferences, admin notifications, and other user-specific state can persist after logout, causing confusion when a new user signs in or when testing auth flows. Each dependent reset runs in its own try/catch so one failure does not block the rest.
 - **Testing**: The cascade is covered by `web/tests/unit/stores/authCascade.test.ts` and end-to-end in `web/tests/e2e/specs/dashboard-auth.spec.ts`. When adding new stores that depend on user authentication, ensure they either:
   1. Subscribe to `userStoreSubscriptions.onAuthChange()` and reset when `isAuthenticated` becomes `false`, or
-  2. Are explicitly reset by the user store's logout/sign-out actions if they contain user-specific data.
+  2. Are explicitly reset inside `cascadeDependentStoreReset()` if they contain user-specific data.
 
-**Example**: If you add a `preferencesStore` that stores user-specific UI preferences, add `usePreferencesStore.getState().resetPreferences()` to the user store's `signOut()` action (or subscribe to auth changes).
+**Example**: If you add a `preferencesStore` that stores user-specific UI preferences, add `usePreferencesStore.getState().resetPreferences()` to the `stores` array inside `cascadeDependentStoreReset()` (or subscribe to auth changes).
 
 ### Consent & Analytics Tracking
 
@@ -417,5 +418,5 @@ For questions, use `#web-platform` or add/update items in `docs/ROADMAP.md`.
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-03-13
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

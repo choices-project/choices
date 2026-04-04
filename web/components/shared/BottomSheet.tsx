@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -19,6 +19,18 @@ export function BottomSheet({ open, onClose, children, className, title }: Botto
   const y = useMotionValue(0);
   const opacity = useTransform(y, [0, 300], [1, 0]);
   const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

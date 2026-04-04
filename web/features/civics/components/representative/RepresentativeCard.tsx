@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 import { AVATAR_BLUR_DATA_URL } from '@/lib/constants/image';
+import { haptic } from '@/lib/haptics';
 import { logger } from '@/lib/utils/logger';
 
 import { useFollowRepresentative } from '@/hooks/useFollowRepresentative';
@@ -70,6 +71,7 @@ export const RepresentativeCard = React.memo(function RepresentativeCard({
     e.stopPropagation(); // Prevent card click
     const success = await toggle();
     if (success) {
+      haptic('light');
       onFollow?.(representative);
       trackCtaEvent(
         'civics_representative_follow_toggle',
@@ -86,6 +88,7 @@ export const RepresentativeCard = React.memo(function RepresentativeCard({
 
   const handleContact = (e?: React.MouseEvent) => {
     e?.stopPropagation?.();
+    haptic('light');
     if (onContact) {
       onContact(representative);
     } else {
@@ -99,6 +102,7 @@ export const RepresentativeCard = React.memo(function RepresentativeCard({
   const handleCreatePoll = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     e.preventDefault(); // Prevent any default behavior
+    haptic('light');
     trackCtaEvent('civics_representative_create_poll_click', {
       ctaLocation: 'card',
       representativeId: representative.id,

@@ -12,17 +12,19 @@
 
 import { MapPin, Users, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { RepresentativeList  } from '@/features/civics/components/representative/RepresentativeList';
 import { RepresentativeSearch } from '@/features/civics/components/representative/RepresentativeSearch';
 
+import { BackToTop } from '@/components/shared/BackToTop';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { haptic } from '@/lib/haptics';
 import {
   useRepresentativeSearchResults,
   useRepresentativeLoading,
@@ -34,6 +36,8 @@ import {
   useRepresentativeFilters
 } from '@/lib/stores/representativeStore';
 import { logger } from '@/lib/utils/logger';
+
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 import type { RepresentativeSearchQuery } from '@/types/representative';
 
@@ -64,6 +68,7 @@ export default function RepresentativesPage() {
 
   const handleSearch = React.useCallback(
     (query: RepresentativeSearchQuery) => {
+      haptic('light');
       void searchRepresentatives(query);
     },
     [searchRepresentatives]
@@ -71,6 +76,7 @@ export default function RepresentativesPage() {
 
   const handleLocationSearch = React.useCallback(
     (address: string) => {
+      haptic('light');
       setHasAttemptedLocationLookup(true);
       void findByLocation({ address });
     },
@@ -79,6 +85,7 @@ export default function RepresentativesPage() {
 
   const handleLoadMore = React.useCallback(async () => {
     if (!searchResults?.data?.hasMore) return;
+    haptic('light');
     const currentCount = searchResults?.data?.representatives?.length ?? 0;
     const limit = searchResults?.data?.limit ?? lastSearchQuery?.limit ?? 50;
     const baseQuery = lastSearchQuery ?? {};
@@ -94,8 +101,18 @@ export default function RepresentativesPage() {
     router.push(`/representatives/${representative.id}`);
   };
 
+  const handleRefresh = useCallback(async () => {
+    await searchRepresentatives({ limit: 50 });
+  }, [searchRepresentatives]);
+
+  const { containerRef: pullToRefreshRef, indicator: pullToRefreshIndicator } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    disabled: loading,
+  });
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div ref={pullToRefreshRef} className="container mx-auto px-4 py-8 max-w-7xl">
+      {pullToRefreshIndicator}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -118,8 +135,8 @@ export default function RepresentativesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Search Sidebar */}
-        <div className="lg:col-span-1">
+        {/* Search Sidebar - sticky on desktop */}
+        <div className="lg:col-span-1 lg:sticky lg:top-4 lg:self-start">
           <RepresentativeSearch
             onSearch={handleSearch}
             onLocationSearch={handleLocationSearch}
@@ -142,7 +159,7 @@ export default function RepresentativesPage() {
               className="mb-6"
             />
           )}
-          <Tabs defaultValue="search" className="w-full">
+          <Tabs defaultValue="search" className="w-full" onValueChange={() => haptic('light')}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="search" className="flex items-center space-x-2">
                 <Search className="w-4 h-4" />
@@ -239,6 +256,8 @@ export default function RepresentativesPage() {
           </Tabs>
         </div>
       </div>
+
+      <BackToTop />
 
       {/* Quick Stats */}
       <Card className="mt-8">

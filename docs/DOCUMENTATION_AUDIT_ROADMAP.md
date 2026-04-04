@@ -1,0 +1,212 @@
+# Documentation ↔ codebase audit roadmap
+
+_Last updated: April 4, 2026_  
+_Audience: new developers and maintainers doing a truth-alignment pass_
+
+This document is the **master checklist** for making every piece of documentation, inline comment, governance rule, and onboarding step **match the actual application** (routes, schema, stores, env, feature flags, security boundaries). It is intentionally detailed so you can execute it in order without guessing what “done” means.
+
+**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/DATABASE_SCHEMA.md` (RPC narrative + **generated** [`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) for full table/view/RPC lists), `docs/STATE_MANAGEMENT.md` (21 modules vs 17-cascade), `docs/DEPLOYMENT.md`, `docs/API/contracts.md`, and `docs/archive/README.md` (canonical `ROADMAP.md`) were aligned with the codebase. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
+
+---
+
+## 1. How to use this roadmap
+
+1. **Treat the codebase as ground truth** for behavior. Treat **generated artifacts** (`web/types/supabase.ts`) as ground truth for the remote schema **as last generated** (regenerate after migrations).
+2. **Work in phases** (§4–§8). Do not skip **Phase 0**—broken governance and dead links waste time on every PR.
+3. When you fix a claim, **add or cite a durable source** (script output, link to generator command, or “verified in file X line Y”) so the next person can re-verify in one step.
+4. For **new-developer ergonomics**, prefer one **canonical doc per topic**; archive or clearly label historical docs so search does not surface contradictions.
+
+---
+
+## 2. Ground-truth sources (single sources of truth)
+
+| Dimension | Authoritative source | How to refresh / verify |
+|-----------|---------------------|-------------------------|
+| HTTP API surface | `web/app/api/**/route.ts` | `npm run docs:surface-counts` (`nextJsRouteHandlers`) + `npm run docs:api-inventory` → `docs/API/inventory.md` |
+| Client + server env vars | `web/` usage of `process.env` / `NEXT_PUBLIC_*` + Zod startup schema (if any) | Ripgrep `process.env`; align `docs/ENVIRONMENT_VARIABLES.md` |
+| Supabase tables / views / RPCs | `web/types/supabase.ts` (`Database['public']`) | `npm run types:generate` from `web/` (per `GETTING_STARTED`) + `npm run docs:public-schema-index` + `docs:surface-counts` |
+| Zustand stores | `web/lib/stores/*.ts` + `web/lib/stores/index.ts` | Count `*Store.ts`; distinguish **modules** vs **logout cascade** (see §5.2) |
+| Feature flags | `web/lib/core/feature-flags.ts` | Compare to `docs/ROADMAP.md` quarantine / product claims |
+| Auth/session behavior | `web/lib/stores/userStore.ts` (`cascadeDependentStoreReset`), `web/contexts/AuthContext.tsx` | Trace `signOut` / `setSessionAndDerived` |
+| RLS & DB constraints | `supabase/migrations/*.sql` (repo root `supabase/`) | Read migrations; do not assume `DATABASE_SCHEMA.md` is exhaustive |
+
+---
+
+## 3. Snapshot: verified inconsistencies (April 2026)
+
+These were verified in this worktree so you can prioritize fixes without rediscovering them.
+
+### 3.1 Governance / pre-commit (`scripts/check-governance.js`)
+
+- **Issue**: `store-governance` required **`docs/ROADMAP_SINGLE_SOURCE.md`**, which **does not exist** at repo root (only under `docs/archive/...`). Any commit touching `web/lib/stores/` would demand updates to a dead path.
+- **Issue**: `api-contracts` allowed **`docs/TESTING/api-contract-plan.md`**, which **does not exist** outside **`docs/archive/reference/testing/...`**.
+- **Remediation**: Point rules at **active** files (e.g. `docs/ROADMAP.md`, `docs/STATE_MANAGEMENT.md`, `docs/API/contracts.md`, `docs/TESTING.md`, `docs/archive/release-notes/CHANGELOG.md`). *(Applied in repo alongside this roadmap.)*
+
+### 3.2 Architecture & database docs vs generated types
+
+| Historical bad claim | Ground truth (`web/types/supabase.ts`, Apr 2026) | Remediation |
+|---------------------|--------------------------------------------------|-------------|
+| “70+ tables”, “19 RPC” in old marketing copy | **93** `public.Tables`, **63** `public.Functions`, **7** `public.Views` | Diagram/counts in `docs/ARCHITECTURE.md`; **`npm run docs:surface-counts`** |
+| Hand-maintained table/RPC bullets in `DATABASE_SCHEMA.md` | Prior lists **omitted tables** and misclassified **`user_voting_history`** / **`idempotency_monitor`** as tables | **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** via **`npm run docs:public-schema-index`** |
+
+**Views**: seven under `public.Views`, including **`idempotency_monitor`**, **`user_voting_history`**, OpenStates `*_v` helpers, **`voter_registration_resources_view`**.
+
+### 3.3 Zustand stores
+
+- **Store modules** (top-level `*Store.ts` under `web/lib/stores/`, excluding `baseStoreActions.ts`, `index.ts`, `storage.ts`, `types*.ts`, `services/`): **21** files (e.g. `appStore`, `deviceStore`, `performanceStore` exist in addition to cascade stores).
+- **Logout cascade** (`userStore.ts` → `cascadeDependentStoreReset`): **17** stores—docs that say “17 stores” without qualification are **ambiguous** (readers think total store count).
+
+### 3.4 API route inventory vs `docs/API/README.md`
+
+- **Cardinality moves with the tree**—verify with `npm run docs:surface-counts` (`nextJsRouteHandlers`) and **`docs/API/inventory.md`** (`npm run docs:api-inventory`). Example: **175** handlers on 2026-04-04 in this clone.
+- `docs/API/README.md` documents a **small subset**. High-value spot checks: admin routes, civics (`/api/v1/civics/...`), auth, webhooks—folder names must equal URL segments.
+
+### 3.5 Environment template
+
+- **Remediated (Apr 2026):** Root **`README.md`** quick start tells contributors to create `web/.env.local` manually and points at **`docs/GETTING_STARTED.md`** (no `cp` from a non-existent `.env.local.example`). Optional tracked template remains **P0-5** if you want one checked in.
+
+### 3.6 Supabase CLI working directory
+
+- **Remediated (Apr 2026):** **`docs/GETTING_STARTED.md`** documents `supabase link` from **repository root** (sibling of `web/`), then returning to `web/` for `types:generate` and dev.
+
+### 3.7 Feature flag cross-reference
+
+- **Remediated in `web/` (Apr 2026):** `rg FEATURE_STATUS web/` returns no matches—live code points at **`docs/ROADMAP.md`** for quarantine / product notes. Archive-only docs may still mention `FEATURE_STATUS.md`; that is expected noise under `docs/archive/`.
+
+---
+
+## 4. Phase 0 — Fix broken references and CI/governance (P0)
+
+**Goal**: No documentation, comment, or script points at missing paths; pre-commit rules are satisfiable.
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P0-1 | Update `scripts/check-governance.js` | Triggers reference files that exist **at commit time**; message text matches actual filenames. |
+| P0-2 | Grep for **`ROADMAP_SINGLE_SOURCE`**, **`FEATURE_STATUS.md`**, **`docs/TESTING/api-contract-plan`** from non-archive code | Replace with `docs/ROADMAP.md`, canonical feature section, or `docs/TESTING.md` / archive pointer. |
+| P0-3 | Root **`README.md`** quick start | Remove or replace `cp .env.local.example`; align with `GETTING_STARTED.md` + `ENVIRONMENT_VARIABLES.md`. |
+| P0-4 | **`docs/GETTING_STARTED.md`** Supabase steps | `supabase link` / migrations / `types:generate` document correct **cwd** (repo root vs `web/`). |
+| P0-5 | Optional: add **`web/.env.local.example`** | Lists all keys **names-only** or safe placeholders; matches Zod/schema; linked from README. If you **do not** add the file, P0-3 must explicitly say “create file manually—no template committed.” |
+
+---
+
+## 5. Phase 1 — Numbers, inventories, and tables of contents (P1)
+
+**Goal**: Every numeric boast in architecture (`stores`, `tables`, `RPCs`, `routes`) is either **accurate** or **explicitly qualified** (“documented subset”, “as of last types generation”).
+
+### 5.1 Database / RPC / views
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P1-1 | **`docs/ARCHITECTURE.md`**: replace “70+ tables”, “19 RPC” | Use **generated counts** or say “see `web/types/supabase.ts` / run `scripts/…`”. Include **view** count if you mention analytics. |
+| P1-2 | **`docs/DATABASE_SCHEMA.md`**: RPC section title | Rename to **“Key RPC functions (documented subset)”** or **“RPC catalog”** with full list vs migration names; add **“Total RPCs in generated types: N”**. |
+| P1-3 | Reconcile **`calculate_trust_weighted_votes`** | Still appears in generated `Functions` in this snapshot—docs claim removal. **Either** document current DB truth **or** remove from types via migration + regen; docs and DB must **agree.** |
+| P1-4 | Scripts at repo root | **`npm run docs:surface-counts`** (JSON counts) and **`npm run docs:public-schema-index`** (full table/view/RPC lists). Optional: fold into **`npm run verify:docs`** (P5). |
+
+### 5.2 State management
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P1-5 | **`docs/ARCHITECTURE.md`**, **`docs/STATE_MANAGEMENT.md`** | Distinguish **“N Zustand store modules”** vs **“M stores in logout cascade”**; list the **4** stores (example: `userStore`, `appStore`, `deviceStore`, `performanceStore`) **not** in cascade if still true—verify in `userStore.ts`. |
+| P1-6 | **`docs/STATE_MANAGEMENT.md`** cascade list | Matches **order and names** in `cascadeDependentStoreReset` exactly. |
+
+### 5.3 API inventory
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P1-7 | **`docs/API/inventory.md`** (generated) | Table: path, methods (`npm run docs:api-inventory`); row count must match `nextJsRouteHandlers` from `docs:surface-counts` unless exclusions are documented (`route.ts` only). |
+| P1-8 | **`docs/API/README.md`** | Either **summarizes** domains and links to inventory **or** states “representative examples only—full list in inventory.” |
+| P1-9 | Spot-check high-risk areas | Admin routes, civics (`/api/v1/civics/...`), auth, webhooks—folder names = URL segments. |
+
+---
+
+## 6. Phase 2 — Behavior, security, and product logic (P2)
+
+**Goal**: Docs describe what the code **actually enforces** (RLS, rate limits, equal voting, trust-tier semantics).
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P2-1 | **RLS** | `docs/SECURITY.md` + `docs/DATABASE_SCHEMA.md`: for each **user-owned** table, note policy pattern (owner read/write, public read, admin bypass via service role). |
+| P2-2 | **Rate limiting** | Map Upstash / middleware usage to documented limits; grep `rate_limit` table + API middleware. |
+| P2-3 | **Equal voting vs trust-tier analytics** | Single canonical explanation: product surfaces vs `calculate_trust_*` analytics-only—cross-link `TRUST_LAYER.md`, `ROADMAP.md`, and code comments. |
+| P2-4 | **Feature flags** | Table: flag → default → where read (server/client) → UI entry points; remove references to missing `FEATURE_STATUS.md` or **revive** a short canonical `docs/FEATURE_FLAGS.md` fed from the same registry. |
+| P2-5 | **WebAuthn / session** | `WEBAUTHN_DESIGN.md` vs `userStore` + API routes—cookie names, logout clearing, E2E harness flags. |
+
+---
+
+## 7. Phase 3 — Testing and contracts (P3)
+
+**Goal**: What we test matches what we ship; governance “contract” files reflect reality.
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P3-1 | **`docs/TESTING.md`** | Sections for unit, integration, E2E; where API contracts are asserted; link **`docs/API/contracts.md`**. |
+| P3-2 | **`docs/API/contracts.md`** | Error shape, pagination, auth errors—grep `createErrorResponse` / shared helpers and align examples. |
+| P3-3 | Archived **`api-contract-plan.md`** | Either **extract** still-valid checklist into `TESTING.md` or mark archive as **historical only** in archive README. |
+| P3-4 | Contract tests | List each route with tests vs untested; prioritize auth and mutation routes. |
+
+---
+
+## 8. Phase 4 — Onboarding and mental models (P4)
+
+**Goal**: A new developer can answer “where do I change X?” in under five minutes.
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P4-1 | **`docs/ARCHITECTURE.md`** diagram or table | Layers: `app/` routes, `components/`, `lib/`, `contexts/`, `supabase/`, external services. |
+| P4-2 | **`AGENTS.md` / `CONTRIBUTING.md`** | Point to this roadmap when touching API, stores, or schema. |
+| P4-3 | **“Change X → file Y”** mini-index | e.g. poll creation → wizard store + API route + RLS tables; representative card → store + civics API. |
+
+---
+
+## 9. Phase 5 — Automation: prevent doc drift (P5)
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| P5-1 | `npm run verify:docs` | Runs: link checker (optional), count scripts, grep guard for removed paths (`FEATURE_STATUS` without file). |
+| P5-2 | CI job (optional) | Fails if `route.ts` count changes but `docs/API/inventory.md` not updated (allowlist or generated file committed). |
+| P5-3 | PR template | Checklist: “Updated docs/RULEMAP affected by this PR.” |
+
+---
+
+## 10. New-developer recommendations (cross-cutting)
+
+These are **process and quality** improvements beyond single files.
+
+1. **Prefer one canonical narrative**: `ROADMAP.md` for product status; `ARCHITECTURE.md` for structure; avoid duplicating full lists in multiple places—**link + summary**.
+2. **Version tricky claims**: Schema counts, store counts, and route counts should carry **“as of &lt;date&gt;, generated from &lt;artifact&gt;”**.
+3. **When archive docs contradict main docs**: add a banner at top of archive: **“Superseded by X—historical only.”**
+4. **Type generation**: After every migration PR, require **`web/types/supabase.ts`** update in the same PR—keeps DATABASE_SCHEMA honest.
+5. **Security**: Document **service role** usage—any route using `createClient` with service key must appear in SECURITY / API inventory classification.
+
+---
+
+## 11. Appendix: quick verification commands
+
+```bash
+# Repo root — canonical counts + full public schema lists
+npm run docs:surface-counts
+npm run docs:public-schema-index
+npm run docs:api-inventory
+
+# Store modules (must equal cascade narrative in docs/STATE_MANAGEMENT.md)
+ls web/lib/stores/*Store.ts 2>/dev/null | wc -l
+
+# Dead doc pointers from active source (archive excluded)
+rg -n "FEATURE_STATUS|ROADMAP_SINGLE_SOURCE|api-contract-plan" --glob '!docs/archive/**' web/
+```
+
+---
+
+## 12. Completion definition
+
+This audit is **complete** when:
+
+- **P0** items are ✅ (no broken governance targets; README/env/Supabase cwd accurate; no dead `FEATURE_STATUS` references in active code).
+- **P1** numeric and inventory claims match generated sources or are explicitly scoped.
+- **P2** security and voting/trust narratives match code paths new developers can trace.
+- **P3–P4** testing and onboarding docs reference the same contracts as production.
+- **P5** (optional but recommended) automation catches the next drift before merge.
+
+---
+
+_Maintenance: update the “Snapshot” section when you complete phases or regenerate types; bump “Last updated” at the top._

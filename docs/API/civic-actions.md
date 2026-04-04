@@ -458,11 +458,11 @@ const { data: actions } = await response.json();
 
 ---
 
-**Last Updated:** January 2025
+**Last Updated:** April 4, 2026
 
 ## Ownership & Update Cadence
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

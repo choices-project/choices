@@ -1,6 +1,6 @@
 # Environment Variables Documentation
 
-**Last Updated:** March 2026  
+**Last Updated:** April 4, 2026  
 **Status:** ✅ **ALL CRITICAL VARIABLES CONFIGURED** (Production Ready — validated by Zod schema at startup)
 
 This document lists all environment variables required for the Choices application.
@@ -214,6 +214,21 @@ web-push generate-vapid-keys
   - Set to `1` to enable maintenance mode
   - Used by: Health check endpoint
 
+### MCP Servers (Agent Context)
+
+These variables are used by MCP servers configured in `.cursor/mcp.json` for Cursor/agent workflows. They are **not** required for the application runtime.
+
+- `GOVINFO_API_KEY` (optional)
+  - GovInfo API key for bill/statute document access
+  - Used by: GovInfo MCP server (`.cursor/govinfo-mcp/`)
+  - Get from: https://api.govinfo.gov/sign-up/
+
+- `CONGRESS_API_KEY` (optional)
+  - Congress.gov API key for legislative data
+  - Used by: LegisMCP, US Gov Open Data MCP
+  - Note: Same key as `CONGRESS_GOV_API_KEY` (Congress.gov); can alias in env
+  - Get from: https://api.congress.gov/sign-up/
+
 ## Environment Variable Usage by Feature
 
 ### Civics Integration
@@ -327,6 +342,10 @@ ADMIN_MONITORING_KEY=your-admin-key
 # Privacy Peppers (Development)
 PRIVACY_PEPPER_DEV=dev-pepper-for-hmac-hashing
 
+# MCP Servers (optional; for Cursor agent context)
+# GOVINFO_API_KEY=your-govinfo-key
+# CONGRESS_API_KEY=your-congress-gov-key
+
 # Push Notifications (PWA) - Optional for development
 # Note: Public key must be set in both variables with the same value
 WEB_PUSH_VAPID_PUBLIC_KEY=your-vapid-public-key
@@ -340,5 +359,5 @@ WEB_PUSH_VAPID_SUBJECT=support@choices.dev
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

@@ -76,13 +76,13 @@
       "close": "Close menu",
       "profile": "My Profile",
       "settings": "Settings",
-      "contribute": "Help Build Democracy",
+      "contributeNav": "Help build democracy",
       "badgeNew": "New",
       "userFallback": "User",
       "contribute": {
-        "title": "Help Build Democracy",
-        "description": "This is an open source project fighting for democracy.",
-        "mission": "Every contribution helps level the playing field and expose \"bought off\" politicians.",
+        "title": "Help build democracy",
+        "description": "Choices is open source. Contributions improve transparency tools everyone can verify.",
+        "mission": "Every contribution helps more people follow public data—funding, votes, and outcomes—with clear sourcing.",
         "financialNote": {
           "label": "Note:",
           "text": "We're exploring ethical ways to accept financial contributions. For now, we focus on code and community contributions to keep the platform truly independent."
@@ -1331,7 +1331,7 @@
         "steps": {
           "findCandidates": "Find your local candidates and see who's really representing you",
           "askQuestions": "Ask questions directly to candidates and track their responses",
-          "followMoney": "See who's funding whom and spot \"bought off\" politicians",
+          "followMoney": "See who's funding whom and compare it to public votes and outcomes",
           "connectVoters": "Connect with other voters who care about democracy"
         }
       },
@@ -4167,58 +4167,58 @@
       "signup": "Get Started"
     },
     "hero": {
-      "title": "Democracy That Works",
-      "titleHighlight": "For Everyone",
-      "subtitle": "A privacy-first platform that levels the playing field for all candidates, exposes financial influence, and empowers citizens to engage directly with democracy.",
-      "ctaPrimary": "Join the Movement",
+      "title": "Civic tools grounded in",
+      "titleHighlight": "evidence",
+      "subtitle": "A privacy-first platform to explore representatives, polls, and public records—campaign finance, votes, and outcomes—with clear sourcing. You control your data; we do not sell personal information.",
+      "ctaPrimary": "Get started",
       "ctaSecondary": "Sign In"
     },
     "mission": {
-      "quote": "Citizens United broke democracy.",
-      "quoteHighlight": "We're fixing it."
+      "quote": "Money and attention shape politics.",
+      "quoteHighlight": "Transparency helps citizens respond."
     },
     "features": {
-      "heading": "Built for Democratic Equality",
-      "subheading": "Real tools for real change, designed with privacy and fairness at the core.",
+      "heading": "Built for participation and accountability",
+      "subheading": "Tools designed for privacy, equal vote tabulation in polls, and verifiable civic data.",
       "levelPlayingField": {
-        "title": "Level Playing Field",
-        "description": "Equal access for all candidates regardless of funding. Independent and third-party voices get the same reach as establishment candidates."
+        "title": "Fairer visibility for candidates",
+        "description": "Surface races and voices with less reliance on ad spend alone—while leaving outcomes to voters and public rules."
       },
       "followMoney": {
-        "title": "Follow the Money",
-        "description": "Real-time campaign finance data from FEC and OpenSecrets. See who's funding whom and identify \"bought off\" politicians."
+        "title": "Follow the money",
+        "description": "Campaign finance and disclosure data (where we integrate it) so you can compare who funds whom to documented votes and outcomes."
       },
       "directEngagement": {
-        "title": "Direct Constituent Engagement",
-        "description": "Connect directly with representatives, track their voting records, and hold them accountable to campaign promises."
+        "title": "Engage with representatives",
+        "description": "Follow public actions, petitions, and civic workflows where the product supports them—grounded in documented records."
       },
       "privacyFirst": {
-        "title": "Privacy-First Architecture",
-        "description": "GDPR/CCPA compliant with zero-knowledge principles. Your data is encrypted client-side and you control it completely."
+        "title": "Privacy-first",
+        "description": "Granular controls and strong defaults. We do not sell personal data; optional aggregate research is separate and opt-in."
       },
       "polling": {
-        "title": "Democratic Polling",
-        "description": "Participate in unbiased polls with equal voting rights. Multiple voting methods ensure fair representation of community voices."
+        "title": "Polling with equal votes",
+        "description": "Participate using several voting methods; tallies you see respect equal weight per participant in those polls."
       },
       "location": {
-        "title": "Your Electoral Landscape",
-        "description": "See all candidates and officials in your district. Location data is encrypted and hashed to protect your privacy."
+        "title": "Your electoral context",
+        "description": "District-aware features where you enable them; prefer coarse geography over precise address when verifying locally."
       }
     },
     "cta": {
-      "heading": "Ready to Take Back Democracy?",
-      "subheading": "Join the movement for transparent, accountable, and equal democratic participation.",
+      "heading": "Explore transparent civic data",
+      "subheading": "Optional verification can unlock trust signals; your personal data stays under your controls.",
       "button": "Get Started"
     },
     "footer": {
       "platformName": "Choices Platform",
       "terms": "Terms of Service",
       "privacy": "Privacy Policy",
-      "copyright": "© 2025 Choices. All rights reserved."
+      "copyright": "© 2026 Choices. All rights reserved."
     },
     "metadata": {
-      "title": "Choices - Democracy That Works For Everyone",
-      "description": "A privacy-first platform that levels the playing field for all candidates, exposes financial influence, and empowers citizens to engage directly with democracy."
+      "title": "Choices — civic participation with privacy",
+      "description": "Privacy-first tools to explore representatives, polls, and public records with sourcing. No sale of personal data; optional aggregate insights only with consent."
     }
   },
   "notFound": {

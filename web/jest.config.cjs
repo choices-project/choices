@@ -181,5 +181,7 @@ module.exports = {
     '/tests\\.disabled/',
     '/scripts\\.disabled/',
     '/archive/'
-  ]
+  ],
+  // Prevent Haste module naming collision with .next/standalone (contains duplicate package.json)
+  modulePathIgnorePatterns: ['<rootDir>/.next/standalone']
 };

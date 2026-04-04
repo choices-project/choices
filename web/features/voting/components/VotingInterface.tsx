@@ -1,14 +1,17 @@
 'use client';
 
 import { Users, Clock } from 'lucide-react'
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics'
 import { useVotingCountdown } from '@/features/voting/hooks/useVotingCountdown'
 import { useVotingIsVoting, useVotingRecords } from '@/features/voting/lib/store'
 
+import { BottomSheet } from '@/components/shared/BottomSheet'
 import { TrustTierBadge } from '@/components/shared/TrustTierBadge'
+import { Button } from '@/components/ui/button'
 
+import { useIsMobile } from '@/lib/hooks/useMediaQuery'
 import { useNotificationActions, useNotificationSettings } from '@/lib/stores/notificationStore'
 
 import { useI18n } from '@/hooks/useI18n'
@@ -22,6 +25,13 @@ import SingleChoiceVoting from './SingleChoiceVoting'
 
 type VoteResponse = { ok: boolean; id?: string; error?: string }
 type VerificationResponse = { ok: boolean; error?: string }
+
+class VoteCancelledError extends Error {
+  constructor() {
+    super('Vote cancelled')
+    this.name = 'VoteCancelledError'
+  }
+}
 
 export type VoteSubmission =
   | { method: 'single'; choice: number }
@@ -83,9 +93,17 @@ export default function VotingInterface({
   onAnalyticsEvent,
 }: VotingInterfaceProps) {
   const { t } = useI18n();
-  const storeIsVoting = useVotingIsVoting()
-  const votingRecords = useVotingRecords()
-  const timeRemaining = useVotingCountdown(poll.endtime)
+  const isMobile = useIsMobile();
+  const storeIsVoting = useVotingIsVoting();
+  const votingRecords = useVotingRecords();
+  const timeRemaining = useVotingCountdown(poll.endtime);
+
+  const [confirmSheet, setConfirmSheet] = useState<{
+    submission: VoteSubmission;
+    execute: () => Promise<VoteResponse>;
+    resolve: (result: VoteResponse) => void;
+    reject: (err: unknown) => void;
+  } | null>(null);
 
   const notificationSettings = useNotificationSettings()
   const { addNotification } = useNotificationActions()
@@ -177,107 +195,200 @@ export default function VotingInterface({
     [emitAnalytics]
   )
 
-  // Stable adapters for each child signature (NO unused params anywhere)
-  const onApproval = useCallback(
-    async (...[, approvals]: [string, string[]]) => {
-      const result = await onVote({ method: 'approval', approvals })
-      handleVoteResult(result, {
-        method: 'approval',
-        value: approvals.length,
-        metadata: { approvals }
-      })
+  const getSubmissionSummary = useCallback(
+    (submission: VoteSubmission): string => {
+      const opts = poll.options;
+      switch (submission.method) {
+        case 'single': {
+          const opt = opts[submission.choice];
+          return opt?.text ?? String(submission.choice);
+        }
+        case 'multiple': {
+          const texts = submission.selections
+            .map((i) => opts[i]?.text)
+            .filter(Boolean) as string[];
+          return texts.join(', ') || '—';
+        }
+        case 'approval': {
+          const texts = submission.approvals
+            .map((id) => opts.find((o) => o.id === id)?.text)
+            .filter(Boolean) as string[];
+          return texts.join(', ') || '—';
+        }
+        case 'ranked': {
+          const texts = submission.rankings.map(
+            (idx, i) => `${i + 1}. ${opts[idx]?.text ?? '?'}`
+          );
+          return texts.join(', ') || '—';
+        }
+        case 'range':
+        case 'quadratic':
+          return t('polls.voting.confirm.customRatings') || 'Custom ratings';
+        default:
+          return '—';
+      }
+    },
+    [poll.options, t]
+  )
+
+  const maybeConfirm = useCallback(
+    (
+      submission: VoteSubmission,
+      execute: () => Promise<VoteResponse>,
+      _context: VoteAnalyticsPayload & { method: string }
+    ): Promise<VoteResponse> => {
+      if (!isMobile) return execute();
+      return new Promise((resolve, reject) => {
+        setConfirmSheet({
+          submission,
+          execute,
+          resolve,
+          reject,
+        });
+      });
+    },
+    [isMobile]
+  )
+
+  const handleConfirmVote = useCallback(async () => {
+    if (!confirmSheet) return;
+    const { execute, resolve } = confirmSheet;
+    setConfirmSheet(null);
+    try {
+      const result = await execute();
+      resolve(result);
+    } catch (e) {
+      confirmSheet.reject(e);
+    }
+  }, [confirmSheet])
+
+  const handleCancelVote = useCallback(() => {
+    if (!confirmSheet) return;
+    confirmSheet.reject(new VoteCancelledError());
+    setConfirmSheet(null);
+  }, [confirmSheet])
+
+  const runVote = useCallback(
+    async (
+      submission: VoteSubmission,
+      context: VoteAnalyticsPayload & { method: string }
+    ) => {
+      const result = await maybeConfirm(
+        submission,
+        () => onVote(submission),
+        context
+      )
+      handleVoteResult(result, context)
       if (!result.ok) {
         notifyError(result.error ?? 'Failed to submit vote')
         throw new Error(result.error ?? 'Failed to submit vote')
       }
       notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote, t]
+    [handleVoteResult, maybeConfirm, notifyError, notifySuccess, onVote, t]
+  )
+
+  const handleVoteCatch = useCallback((err: unknown) => {
+    if (err instanceof VoteCancelledError) return
+    notifyError(err instanceof Error ? err.message : 'Failed to submit vote')
+    throw err
+  }, [notifyError])
+
+  // Stable adapters for each child signature (NO unused params anywhere)
+  const onApproval = useCallback(
+    async (...[, approvals]: [string, string[]]) => {
+      try {
+        await runVote(
+          { method: 'approval', approvals },
+          { method: 'approval', value: approvals.length, metadata: { approvals } }
+        )
+      } catch (e) {
+        handleVoteCatch(e)
+      }
+    },
+    [handleVoteCatch, runVote]
   );
 
   const onQuadratic = useCallback(
     async (...[, allocations]: [string, Record<string, number>]) => {
-      const result = await onVote({ method: 'quadratic', allocations })
-      handleVoteResult(result, {
-        method: 'quadratic',
-        value: Object.values(allocations).reduce((s, v) => s + v, 0),
-        metadata: { allocations }
-      })
-      if (!result.ok) {
-        notifyError(result.error ?? 'Failed to submit vote')
-        throw new Error(result.error ?? 'Failed to submit vote')
+      try {
+        await runVote(
+          { method: 'quadratic', allocations },
+          {
+            method: 'quadratic',
+            value: Object.values(allocations).reduce((s, v) => s + v, 0),
+            metadata: { allocations },
+          }
+        )
+      } catch (e) {
+        handleVoteCatch(e)
       }
-      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote, t]
+    [handleVoteCatch, runVote]
   );
 
   const onRange = useCallback(
     async (...[, ratings]: [string, Record<string, number>]) => {
-      const result = await onVote({ method: 'range', ratings })
-      handleVoteResult(result, {
-        method: 'range',
-        value: Object.values(ratings).reduce((s, v) => s + v, 0),
-        metadata: { ratings }
-      })
-      if (!result.ok) {
-        notifyError(result.error ?? 'Failed to submit vote')
-        throw new Error(result.error ?? 'Failed to submit vote')
+      try {
+        await runVote(
+          { method: 'range', ratings },
+          {
+            method: 'range',
+            value: Object.values(ratings).reduce((s, v) => s + v, 0),
+            metadata: { ratings },
+          }
+        )
+      } catch (e) {
+        handleVoteCatch(e)
       }
-      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote, t]
+    [handleVoteCatch, runVote]
   );
 
   const onRanked = useCallback(
     async (...[, rankings]: [string, number[]]) => {
-      const result = await onVote({ method: 'ranked', rankings })
-      handleVoteResult(result, {
-        method: 'ranked',
-        value: rankings.length,
-        metadata: { rankings }
-      })
-      if (!result.ok) {
-        notifyError(result.error ?? 'Failed to submit vote')
-        throw new Error(result.error ?? 'Failed to submit vote')
+      try {
+        await runVote(
+          { method: 'ranked', rankings },
+          { method: 'ranked', value: rankings.length, metadata: { rankings } }
+        )
+      } catch (e) {
+        handleVoteCatch(e)
       }
-      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote, t]
+    [handleVoteCatch, runVote]
   );
 
   const onSingle = useCallback(
     async (choice: number) => {
-      const result = await onVote({ method: 'single', choice })
-      handleVoteResult(result, {
-        method: 'single',
-        value: 1,
-        metadata: { choice }
-      })
-      if (!result.ok) {
-        notifyError(result.error ?? 'Failed to submit vote')
-        throw new Error(result.error ?? 'Failed to submit vote')
+      try {
+        await runVote(
+          { method: 'single', choice },
+          { method: 'single', value: 1, metadata: { choice } }
+        )
+      } catch (e) {
+        handleVoteCatch(e)
       }
-      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote, t]
+    [handleVoteCatch, runVote]
   );
 
   const onMultiple = useCallback(
     async (selections: number[]) => {
-      const result = await onVote({ method: 'multiple', selections })
-      handleVoteResult(result, {
-        method: 'multiple',
-        value: selections.length,
-        metadata: { selections }
-      })
-      if (!result.ok) {
-        notifyError(result.error ?? 'Failed to submit vote')
-        throw new Error(result.error ?? 'Failed to submit vote')
+      try {
+        await runVote(
+          { method: 'multiple', selections },
+          {
+            method: 'multiple',
+            value: selections.length,
+            metadata: { selections },
+          }
+        )
+      } catch (e) {
+        handleVoteCatch(e)
       }
-      notifySuccess(t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.')
     },
-    [handleVoteResult, notifyError, notifySuccess, onVote, t]
+    [handleVoteCatch, runVote]
   );
 
   // Normalize voting method to handle variations like 'ranked_choice' -> 'ranked'
@@ -476,6 +587,32 @@ export default function VotingInterface({
 
       {/* Voting component */}
       {renderVotingComponent()}
+
+      {/* Mobile vote confirmation */}
+      <BottomSheet
+        open={Boolean(confirmSheet)}
+        onClose={handleCancelVote}
+        title={t('polls.voting.confirm.title') || 'Confirm your vote'}
+      >
+        {confirmSheet && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {t('polls.voting.confirm.summary') || 'You selected:'}
+            </p>
+            <p className="font-medium text-foreground">
+              {getSubmissionSummary(confirmSheet.submission)}
+            </p>
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1" onClick={handleCancelVote}>
+                {t('polls.voting.confirm.cancel') || 'Cancel'}
+              </Button>
+              <Button className="flex-1" onClick={handleConfirmVote}>
+                {t('polls.voting.confirm.submit') || 'Confirm Vote'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }

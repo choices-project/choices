@@ -51,7 +51,7 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
     },
     {
       id: 'contribute',
-      label: t('navigation.menu.contribute'),
+      label: t('navigation.menu.contributeNav'),
       icon: <Heart className="w-5 h-5" />,
       action: () => setActiveSection('contribute'),
       badge: t('navigation.menu.badgeNew')

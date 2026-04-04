@@ -11,6 +11,7 @@ import {
   parseBody,
 } from '@/lib/api';
 import { FEEDBACK_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
@@ -176,7 +177,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       user_id: null,
       feedback_type: 'csp-violation',
       title: 'CSP Violation Report',
-      description: `CSP Violation: ${description}`,
+      description: `CSP Violation: ${sanitizeInput(description)}`,
       sentiment: 'negative',
       screenshot: null,
       user_journey: {},
@@ -256,8 +257,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const feedbackData = {
     user_id: user?.id ?? null,
     feedback_type: type,
-    title: title.trim(),
-    description: description.trim(),
+    title: sanitizeInput(title.trim()),
+    description: sanitizeInput(description.trim()),
     sentiment,
     screenshot: screenshot ?? null,
     user_journey: (userJourney ?? {}) as Json,

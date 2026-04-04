@@ -10,6 +10,7 @@ import { AddressLookup } from '@/features/profile/components/AddressLookup';
 import { useProfileData, useProfileExport } from '@/features/profile/hooks/use-profile';
 
 import { AuthGuard } from '@/components/business/auth/AuthGuard';
+import { BackToTop } from '@/components/shared/BackToTop';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import ProfileSubNav from '@/components/shared/ProfileSubNav';
@@ -19,7 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
-
+import { haptic } from '@/lib/haptics';
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
@@ -358,7 +359,7 @@ function ProfilePageContent() {
                 </CardDescription>
                 <div className="flex justify-center gap-3 mt-4 flex-wrap">
                   <Button
-                    onClick={handleEditProfile}
+                    onClick={() => { haptic('light'); handleEditProfile(); }}
                     variant="outline"
                     className="border-border text-foreground hover:bg-muted"
                     aria-label="Edit your profile"
@@ -367,7 +368,7 @@ function ProfilePageContent() {
                     Edit Profile
                   </Button>
                   <Button
-                    onClick={handleSettings}
+                    onClick={() => { haptic('light'); handleSettings(); }}
                     variant="outline"
                     className="border-border text-foreground hover:bg-muted"
                     aria-label="Open settings"
@@ -468,7 +469,7 @@ function ProfilePageContent() {
                     </div>
                   )}
                   <Button
-                    onClick={handleBiometricSetup}
+                    onClick={() => { haptic('light'); handleBiometricSetup(); }}
                     variant="outline"
                     className="w-full justify-start border-border text-foreground hover:bg-muted mt-4"
                     aria-label={hasCredentials ? 'Manage passkeys' : 'Set up biometric authentication'}
@@ -514,7 +515,7 @@ function ProfilePageContent() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <Button
-                    onClick={handlePrivacySettings}
+                    onClick={() => { haptic('light'); handlePrivacySettings(); }}
                     variant="outline"
                     className="justify-start border-border text-foreground hover:bg-muted"
                     aria-label="Open privacy settings"
@@ -523,7 +524,7 @@ function ProfilePageContent() {
                     Privacy Settings
                   </Button>
                   <Button
-                    onClick={handleExportData}
+                    onClick={() => { haptic('light'); handleExportData(); }}
                     variant="outline"
                     className="justify-start border-border text-foreground hover:bg-muted"
                     disabled={isExporting}
@@ -546,6 +547,8 @@ function ProfilePageContent() {
                 )}
               </CardContent>
             </Card>
+
+            <BackToTop />
           </div>
         </div>
       </ErrorBoundary>

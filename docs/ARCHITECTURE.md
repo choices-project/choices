@@ -1,6 +1,6 @@
 # Architecture Overview
 
-_Last updated: March 2026_
+_Last updated: April 4, 2026_
 
 The Choices platform is a TypeScript/React application built with the Next.js App Router and backed by Supabase. The application uses a feature-module architecture with Zustand for state management, shadcn/ui design tokens for theming, and Framer Motion for animations.
 
@@ -31,7 +31,7 @@ The Choices platform is a TypeScript/React application built with the Next.js Ap
                   ▼
 ┌──────────────────────────────────────────────────────┐
 │ Supabase                                             │
-│ ├─ PostgreSQL (70+ tables, 19 RPC functions)         │
+│ ├─ PostgreSQL (~93 public tables, 7 views, ~63 RPCs)   │
 │ ├─ Row Level Security policies                       │
 │ ├─ Auth (email, OAuth, WebAuthn/passkeys)            │
 │ ├─ Storage buckets                                   │
@@ -67,7 +67,7 @@ Choices/
 │   │   ├── auth/               # Auth components
 │   │   └── share/              # Social sharing
 │   ├── lib/                    # Shared libraries
-│   │   ├── stores/             # Zustand state management (17 stores)
+│   │   ├── stores/             # Zustand (~21 store modules; see cascade note below)
 │   │   ├── api/                # API client and response helpers
 │   │   ├── config/             # Environment validation (Zod)
 │   │   ├── core/               # Feature flags, database optimizer
@@ -80,6 +80,7 @@ Choices/
 │   │   └── charts/             # Recharts wrappers
 │   ├── messages/               # i18n translation files
 │   ├── hooks/                  # Shared custom hooks
+│   ├── scripts/                # Operational scripts (ingest, audits, CI helpers)
 │   ├── tests/                  # Jest + Playwright test suites
 │   └── types/                  # TypeScript type definitions
 ├── supabase/                   # Database migrations
@@ -110,8 +111,8 @@ features/[name]/
 
 Zustand stores follow the creator pattern with Immer middleware. See [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) for the full guide.
 
-- **17 stores** covering auth, profile, polls, feeds, analytics, admin, notifications, voting, contacts, hashtags, onboarding, representatives, elections, PWA, widgets, poll wizard, and voter registration
-- All stores reset on logout via a cascade from `userStore.signOut()`
+- **Store modules** — About twenty-one Zustand stores live under `web/lib/stores/`. On logout / auth clear, `userStore` calls `cascadeDependentStoreReset()`, which resets **17** dependent stores (profile, admin, polls, feeds, analytics, hashtag, voting, contact, notification, onboarding, representative, election, PWA, widget, poll wizard, voter registration, hashtag moderation). **`userStore`** clears its own session state first; **`appStore`**, **`deviceStore`**, and **`performanceStore`** are not part of that cascade—extend the cascade if a store caches user-scoped data and must empty on sign-out.
+- Add new user-scoped stores to the cascade in `web/lib/stores/userStore.ts` (or subscribe to auth) as described in [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md).
 - Selectors + action hooks prevent unnecessary re-renders
 
 ### Design System
@@ -161,10 +162,10 @@ All API routes live under `web/app/api/*` and follow consistent patterns:
 
 ### Database
 
-- **70+ tables** with RLS policies on user-facing tables
-- **19 RPC functions** for complex queries
+- **~93 public tables** and **7 views** in generated types (`web/types/supabase.ts`); **~63 RPC** entries under `public.Functions` (exact counts: `node scripts/doc-surface-counts.mjs` from repo root)
+- **RLS** on user-facing tables (see migrations and schema doc)
 - **Migrations** managed via `supabase/migrations/`
-- **Generated types** in `web/types/supabase.ts` (run `npm run types:generate` after schema changes)
+- **Generated types** in `web/types/supabase.ts` (from `web/`: `npm run types:generate` after schema changes)
 
 ### Security
 

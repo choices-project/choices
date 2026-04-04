@@ -7,6 +7,7 @@ import { UnifiedFeedRefactored } from '@/features/feeds';
 import { useFormattedDistrict } from '@/features/profile/hooks/useUserDistrict';
 
 import { AuthGuard } from '@/components/business/auth/AuthGuard';
+import { BackToTop } from '@/components/shared/BackToTop';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { FeedSkeleton } from '@/components/shared/Skeletons';
 
@@ -143,6 +144,7 @@ export default function FeedContent() {
               }}
             />
           </Suspense>
+          <BackToTop />
         </div>
       </ErrorBoundary>
     </AuthGuard>

@@ -1,6 +1,6 @@
 # Deployment Guide
 
-_Last updated: February 2026_
+_Last updated: April 4, 2026_
 
 ## Purpose
 Use this guide as the single source of truth for shipping the Choices web application. It covers the required checks, how to move a release from local verification to production, and where to look if something goes wrong.
@@ -99,7 +99,8 @@ Use this list **before** calling a release done. Link back to the relevant evide
 
 - [ ] **Inclusive UI / A11y** — Automation (`npm run test:e2e -- --grep @axe`, navigation + analytics SR specs) green; document manual NVDA/VoiceOver smoke in a repo runbook or under `docs/archive/` as needed.
 - [ ] **Locale Coverage** — Locale-switch Playwright spec green; `npm run i18n:extract` snapshot committed; copy changes translated per `docs/archive/reference/technical/technical/i18n-workflow.md` or workflow documented in `docs/ROADMAP.md`.
-- [ ] **Contract & Harness Parity** — `npm run test:contracts` green; any new routes documented in `docs/API/contracts.md` and `docs/archive/reference/testing/TESTING/api-contract-plan.md`; MSW fixtures updated.
+- [ ] **Contract & Harness Parity** — `npm run test:contracts` green; any new routes reflected in `docs/API/contracts.md` and regenerated [`docs/API/inventory.md`](API/inventory.md) (`npm run docs:api-inventory` from repo root); historical contract matrices live under `docs/archive/reference/testing/`. MSW fixtures updated.
+- [ ] **Schema docs (when migrations ship)** — `web/types/supabase.ts` regenerated; commit refreshed [`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) via `npm run docs:public-schema-index`; optional sanity: `npm run docs:surface-counts`.
 - [ ] **Documentation** — Architecture/API docs reflect new selectors, middleware, or response envelopes (`docs/STATE_MANAGEMENT.md`, `docs/API/contracts.md`, etc.).
 - [ ] **Release Notes & Comms** — `docs/archive/release-notes/CHANGELOG.md` (or relevant release note) updated; support + partner teams notified of API schema or analytics changes.
 - [ ] **Audit Scheduling** — Upcoming SR + locale audit owners/date confirmed in `docs/ROADMAP.md` or a runbook under `docs/archive/` as needed.
@@ -121,5 +122,5 @@ Use this list **before** social or public outreach (e.g. announcing the repo, in
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

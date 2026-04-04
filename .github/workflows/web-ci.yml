@@ -105,6 +105,9 @@ jobs:
       - name: Locale lint (blocking)
         run: npm run lint:locale
 
+      - name: Validate locale keys (missing-key check)
+        run: npm run i18n:validate
+
       - name: Contract tests
         run: npm run test:contracts
 

@@ -168,29 +168,29 @@ export class OfflineOutbox {
   }
 
   /**
-   * Sync a single vote
+   * Sync a single vote.
+   * Sends JSON body: single option uses optionId; multiple use approvals.
    */
   private async syncVote(vote: OfflineVote): Promise<void> {
-    const formData = new FormData()
-    formData.append('pollId', vote.pollId)
-    formData.append('optionIds', JSON.stringify(vote.optionIds))
-    formData.append('anonymous', vote.anonymous.toString())
+    const body =
+      vote.optionIds.length === 1
+        ? { optionId: vote.optionIds[0] }
+        : { approvals: vote.optionIds };
 
     const response = await fetch(`/api/polls/${vote.pollId}/vote`, {
       method: 'POST',
-      body: formData,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const result = await response.json()
-    if (!result.success) {
-      throw new Error(result.message || 'Vote failed')
+    const result = await response.json();
+    if (!result.success && result?.data === undefined) {
+      throw new Error(result?.error ?? result?.message ?? 'Vote failed');
     }
   }
 

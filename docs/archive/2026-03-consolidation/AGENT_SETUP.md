@@ -71,6 +71,28 @@ Use for: Vercel docs search, list projects/deployments, deployment logs, rollbac
 
 **Disable `deploy_to_vercel`:** Deployments are triggered by pushes to `main` (CI/CD). In **Cursor Settings → Tools & MCP → Vercel**, turn **off** the `deploy_to_vercel` tool so agents cannot deploy via MCP.
 
+### GovInfo MCP
+
+GovInfo MCP (project: `.cursor/govinfo-mcp/`) provides access to U.S. government documents (bills, statutes, regulations) via GovInfo API. Runs locally; requires `GOVINFO_API_KEY`.
+
+### LegisMCP (P1)
+
+[LegisMCP](https://legismcp.com/) — Open-source legislative MCP with 134 tools across 24 government sources (Congress.gov, FEC, FDA, SEC, EPA, etc.). Complements GovInfo for bills, voting records, campaign finance, lobbying.
+
+**Setup:** Run `cd .cursor/mcp-servers && npm install` (pre-installed to avoid npx cache issues). Requires `CONGRESS_API_KEY` (free from Congress.gov).
+
+### Playwright MCP (P1)
+
+[@playwright/mcp](https://www.npmjs.com/package/@playwright/mcp) — Official Microsoft MCP for browser automation via accessibility snapshots. Use for E2E test generation, debugging flaky specs, exploring the app.
+
+**Setup:** Pre-installed in `.cursor/mcp-servers`. Install browsers: `cd web && npx playwright install chromium`.
+
+### US Government Open Data MCP (P2)
+
+[US Gov Open Data MCP](https://lzinga.github.io/us-gov-open-data-mcp/) — 322 tools across 41 federal APIs (Treasury, FRED, Congress, FEC, CDC, FDA, SEC, EPA, etc.). Cross-referenced queries; TypeScript SDK available.
+
+**Setup:** Pre-installed in `.cursor/mcp-servers`. Optional `CONGRESS_API_KEY` for Congress/FEC modules.
+
 ---
 
 ## 3. Cursor rules
@@ -107,4 +129,8 @@ Ensure that file exists and is populated.
 | MCP config | `~/.cursor/mcp.json` or `.cursor/mcp.json` |
 | Supabase MCP | `https://mcp.supabase.com/mcp?project_ref=...` |
 | Vercel MCP | `https://mcp.vercel.com` |
+| GovInfo MCP | Local command; `.cursor/govinfo-mcp/` |
+| LegisMCP | `npx -y legismcp`; CONGRESS_API_KEY |
+| Playwright MCP | `npx @playwright/mcp@latest` |
+| US Gov Open Data MCP | `npx -y us-gov-open-data-mcp` |
 | Rules | `.cursor/rules/projectruleschoices.mdc` |

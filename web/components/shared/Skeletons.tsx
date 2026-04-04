@@ -232,6 +232,82 @@ export function TrendingPollsSkeleton() {
   );
 }
 
+export function ContactThreadSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-start justify-between">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+        <div className="flex items-center gap-4 pt-2">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-9 w-24" />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ContactThreadListSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-4" role="status" aria-live="polite" aria-busy="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <ContactThreadSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+export function HashtagDisplaySkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-4" role="status" aria-live="polite" aria-busy="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-8 rounded" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+          <Skeleton className="h-8 w-20 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function HashtagTrendingSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-4" role="status" aria-live="polite" aria-busy="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+          <div className="space-y-1 text-right">
+            <Skeleton className="h-4 w-16 ml-auto" />
+            <Skeleton className="h-3 w-12 ml-auto" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function CivicActionDetailSkeleton() {
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8" aria-label="Loading..." role="status">

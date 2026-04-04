@@ -34,18 +34,18 @@ type AlwaysEnabledFlag = typeof ALWAYS_ENABLED_FLAGS[number];
 const ALWAYS_ENABLED_SET = new Set<string>(ALWAYS_ENABLED_FLAGS);
 
 export const FEATURE_FLAGS = {
-  /** @deprecated @quarantined No implementation. See docs/FEATURE_STATUS.md § Feature Quarantine. */
+  /** @deprecated @quarantined No implementation. See docs/ROADMAP.md (quarantine / feature notes). */
   AUTOMATED_POLLS: false,
   SOCIAL_SHARING: false,
   SOCIAL_SHARING_POLLS: false,
-  /** @deprecated @quarantined No civics-specific sharing surfaces. See docs/FEATURE_STATUS.md. */
+  /** @deprecated @quarantined No civics-specific sharing surfaces. See docs/ROADMAP.md (quarantine / feature notes). */
   SOCIAL_SHARING_CIVICS: false,
-  /** @deprecated @quarantined No OG/visual pipeline. See docs/FEATURE_STATUS.md. */
+  /** @deprecated @quarantined No OG/visual pipeline. See docs/ROADMAP.md (quarantine / feature notes). */
   SOCIAL_SHARING_VISUAL: false,
-  /** @deprecated @quarantined No OG/visual pipeline. See docs/FEATURE_STATUS.md. */
+  /** @deprecated @quarantined No OG/visual pipeline. See docs/ROADMAP.md (quarantine / feature notes). */
   SOCIAL_SHARING_OG: false,
   CONTACT_INFORMATION_SYSTEM: true, // GA: RLS, rate limits, admin UI, My Submissions, bulk approve/reject
-  /** @deprecated @quarantined No automated civics validation. See docs/FEATURE_STATUS.md. */
+  /** @deprecated @quarantined No automated civics validation. See docs/ROADMAP.md (quarantine / feature notes). */
   CIVICS_TESTING_STRATEGY: false,
   PUSH_NOTIFICATIONS: true, // ✅ ENABLED - Production ready (January 2025)
   CIVIC_ENGAGEMENT_V2: true, // Shipped: API + UI on rep detail; CivicActionList with create/sign

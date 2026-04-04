@@ -1,6 +1,6 @@
 # API Response Guide
 
-_Last updated: February 2026_
+_Last updated: April 4, 2026_
 
 Standard patterns for API responses in the Choices platform. All routes should use helpers from `@/lib/api/response-utils`.
 

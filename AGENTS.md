@@ -51,3 +51,4 @@ Refer to `web/package.json` scripts and `docs/TESTING.md` for the full list.
 - Tests that require real Supabase (registration, poll creation with credentials) should `test.skip()` when `PLAYWRIGHT_USE_MOCKS=1`.
 - Security audit uses `scripts/audit-high.js` with documented allowlist for known Next.js 14 advisories (mitigated by Vercel deployment). Entries have expiration dates.
 - Some Jest test failures (e.g., in `tests/integration/feeds/`, `tests/unit/supabase/`) are pre-existing and not caused by environment setup.
+- **MCP servers** (LegisMCP, Playwright, US Gov Open Data): Run `cd .cursor/mcp-servers && npm install` after clone. If npx cache errors occur, use `npm_config_cache=/tmp/npm-mcp-cache npm install`. See `docs/archive/2026-03-consolidation/AGENT_SETUP.md`.

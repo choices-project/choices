@@ -1345,6 +1345,11 @@
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
     "register": "Crear cuenta",
+    "signIn": "Iniciar sesión",
+    "feed": "Feed",
+    "analytics": "Analítica",
+    "account": "Cuenta",
+    "representatives": "Representantes",
     "languageSelector": {
       "live": {
         "changed": "Idioma establecido en {language}.",
@@ -1360,13 +1365,13 @@
       "close": "Cerrar menú",
       "profile": "Mi Perfil",
       "settings": "Configuración",
-      "contribute": "Ayuda a Construir la Democracia",
+      "contributeNav": "Ayuda a construir la democracia",
       "badgeNew": "Nuevo",
       "userFallback": "Usuario",
       "contribute": {
-        "title": "Ayuda a Construir la Democracia",
-        "description": "Este es un proyecto de código abierto que lucha por la democracia.",
-        "mission": "Cada contribución ayuda a nivelar el campo de juego y exponer a políticos \"comprados\".",
+        "title": "Ayuda a construir la democracia",
+        "description": "Choices es de código abierto. Las contribuciones mejoran herramientas de transparencia que todos pueden verificar.",
+        "mission": "Cada contribución ayuda a más personas a seguir datos públicos—financiamiento, votos y resultados—con fuentes claras.",
         "financialNote": {
           "label": "Nota:",
           "text": "Estamos explorando formas éticas de aceptar contribuciones financieras. Por ahora, nos enfocamos en contribuciones de código y comunidad para mantener la plataforma verdaderamente independiente."
@@ -2008,6 +2013,16 @@
           "title": "Protección de datos",
           "description": "Todos los datos están cifrados, anonimizados y nunca se venden. Puedes eliminar tu información en cualquier momento."
         }
+      },
+      "controls": {
+        "title": "Tus controles de privacidad",
+        "location": "Permitir ubicación (aproximada al nivel de estado)",
+        "demographics": "Compartir datos demográficos para una mejor experiencia",
+        "analytics": "Compartir analíticas para mejorar la plataforma"
+      },
+      "actions": {
+        "back": "Volver",
+        "continue": "Continuar"
       }
     },
     "demographics": {
@@ -2066,6 +2081,10 @@
       }
     },
     "profile": {
+      "step": {
+        "title": "Completa tu perfil",
+        "subtitle": "Ayúdanos a personalizar tu experiencia (opcional)"
+      },
       "test": {
         "title": "Configuración de Perfil",
         "subtitle": "Configura la información de tu perfil"
@@ -2117,9 +2136,30 @@
           "error": "El nombre para mostrar es obligatorio",
           "howWeUse": "**Cómo lo usamos:** Muestra tu nombre cuando haces preguntas a candidatos o comentas sobre temas. Puedes usar tu nombre real, un seudónimo o dejarlo en blanco para permanecer anónimo."
         },
+        "bio": {
+          "label": "Biografía (opcional)",
+          "placeholder": "Describe brevemente quién eres (opcional)"
+        },
         "visibility": {
           "label": "Visibilidad del Perfil",
           "howWeUse": "**Cómo lo usamos:** Controla quién puede ver tu perfil y actividad. Elige lo que te resulte cómodo - siempre puedes cambiar esto más tarde."
+        }
+      },
+      "participation": {
+        "label": "¿Cómo prefieres participar?",
+        "options": {
+          "observer": {
+            "label": "Observador",
+            "description": "Prefiero leer e informarme"
+          },
+          "contributor": {
+            "label": "Contribuidor",
+            "description": "Me gusta compartir ideas"
+          },
+          "leader": {
+            "label": "Líder",
+            "description": "Quiero impulsar discusiones"
+          }
         }
       },
       "visibility": {
@@ -2189,6 +2229,27 @@
         "continue": "Continuar"
       }
     },
+    "userOnboarding": {
+      "welcome": {
+        "title": "¡Te damos la bienvenida a Civismo!",
+        "description": "Personalicemos tu experiencia encontrando a tus representantes locales. Así te mostraremos la información política más relevante.",
+        "findRepresentatives": "Buscar a mis representantes",
+        "skipToGeneral": "Omitir: mostrar representantes generales"
+      },
+      "findRepresentatives": {
+        "title": "Encuentra a tus representantes",
+        "description": "Introduce tu dirección para ver a tus funcionarios electos locales",
+        "addressLabel": "Dirección",
+        "addressHint": "(solo para encontrar tu distrito; no se guarda)",
+        "addressPlaceholder": "Introduce tu dirección completa",
+        "findButton": "Buscar representantes",
+        "finding": "Buscando..."
+      },
+      "searching": {
+        "title": "Buscando a tus representantes",
+        "description": "Estamos buscando a tus funcionarios electos locales..."
+      }
+    },
     "auth": {
       "test": {
         "title": "Configuración de Autenticación",
@@ -2198,6 +2259,11 @@
         "title": "Protege Tu Cuenta",
         "subtitle": "Elige cómo te gustaría autenticarte. Siempre puedes cambiar esto más tarde.",
         "continueWith": "Continuar con {method}"
+      },
+      "alreadySignedIn": {
+        "subtitle": "Has iniciado sesión con {label}.",
+        "continueHint": "Tu cuenta está protegida. Puedes añadir una clave de acceso más tarde en Perfil → Configurar inicio biométrico.",
+        "continue": "Continuar"
       },
       "setup": {
         "title": "Configurar Autenticación",
@@ -2226,6 +2292,7 @@
         "webauthn": {
           "title": "Clave de Acceso",
           "description": "Autenticación biométrica segura",
+          "recommended": "(Recomendado)",
           "bullets": {
             "biometric": "Huella dactilar/Reconocimiento facial",
             "noPassword": "Sin contraseñas",
@@ -2280,6 +2347,7 @@
         "github": "GitHub",
         "cardTitle": "Autenticación Social",
         "cardDescription": "Elige tu proveedor de inicio de sesión social preferido",
+        "helper": "Rápido y sencillo",
         "actions": {
           "continueWithGoogle": "Continuar con Google",
           "continueWithGitHub": "Continuar con GitHub"
@@ -2318,6 +2386,15 @@
         },
         "actions": {
           "continue": "Continuar de Forma Anónima"
+        },
+        "note": "Puedes empezar sin cuenta, con funciones limitadas."
+      },
+      "reason": {
+        "title": "¿Por qué necesitamos autenticación?",
+        "items": {
+          "save": "Guardar tus preferencias e historial de votos",
+          "personalized": "Mostrarte contenido personalizado",
+          "secure": "Mantener tus datos seguros y privados"
         }
       },
       "errors": {
@@ -2327,7 +2404,9 @@
       },
       "actions": {
         "continue": "Continuar",
-        "back": "Volver"
+        "back": "Volver",
+        "backToOptions": "Volver a las opciones",
+        "skip": "Omitir por ahora"
       }
     },
     "values": {
@@ -2466,6 +2545,24 @@
         "subtitle": "Ya estás listo para hacer oír tu voz.",
         "celebration": "🎉 ¡Incorporación completada! +50 puntos obtenidos"
       },
+      "dashboard": {
+        "title": "Tu panel personalizado",
+        "cards": {
+          "representatives": {
+            "title": "Tus representantes",
+            "description": "Según tu ubicación: {state}",
+            "fallback": "No especificado"
+          },
+          "polls": {
+            "title": "Encuestas relevantes",
+            "description": "Encuestas acordes con tus intereses"
+          },
+          "finance": {
+            "title": "Financiación de campañas",
+            "description": "Consulta quién financia las campañas"
+          }
+        }
+      },
       "summary": {
         "title": "Resumen de Tu Perfil",
         "userFallback": "Usuario",
@@ -2491,7 +2588,7 @@
         "steps": {
           "findCandidates": "Encuentra a tus candidatos locales y descubre quién realmente te representa",
           "askQuestions": "Haz preguntas directamente a los candidatos y sigue sus respuestas",
-          "followMoney": "Ve quién financia a quién y detecta políticos \"comprados\"",
+          "followMoney": "Ve quién financia a quién y compáralo con votos y resultados públicos",
           "connectVoters": "Conecta con otros votantes que se preocupan por la democracia"
         }
       },
@@ -2528,7 +2625,10 @@
       "actions": {
         "back": "Volver",
         "complete": "Completar Configuración",
-        "saving": "Guardando tu perfil..."
+        "saving": "Guardando tu perfil...",
+        "findRepresentatives": "Buscar a mis representantes",
+        "browsePolls": "Ver encuestas actuales",
+        "exploreFeatures": "Explorar todas las funciones"
       }
     }
   },
@@ -3879,58 +3979,58 @@
       "signup": "Comenzar"
     },
     "hero": {
-      "title": "Democracia Que Funciona",
-      "titleHighlight": "Para Todos",
-      "subtitle": "Una plataforma que prioriza la privacidad, nivela el campo de juego para todos los candidatos, expone la influencia financiera y empodera a los ciudadanos para participar directamente en la democracia.",
-      "ctaPrimary": "Únete al Movimiento",
+      "title": "Herramientas cívicas basadas en",
+      "titleHighlight": "evidencia",
+      "subtitle": "Una plataforma centrada en la privacidad para explorar representantes, encuestas y registros públicos—financiamiento de campañas, votos y resultados—con fuentes claras. Tú controlas tus datos; no vendemos información personal.",
+      "ctaPrimary": "Comenzar",
       "ctaSecondary": "Iniciar Sesión"
     },
     "mission": {
-      "quote": "Citizens United rompió la democracia.",
-      "quoteHighlight": "Nosotros la estamos arreglando."
+      "quote": "El dinero y la atención moldean la política.",
+      "quoteHighlight": "La transparencia ayuda a la ciudadanía a responder."
     },
     "features": {
-      "heading": "Construida para la Igualdad Democrática",
-      "subheading": "Herramientas reales para un cambio real, diseñadas con privacidad y equidad en el núcleo.",
+      "heading": "Pensada para la participación y la rendición de cuentas",
+      "subheading": "Herramientas con privacidad, recuento igualitario en encuestas y datos cívicos verificables.",
       "levelPlayingField": {
-        "title": "Campo de Juego Nivelado",
-        "description": "Acceso igualitario para todos los candidatos independientemente de su financiamiento. Las voces independientes y de terceros obtienen el mismo alcance que los candidatos del establishment."
+        "title": "Mayor visibilidad más equilibrada",
+        "description": "Mostrar contiendas y voces con menos dependencia solo de gasto en anuncios—los resultados siguen en manos de la ciudadanía y las reglas públicas."
       },
       "followMoney": {
-        "title": "Sigue el Dinero",
-        "description": "Datos en tiempo real de financiamiento de campañas de FEC y OpenSecrets. Ve quién está financiando a quién e identifica a políticos \"comprados\"."
+        "title": "Seguir el dinero",
+        "description": "Datos de financiamiento y divulgación (cuando los integramos) para comparar quién financia a quién con votos y resultados documentados."
       },
       "directEngagement": {
-        "title": "Participación Directa de Constituyentes",
-        "description": "Conéctate directamente con representantes, rastrea sus registros de votación y hazlos responsables de sus promesas de campaña."
+        "title": "Participación con representantes",
+        "description": "Seguir acciones públicas, peticiones y flujos cívicos donde el producto los ofrece, anclados en registros documentados."
       },
       "privacyFirst": {
-        "title": "Arquitectura que Prioriza la Privacidad",
-        "description": "Compatible con GDPR/CCPA con principios de conocimiento cero. Tus datos se cifran del lado del cliente y tú los controlas completamente."
+        "title": "Privacidad primero",
+        "description": "Controles granulares y valores por defecto restrictivos. No vendemos datos personales; la investigación agregada opcional es aparte y bajo consentimiento."
       },
       "polling": {
-        "title": "Encuestas Democráticas",
-        "description": "Participa en encuestas imparciales con derechos de voto equitativos. Múltiples métodos de votación aseguran una representación justa de las voces de la comunidad."
+        "title": "Encuestas con votos iguales",
+        "description": "Varios métodos de votación; los totales que ves respetan el mismo peso por participante en esas encuestas."
       },
       "location": {
-        "title": "Tu Panorama Electoral",
-        "description": "Ve todos los candidatos y funcionarios en tu distrito. Los datos de ubicación se cifran y se procesan con hash para proteger tu privacidad."
+        "title": "Contexto electoral",
+        "description": "Funciones por distrito cuando las activas; preferir geografía amplia frente a dirección exacta al verificar localmente."
       }
     },
     "cta": {
-      "heading": "¿Listo para Recuperar la Democracia?",
-      "subheading": "Únete al movimiento por una participación democrática transparente, responsable e igualitaria.",
+      "heading": "Explora datos cívicos transparentes",
+      "subheading": "La verificación opcional puede desbloquear señales de confianza; tus datos personales siguen bajo tu control.",
       "button": "Comenzar"
     },
     "footer": {
       "platformName": "Plataforma Choices",
       "terms": "Términos de Servicio",
       "privacy": "Política de Privacidad",
-      "copyright": "© 2025 Choices. Todos los derechos reservados."
+      "copyright": "© 2026 Choices. Todos los derechos reservados."
     },
     "metadata": {
-      "title": "Choices - Democracia Que Funciona Para Todos",
-      "description": "Una plataforma que prioriza la privacidad, nivela el campo de juego para todos los candidatos, expone la influencia financiera y empodera a los ciudadanos para participar directamente en la democracia."
+      "title": "Choices — participación cívica con privacidad",
+      "description": "Herramientas centradas en la privacidad para explorar representantes, encuestas y registros públicos con fuentes. Sin venta de datos personales; información agregada opcional solo con consentimiento."
     }
   }
 }

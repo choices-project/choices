@@ -10,6 +10,7 @@ import {
   parseBody,
 } from '@/lib/api';
 import { MODERATION_REPORT_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -43,9 +44,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     .insert({
       reporter_id: user.id,
       target_type: payload.target_type,
-      target_id: payload.target_id,
-      reason: payload.reason,
-      details: payload.details ?? null,
+      target_id: sanitizeInput(String(payload.target_id).trim()),
+      reason: sanitizeInput(String(payload.reason).trim()),
+      details: payload.details ? sanitizeInput(String(payload.details).trim()) : null,
       metadata: payload.metadata ?? {},
       status: 'open',
     })

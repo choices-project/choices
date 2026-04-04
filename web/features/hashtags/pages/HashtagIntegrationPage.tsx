@@ -3,6 +3,10 @@
 import { Hash, TrendingUp, Users, Search, BarChart3, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { BackToTop } from '@/components/shared/BackToTop';
+import { HashtagDisplaySkeleton, HashtagTrendingSkeleton } from '@/components/shared/Skeletons';
+
+import { haptic } from '@/lib/haptics';
 import logger from '@/lib/utils/logger';
 
 import { HashtagAnalytics } from '../components/HashtagAnalytics';
@@ -48,6 +52,7 @@ export default function HashtagIntegrationPage() {
   };
 
   const handleFollowHashtag = async (hashtagId: string) => {
+    haptic('light');
     const success = await followHashtagAction(hashtagId);
     if (success) {
       logger.info('Successfully followed hashtag');
@@ -56,6 +61,7 @@ export default function HashtagIntegrationPage() {
   };
 
   const handleUnfollowHashtag = async (hashtagId: string) => {
+    haptic('light');
     const success = await unfollowHashtagAction(hashtagId);
     if (success) {
       logger.info('Successfully unfollowed hashtag');
@@ -105,7 +111,7 @@ export default function HashtagIntegrationPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => { haptic('light'); setActiveTab(tab.id as any); }}
                   className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -255,11 +261,7 @@ export default function HashtagIntegrationPage() {
                 Display hashtags with stats and interactive features.
               </p>
               {isLoading ? (
-                <div className="animate-pulse space-y-4">
-                  <div className="h-20 bg-gray-200 rounded" />
-                  <div className="h-20 bg-gray-200 rounded" />
-                  <div className="h-20 bg-gray-200 rounded" />
-                </div>
+                <HashtagDisplaySkeleton count={5} />
               ) : (
                 <HashtagDisplay
                   hashtags={hashtags}
@@ -309,11 +311,7 @@ export default function HashtagIntegrationPage() {
                 Real-time trending hashtags with growth metrics.
               </p>
               {isLoading ? (
-                <div className="animate-pulse space-y-4">
-                  <div className="h-24 bg-gray-200 rounded" />
-                  <div className="h-24 bg-gray-200 rounded" />
-                  <div className="h-24 bg-gray-200 rounded" />
-                </div>
+                <HashtagTrendingSkeleton count={5} />
               ) : (
                 <TrendingHashtagDisplay
                   trendingHashtags={trendingHashtags}
@@ -330,6 +328,8 @@ export default function HashtagIntegrationPage() {
             <HashtagAnalytics refreshInterval={30000} />
           </div>
         )}
+
+        <BackToTop />
       </div>
     </div>
   );

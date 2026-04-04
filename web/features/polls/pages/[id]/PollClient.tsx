@@ -8,6 +8,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 import ReportModal from '@/features/moderation/components/ReportModal';
 import { IntegrityBadge } from '@/features/polls/components/IntegrityBadge';
+import { PollActivitySparkline } from '@/features/polls/components/PollActivitySparkline';
+import { PollOptionComparison } from '@/features/polls/components/PollOptionComparison';
+import { VoteAuditPanel } from '@/features/polls/components/VoteAuditPanel';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 // Vote Milestones - Commented out per user request
 // import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
@@ -19,6 +22,8 @@ import {
 } from '@/features/voting/lib/pollAdapters';
 import { useVotingActions, useVotingError, useVotingIsVoting } from '@/features/voting/lib/store';
 
+import { AnimatedVoteBar } from '@/components/shared/AnimatedVoteBar';
+import { BackToTop } from '@/components/shared/BackToTop';
 import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -48,6 +53,7 @@ import { logger } from '@/lib/utils/logger';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/hooks/useI18n';
+import { useOptimisticMultiVote } from '@/hooks/useOptimisticMultiVote';
 import { useOptimisticVote } from '@/hooks/useOptimisticVote';
 
 type VotingStatusMessage = {
@@ -590,16 +596,6 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const integrityInfo = results?.integrity;
 
-  const topOption = useMemo(() => {
-    if (normalizedOptions.length === 0) return null;
-    return normalizedOptions.reduce((currentTop, option) => {
-      if (!currentTop || option.votes > currentTop.votes) {
-        return option;
-      }
-      return currentTop;
-    }, normalizedOptions[0]);
-  }, [normalizedOptions]);
-
   // pollStatus and canVote are already defined above
   const participationCount = typeof poll.participation === 'number' ? poll.participation : 0;
   const privacyLabel = PRIVACY_LABELS[poll.privacyLevel ?? 'public'] ?? (poll.privacyLevel ?? 'Public');
@@ -777,6 +773,14 @@ export default function PollClient({ poll }: PollClientProps) {
   }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, announce, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
 
   const isSingleChoice = (poll.votingMethod ?? 'single') === 'single';
+  const isApprovalOrMultiple =
+    (poll.votingMethod ?? 'single') === 'approval' || (poll.votingMethod ?? 'single') === 'multiple';
+  const pollWithMulti = poll as { userApprovalVote?: string[]; userMultipleVote?: number[] };
+  const userMultiVote: string[] | null =
+    pollWithMulti.userApprovalVote ??
+    (Array.isArray(pollWithMulti.userMultipleVote)
+      ? pollWithMulti.userMultipleVote.map((i) => normalizedOptions[i]?.id ?? String(i)).filter(Boolean)
+      : null);
   const {
     optimisticData,
     vote: optimisticVote,
@@ -799,8 +803,72 @@ export default function PollClient({ poll }: PollClientProps) {
     },
   });
 
+  const {
+    optimisticData: optimisticMultiData,
+    vote: optimisticMultiVote,
+    isVoting: isOptimisticMultiVoting,
+  } = useOptimisticMultiVote({
+    pollId: poll.id,
+    options: normalizedOptions,
+    totalVotes: computedTotalVotes,
+    userVote: hasVoted && userMultiVote ? userMultiVote : null,
+    submitVote: async (_pollId: string, optionIds: string[]) => {
+      const method = (poll.votingMethod ?? 'single') as 'approval' | 'multiple';
+      const result =
+        method === 'approval'
+          ? await handleVote({ method: 'approval', approvals: optionIds } as VoteSubmission)
+          : await handleVote({
+              method: 'multiple',
+              selections: optionIds.map((id) => normalizedOptions.findIndex((o) => o.id === id)).filter((i) => i >= 0),
+            } as VoteSubmission);
+      if (!result.ok) {
+        throw new Error(result.error ?? 'Vote failed');
+      }
+      return { success: true };
+    },
+  });
+
   const displayTotalVotes =
-    optimisticData.userVote !== null ? optimisticData.totalVotes : computedTotalVotes;
+    isSingleChoice && optimisticData.userVote !== null
+      ? optimisticData.totalVotes
+      : isApprovalOrMultiple && optimisticMultiData.userVote !== null
+        ? optimisticMultiData.totalVotes
+        : computedTotalVotes;
+
+  // Use optimistic option counts for instant feedback when vote is in flight or just submitted
+  const displayOptions = useMemo(() => {
+    if (isSingleChoice && optimisticData.userVote !== null) {
+      return optimisticData.options.map((opt) => {
+        const normalized = normalizedOptions.find((n) => n.id === opt.id);
+        return { ...(normalized ?? { id: opt.id, index: 0, text: opt.text ?? '' }), votes: opt.votes };
+      });
+    }
+    if (isApprovalOrMultiple && optimisticMultiData.userVote !== null) {
+      return optimisticMultiData.options.map((opt) => {
+        const normalized = normalizedOptions.find((n) => n.id === opt.id);
+        return { ...(normalized ?? { id: opt.id, index: 0, text: opt.text ?? '' }), votes: opt.votes };
+      });
+    }
+    return normalizedOptions;
+  }, [
+    isSingleChoice,
+    isApprovalOrMultiple,
+    optimisticData.userVote,
+    optimisticData.options,
+    optimisticMultiData.userVote,
+    optimisticMultiData.options,
+    normalizedOptions,
+  ]);
+
+  const topOption = useMemo(() => {
+    if (displayOptions.length === 0) return null;
+    return displayOptions.reduce((currentTop, option) => {
+      if (!currentTop || option.votes > currentTop.votes) {
+        return option;
+      }
+      return currentTop;
+    }, displayOptions[0]);
+  }, [displayOptions]);
 
   const handleCopyShareLink = async () => {
     if (!shareUrl) return;
@@ -1043,6 +1111,45 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
       </div>
 
+      {/* Participation progress - social-style engagement indicator */}
+      {pollStatus === 'active' && displayTotalVotes > 0 && (() => {
+        const milestones = [25, 50, 100, 250, 500, 1000];
+        const nextMilestone = milestones.find((m) => displayTotalVotes < m) ?? 1000;
+        const progress = Math.min(100, (displayTotalVotes / nextMilestone) * 100);
+        return (
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-3 mb-6" role="status" aria-live="polite">
+            <div className="flex items-center justify-between text-sm mb-1.5">
+              <span className="font-medium text-foreground/90">
+                {t('polls.view.participationProgress.label', { defaultValue: 'Community engagement' })}
+              </span>
+              <span className="text-muted-foreground tabular-nums">
+                {displayTotalVotes < nextMilestone
+                  ? `${isMounted ? displayTotalVotes.toLocaleString() : displayTotalVotes} of ${nextMilestone}`
+                  : `${isMounted ? displayTotalVotes.toLocaleString() : displayTotalVotes} votes`}
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary/70 transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-muted-foreground">
+              <PollActivitySparkline
+                pollId={pollId}
+                width={100}
+                height={24}
+                className="text-primary/60"
+                aria-label={t('polls.view.activitySparkline.ariaLabel', { defaultValue: 'Vote activity over last 7 days' })}
+              />
+              <span className="text-xs">
+                {t('polls.view.activitySparkline.label', { defaultValue: '7-day activity' })}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Leading Option - Only show if there are votes */}
       {topOption && totalRecordedVotes > 0 && (
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 shadow-sm mb-6">
@@ -1076,7 +1183,7 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       {/* Voting Interface - PRIORITY: Show first for active polls where user can vote */}
-      {pollStatus === 'active' && canVote && user && !hasVoted && normalizedOptions.length > 0 && (
+      {pollStatus === 'active' && canVote && user && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && !(isApprovalOrMultiple && optimisticMultiData.userVote !== null) && normalizedOptions.length > 0 && (
         <Card className="mb-6 border-2 border-primary/20">
           <CardHeader className="bg-primary/5">
             <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
@@ -1103,6 +1210,7 @@ export default function PollClient({ poll }: PollClientProps) {
                           normalizedOptions[submission.choice]?.id ?? String(submission.choice);
                         try {
                           await optimisticVote(optionId);
+                          haptic('success');
                           return { ok: true };
                         } catch (err) {
                           const msg = err instanceof Error ? err.message : 'Vote failed';
@@ -1111,9 +1219,42 @@ export default function PollClient({ poll }: PollClientProps) {
                       }
                       return handleVote(submission);
                     }
-                  : handleVote
+                  : isApprovalOrMultiple
+                    ? async (submission) => {
+                        if (submission.method === 'approval') {
+                          try {
+                            await optimisticMultiVote(submission.approvals);
+                            haptic('success');
+                            return { ok: true };
+                          } catch (err) {
+                            const msg = err instanceof Error ? err.message : 'Vote failed';
+                            return { ok: false, error: msg };
+                          }
+                        }
+                        if (submission.method === 'multiple') {
+                          const optionIds = submission.selections
+                            .map((i) => normalizedOptions[i]?.id)
+                            .filter((id): id is string => id != null);
+                          try {
+                            await optimisticMultiVote(optionIds);
+                            haptic('success');
+                            return { ok: true };
+                          } catch (err) {
+                            const msg = err instanceof Error ? err.message : 'Vote failed';
+                            return { ok: false, error: msg };
+                          }
+                        }
+                        return handleVote(submission);
+                      }
+                    : handleVote
               }
-              isVoting={isSingleChoice ? isOptimisticVoting : storeIsVoting}
+              isVoting={
+                isSingleChoice
+                  ? isOptimisticVoting
+                  : isApprovalOrMultiple
+                    ? isOptimisticMultiVoting
+                    : storeIsVoting
+              }
               hasVoted={hasVoted}
               verificationTier={trustTier ?? 'T0'}
               onAnalyticsEvent={(action, payload) => {
@@ -1125,14 +1266,30 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       {/* Poll Options Display - Show after voting interface */}
-      {normalizedOptions.length > 0 && (
-        <Card className="mb-6">
+      {displayOptions.length > 0 && (
+        <>
+          <PollOptionComparison
+            options={[...displayOptions]
+              .sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0))
+              .map((opt) => ({
+                optionId: opt.id,
+                option: opt.text,
+                label: opt.text,
+                voteCount: opt.votes ?? 0,
+                votes: opt.votes ?? 0,
+                votePercentage: getVotePercentage(opt.votes ?? 0),
+                percentage: getVotePercentage(opt.votes ?? 0),
+              }))}
+            totalVotes={displayTotalVotes}
+            className="mb-6"
+          />
+          <Card className="mb-6">
           <CardHeader>
             <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
             <CardDescription>
-              {pollStatus === 'active' && canVote && !hasVoted && user
-                ? 'View the options below'
-                : hasVoted
+              {pollStatus === 'active' && canVote && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && user
+                  ? 'View the options below'
+                : hasVoted || (isSingleChoice && optimisticData.userVote !== null) || (isApprovalOrMultiple && optimisticMultiData.userVote !== null) || (isApprovalOrMultiple && optimisticMultiData.userVote !== null)
                   ? 'You have already voted on this poll'
                   : pollStatus !== 'active'
                     ? 'This poll is closed'
@@ -1145,37 +1302,44 @@ export default function PollClient({ poll }: PollClientProps) {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2" data-testid="poll-options-list">
-              {normalizedOptions.map((option, index) => (
-                <div
-                  key={option.id}
-                  className="p-4 border-2 border-border rounded-lg bg-card hover:border-primary/50 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground break-words">{option.text}</p>
-                      {option.votes !== undefined && option.votes > 0 && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {option.votes} vote{option.votes !== 1 ? 's' : ''} ({getVotePercentage(option.votes)}%)
-                        </p>
-                      )}
+              {displayOptions.map((option, index) => {
+                const votes = option.votes ?? 0;
+                const pct = getVotePercentage(votes);
+                const isSelected =
+                  (isSingleChoice &&
+                    optimisticData.userVote !== null &&
+                    String(option.id) === String(optimisticData.userVote)) ||
+                  (isApprovalOrMultiple &&
+                    optimisticMultiData.userVote !== null &&
+                    optimisticMultiData.userVote.includes(String(option.id)));
+                const isWinner = topOption != null && option.id === topOption.id;
+                return (
+                  <div
+                    key={option.id}
+                    className="p-4 border-2 border-border rounded-lg bg-card hover:border-primary/50 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <AnimatedVoteBar
+                          label={option.text}
+                          voteCount={votes}
+                          percentage={pct}
+                          color="bg-primary"
+                          isSelected={isSelected}
+                          isWinner={isWinner}
+                        />
+                      </div>
                     </div>
                   </div>
-                  {option.votes > 0 && (
-                    <div className="mt-3 w-full bg-muted rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${getVotePercentage(option.votes)}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
       <Separator className="my-6" />
@@ -1277,6 +1441,14 @@ export default function PollClient({ poll }: PollClientProps) {
 
       <Separator />
 
+      {isAdminFlag && (
+        <div className="mt-4">
+          <VoteAuditPanel pollId={pollId} />
+        </div>
+      )}
+
+      <Separator />
+
       <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-foreground/80">
         <span className="inline-flex items-center gap-1">
           <Shield className="h-4 w-4" /> {privacyLabel}
@@ -1348,6 +1520,8 @@ export default function PollClient({ poll }: PollClientProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BackToTop />
     </div>
   );
 }

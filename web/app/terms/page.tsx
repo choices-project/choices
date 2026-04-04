@@ -65,7 +65,7 @@ export default function TermsPage() {
           <p className="mt-2 text-gray-600">
             These terms outline your rights and responsibilities when using the Choices platform.
           </p>
-          <p className="mt-1 text-sm text-gray-500">Last updated: November 17, 2025</p>
+          <p className="mt-1 text-sm text-gray-500">Last updated: April 4, 2026</p>
         </div>
       </div>
 

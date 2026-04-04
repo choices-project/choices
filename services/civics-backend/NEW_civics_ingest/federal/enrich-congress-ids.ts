@@ -35,6 +35,7 @@ interface RepresentativeRow {
   govinfo_id: string | null;
   is_active: boolean | null;
   status: 'active' | 'inactive' | 'historical' | null;
+  party: string | null;
 }
 
 interface UpdateResult {
@@ -99,7 +100,7 @@ function parseArgs(): CliOptions {
 }
 
 const FEDERAL_SELECT =
-  'id,name,state,district,canonical_id,bioguide_id,congress_gov_id,govinfo_id,is_active,status,level';
+  'id,name,state,district,canonical_id,bioguide_id,congress_gov_id,govinfo_id,is_active,status,level,party';
 
 async function fetchFederalRows(options: CliOptions): Promise<RepresentativeRow[]> {
   const client = getSupabaseClient();
@@ -374,7 +375,7 @@ function normalizeStateCode(state: string | null | undefined): string {
 
 async function updateRepresentativeIdentifiers(
   row: RepresentativeRow,
-  updates: { congressGovId?: string | null; govinfoId?: string | null },
+  updates: { congressGovId?: string | null; govinfoId?: string | null; party?: string | null },
   dryRun: boolean,
 ): Promise<void> {
   const updatePayload: Record<string, string | null> = {};
@@ -393,6 +394,10 @@ async function updateRepresentativeIdentifiers(
     if (updates.govinfoId) {
       tokens.push(`govinfo:${updates.govinfoId}`);
     }
+  }
+
+  if (updates.party !== undefined) {
+    updatePayload.party = updates.party ? updates.party.slice(0, 100) : null;
   }
 
   if (Object.keys(updatePayload).length === 0) {
@@ -915,14 +920,19 @@ async function main(): Promise<void> {
 
     const existingCongressId = normaliseId(row.congress_gov_id);
     const existingGovInfoId = normaliseId(row.govinfo_id);
+    const existingParty = (row.party ?? '').trim();
+    const memberParty = (member.party ?? null)?.trim().slice(0, 100) ?? null;
 
-    const updates: { congressGovId?: string | null; govinfoId?: string | null } = {};
+    const updates: { congressGovId?: string | null; govinfoId?: string | null; party?: string | null } = {};
 
     if (congressGovId && congressGovId !== existingCongressId) {
       updates.congressGovId = congressGovId;
     }
     if (govinfoId && govinfoId !== existingGovInfoId) {
       updates.govinfoId = govinfoId;
+    }
+    if (memberParty && !existingParty) {
+      updates.party = memberParty;
     }
 
     if (Object.keys(updates).length === 0) {

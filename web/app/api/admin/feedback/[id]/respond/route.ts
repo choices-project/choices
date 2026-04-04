@@ -10,6 +10,7 @@ import {
   notFoundError,
 } from '@/lib/api';
 import { NOTIFICATION_LOG_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { devLog } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -35,11 +36,13 @@ export const POST = withErrorHandling(async (
   }
 
   const body = await request.json().catch(() => ({}));
-  const responseText =
+  const rawResponse =
     typeof body?.response === 'string' ? body.response.trim() : '';
-  if (!responseText) {
+  if (!rawResponse) {
     return validationError({ response: 'Response is required' });
   }
+
+  const responseText = sanitizeInput(rawResponse);
 
   const supabase = await getSupabaseServerClient();
   const adminClient = await getSupabaseAdminClient();

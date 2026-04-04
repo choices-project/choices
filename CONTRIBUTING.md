@@ -2,9 +2,11 @@
 
 We welcome contributions! This project is licensed under MIT and uses the Developer Certificate of Origin (DCO) for inbound contributions.
 
-## Quick Start
+_Documentation last reviewed: April 4, 2026._
 
-1. **Read the docs**: Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) to set up your environment
+## Quick Start (~15 minutes to first local run)
+
+1. **Read the docs**: Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) to set up your environment (clone → `cd web` → `npm install` → `.env.local` → `npm run dev`)
 2. **Find a task**: Look for issues labeled `good first issue` or `help wanted`
 3. **Create a branch**: `git checkout -b feature/your-feature-name`
 4. **Make changes**: Follow the patterns in [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
@@ -39,7 +41,7 @@ git checkout -b fix/issue-description
 - Follow TypeScript best practices
 - Use the utilities from [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) § Canonical Utilities
 - Follow state management patterns from [`docs/STATE_MANAGEMENT.md`](docs/STATE_MANAGEMENT.md)
-- Write self-documenting code with JSDoc comments
+- **JSDoc (tiered):** prioritize `@param` / `@returns` on **exported** functions and privacy-sensitive modules (`web/utils/privacy/**`, public API helpers); full component commentary can follow incrementally
 - Keep functions small and focused
 
 **Import Order:**
@@ -181,9 +183,9 @@ Signed-off-by: Your Name <you@example.com>
 
 **Why DCO?** It ensures all contributions are properly licensed and that contributors have the right to contribute their code.
 
-## Code of Conduct
+## Code of Conduct & community
 
-Please review and adhere to the [Code of Conduct](CODE_OF_CONDUCT.md). We are committed to providing a welcoming and inclusive environment for all contributors.
+Please review the [Code of Conduct](CODE_OF_CONDUCT.md) and [docs/COMMUNITY_GUIDELINES.md](docs/COMMUNITY_GUIDELINES.md). We are committed to a welcoming environment grounded in evidence and respectful disagreement.
 
 ## Security
 

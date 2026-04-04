@@ -4,7 +4,7 @@
  * Handles user data export, anonymization, and privacy controls.
  * All operations are user-controlled and privacy-preserving.
  * 
- * @created September 9, 2025
+ * Originated September 9, 2025. Last reviewed (trust-layer documentation): April 4, 2026.
  */
 
 
@@ -79,6 +79,9 @@ export class PrivacyDataManager {
   private consentManager: ConsentManager;
   private supabaseClient: SupabaseClient;
 
+  /**
+   * @param supabaseClient - Optional client; defaults to browser Supabase singleton.
+   */
   constructor(supabaseClient?: SupabaseClient) {
     this.encryption = new UserEncryption();
     this.supabaseClient = supabaseClient ?? (getSupabaseBrowserClient() as unknown as SupabaseClient);
@@ -86,7 +89,7 @@ export class PrivacyDataManager {
   }
 
   /**
-   * Export all user data
+   * @returns RPC `export_user_data` payload for the current user, or null if unauthenticated / error.
    */
   async exportUserData(): Promise<UserDataExport | null> {
     try {
@@ -113,7 +116,7 @@ export class PrivacyDataManager {
   }
 
   /**
-   * Anonymize user data
+   * @returns Result of RPC `anonymize_user_data` with success flag and field list or error message.
    */
   async anonymizeUserData(): Promise<AnonymizationResult> {
     try {
@@ -163,7 +166,12 @@ export class PrivacyDataManager {
   }
 
   /**
-   * Store encrypted user data
+   * Encrypt `data` with `password`, upsert ciphertext + IV/salt metadata.
+   *
+   * @param dataType - Which encrypted column to update (`user_profiles_encrypted` vs `private_user_data`).
+   * @param data - Plain fields to encrypt.
+   * @param password - Passphrase for PBKDF2/AES-GCM; cleared from memory after use.
+   * @returns True on successful upsert; false on any error.
    */
   async storeEncryptedData(
     dataType: 'demographics' | 'preferences' | 'contact_info' | 'personal_info' | 'behavioral_data' | 'analytics_data',
@@ -233,7 +241,11 @@ export class PrivacyDataManager {
   }
 
   /**
-   * Retrieve and decrypt user data
+   * Load ciphertext for `dataType`, derive key from `password`, return decrypted JSON object.
+   *
+   * @param dataType - Column group to load.
+   * @param password - Same passphrase used for {@link storeEncryptedData}.
+   * @returns Decrypted record or null if missing / wrong password / error.
    */
   async retrieveEncryptedData(
     dataType: 'demographics' | 'preferences' | 'contact_info' | 'personal_info' | 'behavioral_data' | 'analytics_data',
@@ -314,7 +326,16 @@ export class PrivacyDataManager {
   }
 
   /**
-   * Contribute to analytics (privacy-preserving)
+   * If analytics consent is on, bucket demographics and call `contribute_to_analytics` RPC.
+   *
+   * @param pollId - Target poll.
+   * @param demographicData - Raw demographics; stored only as coarse buckets server-side.
+   * @param demographicData.age - Age value used only for coarse bucketing.
+   * @param demographicData.location - Location string used only for coarse bucketing.
+   * @param demographicData.education - Education string used only for coarse bucketing.
+   * @param voteChoice - Vote index contributed in aggregate.
+   * @param participationTime - Duration hint (seconds) passed through to RPC.
+   * @returns True if RPC succeeded; false if no consent or error.
    */
   async contributeToAnalytics(
     pollId: string,
@@ -362,7 +383,7 @@ export class PrivacyDataManager {
   }
 
   /**
-   * Get privacy dashboard data
+   * @returns Consent summary, feature flags, and which encrypted blobs exist for the user.
    */
   async getPrivacyDashboard(): Promise<{
     consentSummary: any;

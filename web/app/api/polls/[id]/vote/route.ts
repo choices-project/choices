@@ -377,6 +377,10 @@ export const POST = withErrorHandling(async (request: NextRequest, { params }: {
       .single<{ id: string }>();
 
     if (insertBallotError) {
+      const isUniqueViolation = insertBallotError.code === '23505';
+      if (isUniqueViolation) {
+        return validationError({ vote: 'You have already voted on this poll' });
+      }
       logger.error('Ranked vote insert failed', {
         error: insertBallotError,
         pollId,

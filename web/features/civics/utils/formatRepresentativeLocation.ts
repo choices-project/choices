@@ -28,11 +28,12 @@ export function formatRepresentativeLocation(input: FormatRepresentativeLocation
   if (isSenator || isGovernor) {
     districtPart = 'Statewide';
   } else if (district != null && String(district).trim() !== '') {
-    const d = String(district).trim().toLowerCase();
-    if (d === 'at-large' || d === '0') {
+    const raw = String(district).trim();
+    const normalized = raw.toLowerCase().replace(/^district\s*/i, '').trim();
+    if (normalized === 'at-large' || normalized === '0' || normalized === '') {
       districtPart = 'At-large';
     } else {
-      districtPart = `District ${district.trim()}`;
+      districtPart = raw.match(/^district\s/i) ? raw : `District ${raw}`;
     }
   } else {
     districtPart = '';

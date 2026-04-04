@@ -97,23 +97,26 @@ export type FeedCoreProps = {
  * Consumes FeedContext when within FeedProvider; direct props override context.
  * All props are optional when used with FeedProvider.
  */
+/* eslint-disable-next-line @typescript-eslint/no-empty-function */
+const NOOP = () => {};
+
 export default function FeedCore(props: Partial<FeedCoreProps> & { className?: string }) {
   const contextValue = useFeedContextOptional();
 
   const feeds = props.feeds ?? contextValue?.feeds ?? [];
   const isLoading = props.isLoading ?? contextValue?.isLoading ?? false;
   const error = props.error ?? contextValue?.error ?? null;
-  const onLike = props.onLike ?? contextValue?.onLike ?? (() => {});
-  const onBookmark = props.onBookmark ?? contextValue?.onBookmark ?? (() => {});
-  const onShare = props.onShare ?? contextValue?.onShare ?? (() => {});
-  const onRefresh = props.onRefresh ?? contextValue?.onRefresh ?? (() => {});
+  const onLike = props.onLike ?? contextValue?.onLike ?? NOOP;
+  const onBookmark = props.onBookmark ?? contextValue?.onBookmark ?? NOOP;
+  const onShare = props.onShare ?? contextValue?.onShare ?? NOOP;
+  const onRefresh = props.onRefresh ?? contextValue?.onRefresh ?? NOOP;
   const selectedHashtags = props.selectedHashtags ?? contextValue?.selectedHashtags ?? [];
-  const onHashtagAdd = props.onHashtagAdd ?? contextValue?.onHashtagAdd ?? (() => {});
-  const onHashtagRemove = props.onHashtagRemove ?? contextValue?.onHashtagRemove ?? (() => {});
+  const onHashtagAdd = props.onHashtagAdd ?? contextValue?.onHashtagAdd ?? NOOP;
+  const onHashtagRemove = props.onHashtagRemove ?? contextValue?.onHashtagRemove ?? NOOP;
   const trendingHashtags = props.trendingHashtags ?? contextValue?.trendingHashtags ?? [];
   const userDistrict = props.userDistrict ?? contextValue?.userDistrict ?? null;
   const districtFilterEnabled = props.districtFilterEnabled ?? contextValue?.districtFilterEnabled ?? false;
-  const onDistrictFilterToggle = props.onDistrictFilterToggle ?? contextValue?.onDistrictFilterToggle ?? (() => {});
+  const onDistrictFilterToggle = props.onDistrictFilterToggle ?? contextValue?.onDistrictFilterToggle ?? NOOP;
   const className = props.className ?? '';
   const onLoadMore = props.onLoadMore ?? contextValue?.onLoadMore;
   const hasMore = props.hasMore ?? contextValue?.hasMore ?? false;
@@ -849,7 +852,7 @@ export default function FeedCore(props: Partial<FeedCoreProps> & { className?: s
                       <Bookmark className="h-4 w-4 mr-1.5" aria-hidden="true" />
                       {t('feeds.core.actions.bookmark')}
                     </Button>
-                    <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => onShare(feed.id)}>
+                    <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => { haptic('light'); onShare(feed.id); }}>
                       <Share2 className="h-4 w-4 mr-1.5" aria-hidden="true" />
                       {t('feeds.core.actions.share')}
                     </Button>

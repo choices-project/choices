@@ -94,6 +94,11 @@ jobs:
         cd web
         npm run lint:locale
 
+    - name: Validate locale keys (missing-key check)
+      run: |
+        cd web
+        npm run i18n:validate
+
   # Unit Tests
   unit-tests:
     name: Unit Tests

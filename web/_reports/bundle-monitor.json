@@ -1,0 +1,3708 @@
+{
+  "metrics": [
+    {
+      "name": "1174-2da51e22a6451822.js",
+      "size": 15946,
+      "gzipSize": 5278,
+      "chunks": [
+        "1174-2da51e22a6451822.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196080
+    },
+    {
+      "name": "1204-9e11e00b0a54b72d.js",
+      "size": 56295,
+      "gzipSize": 17463,
+      "chunks": [
+        "1204-9e11e00b0a54b72d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196082
+    },
+    {
+      "name": "125-26a3517ac9064dcf.js",
+      "size": 9581,
+      "gzipSize": 3017,
+      "chunks": [
+        "125-26a3517ac9064dcf.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196083
+    },
+    {
+      "name": "1220-dfd8a33b6a1c3830.js",
+      "size": 37119,
+      "gzipSize": 11480,
+      "chunks": [
+        "1220-dfd8a33b6a1c3830.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196084
+    },
+    {
+      "name": "1337-4f8de6c596d85098.js",
+      "size": 5953,
+      "gzipSize": 2438,
+      "chunks": [
+        "1337-4f8de6c596d85098.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196084
+    },
+    {
+      "name": "1432-fd96dee4000061e0.js",
+      "size": 16091,
+      "gzipSize": 4415,
+      "chunks": [
+        "1432-fd96dee4000061e0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196084
+    },
+    {
+      "name": "1262-b700e063a1e9f8d2.js",
+      "size": 11430,
+      "gzipSize": 4517,
+      "chunks": [
+        "1262-b700e063a1e9f8d2.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196085
+    },
+    {
+      "name": "1496-f8299dad79589ab7.js",
+      "size": 8732,
+      "gzipSize": 2808,
+      "chunks": [
+        "1496-f8299dad79589ab7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196085
+    },
+    {
+      "name": "1920-54e197384ce8c02b.js",
+      "size": 4725,
+      "gzipSize": 1715,
+      "chunks": [
+        "1920-54e197384ce8c02b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196085
+    },
+    {
+      "name": "1480.e27771c5956be42d.js",
+      "size": 4392,
+      "gzipSize": 1794,
+      "chunks": [
+        "1480.e27771c5956be42d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196085
+    },
+    {
+      "name": "1993-6dbd665f441a5870.js",
+      "size": 3647,
+      "gzipSize": 1486,
+      "chunks": [
+        "1993-6dbd665f441a5870.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196085
+    },
+    {
+      "name": "157.64a601f086108190.js",
+      "size": 2337,
+      "gzipSize": 1120,
+      "chunks": [
+        "157.64a601f086108190.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196085
+    },
+    {
+      "name": "2147-6043550340def62a.js",
+      "size": 31627,
+      "gzipSize": 10076,
+      "chunks": [
+        "2147-6043550340def62a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196086
+    },
+    {
+      "name": "2249-44180798ac4b7b19.js",
+      "size": 29140,
+      "gzipSize": 7112,
+      "chunks": [
+        "2249-44180798ac4b7b19.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196087
+    },
+    {
+      "name": "202-8aead2b05eb3ed15.js",
+      "size": 4443,
+      "gzipSize": 1582,
+      "chunks": [
+        "202-8aead2b05eb3ed15.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196087
+    },
+    {
+      "name": "2397-0980c3691e373fce.js",
+      "size": 17742,
+      "gzipSize": 4474,
+      "chunks": [
+        "2397-0980c3691e373fce.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196087
+    },
+    {
+      "name": "1662.dbce89e4a3923583.js",
+      "size": 2214,
+      "gzipSize": 957,
+      "chunks": [
+        "1662.dbce89e4a3923583.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196087
+    },
+    {
+      "name": "2460-3e90985b24d80716.js",
+      "size": 8319,
+      "gzipSize": 2593,
+      "chunks": [
+        "2460-3e90985b24d80716.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196088
+    },
+    {
+      "name": "2551-8451870077bbc660.js",
+      "size": 5058,
+      "gzipSize": 1675,
+      "chunks": [
+        "2551-8451870077bbc660.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196088
+    },
+    {
+      "name": "2777-0d4ade24a89dfe51.js",
+      "size": 18628,
+      "gzipSize": 5829,
+      "chunks": [
+        "2777-0d4ade24a89dfe51.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196088
+    },
+    {
+      "name": "2546-12ef89f19dd14ecb.js",
+      "size": 23853,
+      "gzipSize": 5738,
+      "chunks": [
+        "2546-12ef89f19dd14ecb.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196089
+    },
+    {
+      "name": "2594-e43aa80d8a9eac22.js",
+      "size": 19487,
+      "gzipSize": 4847,
+      "chunks": [
+        "2594-e43aa80d8a9eac22.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196089
+    },
+    {
+      "name": "29-db0ae068abd35daa.js",
+      "size": 8557,
+      "gzipSize": 2637,
+      "chunks": [
+        "29-db0ae068abd35daa.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196089
+    },
+    {
+      "name": "3031-88149ec714470943.js",
+      "size": 22226,
+      "gzipSize": 5116,
+      "chunks": [
+        "3031-88149ec714470943.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196090
+    },
+    {
+      "name": "2926-855285cb41e3614e.js",
+      "size": 8866,
+      "gzipSize": 3193,
+      "chunks": [
+        "2926-855285cb41e3614e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196090
+    },
+    {
+      "name": "3079-a73c27bbfef18e5c.js",
+      "size": 12749,
+      "gzipSize": 3367,
+      "chunks": [
+        "3079-a73c27bbfef18e5c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196090
+    },
+    {
+      "name": "1998.c766ba181a88d13e.js",
+      "size": 1628,
+      "gzipSize": 878,
+      "chunks": [
+        "1998.c766ba181a88d13e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196090
+    },
+    {
+      "name": "1970.10a90ee9009edfc8.js",
+      "size": 2337,
+      "gzipSize": 1120,
+      "chunks": [
+        "1970.10a90ee9009edfc8.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196090
+    },
+    {
+      "name": "1096-4d0a9c4155cad24a.js",
+      "size": 13240,
+      "gzipSize": 4002,
+      "chunks": [
+        "1096-4d0a9c4155cad24a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196091
+    },
+    {
+      "name": "3134-9a70951487f5b987.js",
+      "size": 4734,
+      "gzipSize": 1821,
+      "chunks": [
+        "3134-9a70951487f5b987.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196091
+    },
+    {
+      "name": "3259-d3258b126ff70c75.js",
+      "size": 19103,
+      "gzipSize": 4770,
+      "chunks": [
+        "3259-d3258b126ff70c75.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196091
+    },
+    {
+      "name": "3229-08a42cbb7381a88b.js",
+      "size": 17755,
+      "gzipSize": 5468,
+      "chunks": [
+        "3229-08a42cbb7381a88b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196092
+    },
+    {
+      "name": "3244-ae2494c18e1efbca.js",
+      "size": 26121,
+      "gzipSize": 5909,
+      "chunks": [
+        "3244-ae2494c18e1efbca.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196092
+    },
+    {
+      "name": "3562-626a67c75f475617.js",
+      "size": 17588,
+      "gzipSize": 4929,
+      "chunks": [
+        "3562-626a67c75f475617.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196093
+    },
+    {
+      "name": "337-b6c0049d1be2b624.js",
+      "size": 5807,
+      "gzipSize": 1945,
+      "chunks": [
+        "337-b6c0049d1be2b624.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196093
+    },
+    {
+      "name": "3820-530e594f7af51fd9.js",
+      "size": 24707,
+      "gzipSize": 6419,
+      "chunks": [
+        "3820-530e594f7af51fd9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196093
+    },
+    {
+      "name": "2353.61975b687a4c2e08.js",
+      "size": 735,
+      "gzipSize": 387,
+      "chunks": [
+        "2353.61975b687a4c2e08.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196093
+    },
+    {
+      "name": "309.70f13d15119c5198.js",
+      "size": 2337,
+      "gzipSize": 1120,
+      "chunks": [
+        "309.70f13d15119c5198.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196093
+    },
+    {
+      "name": "3092.13817312d752b2a8.js",
+      "size": 16519,
+      "gzipSize": 2397,
+      "chunks": [
+        "3092.13817312d752b2a8.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196094
+    },
+    {
+      "name": "3870.d1f90159b3012b05.js",
+      "size": 10097,
+      "gzipSize": 3698,
+      "chunks": [
+        "3870.d1f90159b3012b05.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196094
+    },
+    {
+      "name": "3343.e2c72516670d86c0.js",
+      "size": 1450,
+      "gzipSize": 840,
+      "chunks": [
+        "3343.e2c72516670d86c0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196094
+    },
+    {
+      "name": "3986-ed1f5c7ccdcf8627.js",
+      "size": 5232,
+      "gzipSize": 1972,
+      "chunks": [
+        "3986-ed1f5c7ccdcf8627.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196094
+    },
+    {
+      "name": "4084-ad6cf4904042e235.js",
+      "size": 11409,
+      "gzipSize": 3628,
+      "chunks": [
+        "4084-ad6cf4904042e235.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196094
+    },
+    {
+      "name": "4074-fa7130fb13b29327.js",
+      "size": 51600,
+      "gzipSize": 11675,
+      "chunks": [
+        "4074-fa7130fb13b29327.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196095
+    },
+    {
+      "name": "4031.aac23e825b98271d.js",
+      "size": 17952,
+      "gzipSize": 5112,
+      "chunks": [
+        "4031.aac23e825b98271d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196096
+    },
+    {
+      "name": "415-170ce7a4b38e3812.js",
+      "size": 4114,
+      "gzipSize": 1593,
+      "chunks": [
+        "415-170ce7a4b38e3812.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196096
+    },
+    {
+      "name": "4199-5b1619783adecd21.js",
+      "size": 21564,
+      "gzipSize": 7067,
+      "chunks": [
+        "4199-5b1619783adecd21.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196096
+    },
+    {
+      "name": "4197-06b2412f083196ec.js",
+      "size": 9155,
+      "gzipSize": 2649,
+      "chunks": [
+        "4197-06b2412f083196ec.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196097
+    },
+    {
+      "name": "4374-74895c5b1eea3e8c.js",
+      "size": 20554,
+      "gzipSize": 5275,
+      "chunks": [
+        "4374-74895c5b1eea3e8c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196097
+    },
+    {
+      "name": "4627-869097159622abbc.js",
+      "size": 11915,
+      "gzipSize": 3380,
+      "chunks": [
+        "4627-869097159622abbc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196097
+    },
+    {
+      "name": "4710-efbdc01a1e5b57f5.js",
+      "size": 7546,
+      "gzipSize": 2078,
+      "chunks": [
+        "4710-efbdc01a1e5b57f5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196097
+    },
+    {
+      "name": "4014-38d3a31e4161a24d.js",
+      "size": 15655,
+      "gzipSize": 4549,
+      "chunks": [
+        "4014-38d3a31e4161a24d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196098
+    },
+    {
+      "name": "4771-cf13dde9444958db.js",
+      "size": 5842,
+      "gzipSize": 2433,
+      "chunks": [
+        "4771-cf13dde9444958db.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196098
+    },
+    {
+      "name": "4859-9c6166df504ff83b.js",
+      "size": 13677,
+      "gzipSize": 3677,
+      "chunks": [
+        "4859-9c6166df504ff83b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196098
+    },
+    {
+      "name": "5053-a1491cbf5f223568.js",
+      "size": 16094,
+      "gzipSize": 4143,
+      "chunks": [
+        "5053-a1491cbf5f223568.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196099
+    },
+    {
+      "name": "4713-022c1eb0a325a69d.js",
+      "size": 10349,
+      "gzipSize": 4063,
+      "chunks": [
+        "4713-022c1eb0a325a69d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196099
+    },
+    {
+      "name": "5216-a94666a29c0a17a9.js",
+      "size": 16186,
+      "gzipSize": 4897,
+      "chunks": [
+        "5216-a94666a29c0a17a9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196099
+    },
+    {
+      "name": "515-0dcc53581fba1f52.js",
+      "size": 34044,
+      "gzipSize": 8916,
+      "chunks": [
+        "515-0dcc53581fba1f52.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196100
+    },
+    {
+      "name": "5283-95edf3afa41f463f.js",
+      "size": 26105,
+      "gzipSize": 7225,
+      "chunks": [
+        "5283-95edf3afa41f463f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196101
+    },
+    {
+      "name": "5785-bf915396557efdd2.js",
+      "size": 53424,
+      "gzipSize": 13748,
+      "chunks": [
+        "5785-bf915396557efdd2.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196102
+    },
+    {
+      "name": "5675-2e7fc09a3c02f6f6.js",
+      "size": 23599,
+      "gzipSize": 5144,
+      "chunks": [
+        "5675-2e7fc09a3c02f6f6.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196102
+    },
+    {
+      "name": "3710-eceb067ec3dc6f96.js",
+      "size": 5856,
+      "gzipSize": 2251,
+      "chunks": [
+        "3710-eceb067ec3dc6f96.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196103
+    },
+    {
+      "name": "5817.28129f1536a4f4e5.js",
+      "size": 8103,
+      "gzipSize": 2654,
+      "chunks": [
+        "5817.28129f1536a4f4e5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196103
+    },
+    {
+      "name": "480.a17e114202bde7cc.js",
+      "size": 851,
+      "gzipSize": 524,
+      "chunks": [
+        "480.a17e114202bde7cc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196103
+    },
+    {
+      "name": "4221.26d462f23a1db548.js",
+      "size": 1653,
+      "gzipSize": 964,
+      "chunks": [
+        "4221.26d462f23a1db548.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196103
+    },
+    {
+      "name": "5984-c12450aeee2956d5.js",
+      "size": 22238,
+      "gzipSize": 6632,
+      "chunks": [
+        "5984-c12450aeee2956d5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196104
+    },
+    {
+      "name": "6110-215950a44b316299.js",
+      "size": 33587,
+      "gzipSize": 9735,
+      "chunks": [
+        "6110-215950a44b316299.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196104
+    },
+    {
+      "name": "6165-ee068c1763a134d0.js",
+      "size": 15166,
+      "gzipSize": 5496,
+      "chunks": [
+        "6165-ee068c1763a134d0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196105
+    },
+    {
+      "name": "5474-6072a0b61ef33b57.js",
+      "size": 7995,
+      "gzipSize": 3244,
+      "chunks": [
+        "5474-6072a0b61ef33b57.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196105
+    },
+    {
+      "name": "5267-c306a77096da7a31.js",
+      "size": 33606,
+      "gzipSize": 10028,
+      "chunks": [
+        "5267-c306a77096da7a31.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196106
+    },
+    {
+      "name": "6237-983a7559fd12678b.js",
+      "size": 14332,
+      "gzipSize": 4532,
+      "chunks": [
+        "6237-983a7559fd12678b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196106
+    },
+    {
+      "name": "5960.33627b28f332a5cf.js",
+      "size": 18413,
+      "gzipSize": 4726,
+      "chunks": [
+        "5960.33627b28f332a5cf.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196107
+    },
+    {
+      "name": "6152.1fc7dbe8e491b8f5.js",
+      "size": 15653,
+      "gzipSize": 4833,
+      "chunks": [
+        "6152.1fc7dbe8e491b8f5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196107
+    },
+    {
+      "name": "6284.5020b30ab3c9864c.js",
+      "size": 2519,
+      "gzipSize": 1061,
+      "chunks": [
+        "6284.5020b30ab3c9864c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196107
+    },
+    {
+      "name": "6384-e2b34775903c769c.js",
+      "size": 24299,
+      "gzipSize": 5268,
+      "chunks": [
+        "6384-e2b34775903c769c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196107
+    },
+    {
+      "name": "6409-9604ca813f237604.js",
+      "size": 26858,
+      "gzipSize": 7493,
+      "chunks": [
+        "6409-9604ca813f237604.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196108
+    },
+    {
+      "name": "6417-85bdf084e48f5ae0.js",
+      "size": 6798,
+      "gzipSize": 1958,
+      "chunks": [
+        "6417-85bdf084e48f5ae0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196108
+    },
+    {
+      "name": "6060.6a674a7b5764ad97.js",
+      "size": 15350,
+      "gzipSize": 4854,
+      "chunks": [
+        "6060.6a674a7b5764ad97.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196109
+    },
+    {
+      "name": "6840-a614e7111d1127d9.js",
+      "size": 27352,
+      "gzipSize": 8834,
+      "chunks": [
+        "6840-a614e7111d1127d9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196109
+    },
+    {
+      "name": "6877-c175b7b85b28a977.js",
+      "size": 32755,
+      "gzipSize": 10517,
+      "chunks": [
+        "6877-c175b7b85b28a977.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196110
+    },
+    {
+      "name": "7035-2be1956aa4096abc.js",
+      "size": 13386,
+      "gzipSize": 4022,
+      "chunks": [
+        "7035-2be1956aa4096abc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196110
+    },
+    {
+      "name": "62.aa1a2bb89672e9e4.js",
+      "size": 28597,
+      "gzipSize": 7441,
+      "chunks": [
+        "62.aa1a2bb89672e9e4.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196111
+    },
+    {
+      "name": "666-17baca920a1f3567.js",
+      "size": 21458,
+      "gzipSize": 5747,
+      "chunks": [
+        "666-17baca920a1f3567.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196111
+    },
+    {
+      "name": "7062-1e5cb86795244096.js",
+      "size": 17243,
+      "gzipSize": 4783,
+      "chunks": [
+        "7062-1e5cb86795244096.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196112
+    },
+    {
+      "name": "7145-fc5c62b6b2187368.js",
+      "size": 5789,
+      "gzipSize": 2207,
+      "chunks": [
+        "7145-fc5c62b6b2187368.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196112
+    },
+    {
+      "name": "6294.ffde9052584298ea.js",
+      "size": 14132,
+      "gzipSize": 3264,
+      "chunks": [
+        "6294.ffde9052584298ea.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196112
+    },
+    {
+      "name": "7178-4fd0299b9a445b5f.js",
+      "size": 14651,
+      "gzipSize": 4566,
+      "chunks": [
+        "7178-4fd0299b9a445b5f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196113
+    },
+    {
+      "name": "6807.454dbde0ca80b231.js",
+      "size": 1718,
+      "gzipSize": 761,
+      "chunks": [
+        "6807.454dbde0ca80b231.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196113
+    },
+    {
+      "name": "7346-09d5ae47a116ccbe.js",
+      "size": 23487,
+      "gzipSize": 6335,
+      "chunks": [
+        "7346-09d5ae47a116ccbe.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196113
+    },
+    {
+      "name": "7266.560791418c7cc103.js",
+      "size": 2519,
+      "gzipSize": 1061,
+      "chunks": [
+        "7266.560791418c7cc103.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196113
+    },
+    {
+      "name": "743-ba4e8098366476a3.js",
+      "size": 29247,
+      "gzipSize": 9079,
+      "chunks": [
+        "743-ba4e8098366476a3.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196114
+    },
+    {
+      "name": "6717-ba1ec67822f99549.js",
+      "size": 22411,
+      "gzipSize": 8062,
+      "chunks": [
+        "6717-ba1ec67822f99549.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196115
+    },
+    {
+      "name": "7497-5e4eae32e1a4cb46.js",
+      "size": 21222,
+      "gzipSize": 6183,
+      "chunks": [
+        "7497-5e4eae32e1a4cb46.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196115
+    },
+    {
+      "name": "7599-017362fa856467b5.js",
+      "size": 9635,
+      "gzipSize": 3754,
+      "chunks": [
+        "7599-017362fa856467b5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196116
+    },
+    {
+      "name": "760-6e92cac0e174666f.js",
+      "size": 3925,
+      "gzipSize": 1311,
+      "chunks": [
+        "760-6e92cac0e174666f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196116
+    },
+    {
+      "name": "7782-9c734db6500fcebd.js",
+      "size": 14567,
+      "gzipSize": 5502,
+      "chunks": [
+        "7782-9c734db6500fcebd.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196116
+    },
+    {
+      "name": "767.80bff53a48f9e812.js",
+      "size": 2337,
+      "gzipSize": 1120,
+      "chunks": [
+        "767.80bff53a48f9e812.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196116
+    },
+    {
+      "name": "7935-a438a361f403971a.js",
+      "size": 30889,
+      "gzipSize": 8061,
+      "chunks": [
+        "7935-a438a361f403971a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196117
+    },
+    {
+      "name": "7907-26197dcb79655c4b.js",
+      "size": 21208,
+      "gzipSize": 6782,
+      "chunks": [
+        "7907-26197dcb79655c4b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196117
+    },
+    {
+      "name": "7910-8061f01a226fc6e7.js",
+      "size": 24047,
+      "gzipSize": 5210,
+      "chunks": [
+        "7910-8061f01a226fc6e7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196118
+    },
+    {
+      "name": "8046-8b3c0b9d86ea8234.js",
+      "size": 7520,
+      "gzipSize": 2856,
+      "chunks": [
+        "8046-8b3c0b9d86ea8234.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196118
+    },
+    {
+      "name": "7672.718ceffc6f71e656.js",
+      "size": 4286,
+      "gzipSize": 1395,
+      "chunks": [
+        "7672.718ceffc6f71e656.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196118
+    },
+    {
+      "name": "8115-ac9063e3970f7839.js",
+      "size": 10349,
+      "gzipSize": 4063,
+      "chunks": [
+        "8115-ac9063e3970f7839.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196118
+    },
+    {
+      "name": "7942-23db1348c22b0353.js",
+      "size": 6270,
+      "gzipSize": 2224,
+      "chunks": [
+        "7942-23db1348c22b0353.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196119
+    },
+    {
+      "name": "8155-9ef78101826a5874.js",
+      "size": 9509,
+      "gzipSize": 3722,
+      "chunks": [
+        "8155-9ef78101826a5874.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196119
+    },
+    {
+      "name": "82-7ec11495782e108a.js",
+      "size": 15208,
+      "gzipSize": 4091,
+      "chunks": [
+        "82-7ec11495782e108a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196119
+    },
+    {
+      "name": "8237-d941d7b884a7ac27.js",
+      "size": 60869,
+      "gzipSize": 17383,
+      "chunks": [
+        "8237-d941d7b884a7ac27.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196121
+    },
+    {
+      "name": "8201-ff8902d795e50bb9.js",
+      "size": 24952,
+      "gzipSize": 8422,
+      "chunks": [
+        "8201-ff8902d795e50bb9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196122
+    },
+    {
+      "name": "824-8285e69ae9b116d5.js",
+      "size": 17217,
+      "gzipSize": 5337,
+      "chunks": [
+        "824-8285e69ae9b116d5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196122
+    },
+    {
+      "name": "8023-73a430ffd80991e7.js",
+      "size": 5693,
+      "gzipSize": 2104,
+      "chunks": [
+        "8023-73a430ffd80991e7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196122
+    },
+    {
+      "name": "762-779865736d32d5dc.js",
+      "size": 6030,
+      "gzipSize": 2306,
+      "chunks": [
+        "762-779865736d32d5dc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196123
+    },
+    {
+      "name": "8378-7af197d97e0cc9b7.js",
+      "size": 5835,
+      "gzipSize": 1757,
+      "chunks": [
+        "8378-7af197d97e0cc9b7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196123
+    },
+    {
+      "name": "8438-277c969e86fa681b.js",
+      "size": 36558,
+      "gzipSize": 9164,
+      "chunks": [
+        "8438-277c969e86fa681b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196123
+    },
+    {
+      "name": "8419-c55bb72eedee6055.js",
+      "size": 25058,
+      "gzipSize": 6415,
+      "chunks": [
+        "8419-c55bb72eedee6055.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196124
+    },
+    {
+      "name": "8464-f93d6daeb2077f5b.js",
+      "size": 23335,
+      "gzipSize": 6423,
+      "chunks": [
+        "8464-f93d6daeb2077f5b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196125
+    },
+    {
+      "name": "8304-3e27df96312e587f.js",
+      "size": 2054,
+      "gzipSize": 1022,
+      "chunks": [
+        "8304-3e27df96312e587f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196125
+    },
+    {
+      "name": "8719-dda3ca321c7a47a5.js",
+      "size": 7918,
+      "gzipSize": 3122,
+      "chunks": [
+        "8719-dda3ca321c7a47a5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196125
+    },
+    {
+      "name": "8749-cba3527a3766d745.js",
+      "size": 8379,
+      "gzipSize": 2977,
+      "chunks": [
+        "8749-cba3527a3766d745.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196125
+    },
+    {
+      "name": "8879-562abc8a700098b5.js",
+      "size": 6781,
+      "gzipSize": 2185,
+      "chunks": [
+        "8879-562abc8a700098b5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196125
+    },
+    {
+      "name": "9281-ad45b9e594fbad94.js",
+      "size": 4443,
+      "gzipSize": 1582,
+      "chunks": [
+        "9281-ad45b9e594fbad94.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196125
+    },
+    {
+      "name": "9282-c51a351c4d94bae0.js",
+      "size": 26367,
+      "gzipSize": 7793,
+      "chunks": [
+        "9282-c51a351c4d94bae0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196126
+    },
+    {
+      "name": "9298-5e57a94ce982b8d1.js",
+      "size": 29970,
+      "gzipSize": 6223,
+      "chunks": [
+        "9298-5e57a94ce982b8d1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196127
+    },
+    {
+      "name": "9345-509b72700f76523a.js",
+      "size": 22311,
+      "gzipSize": 6856,
+      "chunks": [
+        "9345-509b72700f76523a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196127
+    },
+    {
+      "name": "8556.923c18d7d2734081.js",
+      "size": 8868,
+      "gzipSize": 2965,
+      "chunks": [
+        "8556.923c18d7d2734081.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196127
+    },
+    {
+      "name": "8505.78bacb9465c54c8d.js",
+      "size": 3081,
+      "gzipSize": 985,
+      "chunks": [
+        "8505.78bacb9465c54c8d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196127
+    },
+    {
+      "name": "8944.8d095adad41217cd.js",
+      "size": 1498,
+      "gzipSize": 868,
+      "chunks": [
+        "8944.8d095adad41217cd.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196127
+    },
+    {
+      "name": "9320-b140a5b86802112d.js",
+      "size": 60328,
+      "gzipSize": 12542,
+      "chunks": [
+        "9320-b140a5b86802112d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196128
+    },
+    {
+      "name": "9439-f417775473c181ee.js",
+      "size": 20242,
+      "gzipSize": 4857,
+      "chunks": [
+        "9439-f417775473c181ee.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196129
+    },
+    {
+      "name": "9568-66409c64f1f5224c.js",
+      "size": 3700,
+      "gzipSize": 1147,
+      "chunks": [
+        "9568-66409c64f1f5224c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196129
+    },
+    {
+      "name": "9579-fdb47401fcdebfa7.js",
+      "size": 34335,
+      "gzipSize": 10353,
+      "chunks": [
+        "9579-fdb47401fcdebfa7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196130
+    },
+    {
+      "name": "9506-7c04bf28617fdfa4.js",
+      "size": 21358,
+      "gzipSize": 5880,
+      "chunks": [
+        "9506-7c04bf28617fdfa4.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196130
+    },
+    {
+      "name": "9658-b754bdbfcaf9236d.js",
+      "size": 25056,
+      "gzipSize": 6537,
+      "chunks": [
+        "9658-b754bdbfcaf9236d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196131
+    },
+    {
+      "name": "9553.34e252bcb032523c.js",
+      "size": 6131,
+      "gzipSize": 2226,
+      "chunks": [
+        "9553.34e252bcb032523c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196131
+    },
+    {
+      "name": "981-9f59ede9023ce0a6.js",
+      "size": 3557,
+      "gzipSize": 1483,
+      "chunks": [
+        "981-9f59ede9023ce0a6.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196132
+    },
+    {
+      "name": "9695.9083b2ee269deb34.js",
+      "size": 3879,
+      "gzipSize": 1836,
+      "chunks": [
+        "9695.9083b2ee269deb34.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196132
+    },
+    {
+      "name": "9680.0ccd64b359de38de.js",
+      "size": 1310,
+      "gzipSize": 660,
+      "chunks": [
+        "9680.0ccd64b359de38de.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196132
+    },
+    {
+      "name": "99-e0fdf739db644d54.js",
+      "size": 16727,
+      "gzipSize": 5101,
+      "chunks": [
+        "99-e0fdf739db644d54.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196132
+    },
+    {
+      "name": "9897-e0bf45725322b9ca.js",
+      "size": 14946,
+      "gzipSize": 4497,
+      "chunks": [
+        "9897-e0bf45725322b9ca.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196133
+    },
+    {
+      "name": "data-0195e57e-ded1cfa4c2104676.js",
+      "size": 225,
+      "gzipSize": 176,
+      "chunks": [
+        "data-0195e57e-ded1cfa4c2104676.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196133
+    },
+    {
+      "name": "9608-bd691a42b4888926.js",
+      "size": 5364,
+      "gzipSize": 2036,
+      "chunks": [
+        "9608-bd691a42b4888926.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196133
+    },
+    {
+      "name": "9917-8ab15798c914417f.js",
+      "size": 11828,
+      "gzipSize": 1855,
+      "chunks": [
+        "9917-8ab15798c914417f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196133
+    },
+    {
+      "name": "data-14cf90c9-9ccfb4da10953fd9.js",
+      "size": 30999,
+      "gzipSize": 9432,
+      "chunks": [
+        "data-14cf90c9-9ccfb4da10953fd9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196134
+    },
+    {
+      "name": "data-58754121-ebf04f1ede85c16e.js",
+      "size": 10536,
+      "gzipSize": 3334,
+      "chunks": [
+        "data-58754121-ebf04f1ede85c16e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196134
+    },
+    {
+      "name": "data-713ab8fe-4f6ea58a522ee707.js",
+      "size": 14469,
+      "gzipSize": 4189,
+      "chunks": [
+        "data-713ab8fe-4f6ea58a522ee707.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196135
+    },
+    {
+      "name": "data-3dcaadb3-bae5329baf0b08d0.js",
+      "size": 30281,
+      "gzipSize": 9475,
+      "chunks": [
+        "data-3dcaadb3-bae5329baf0b08d0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196135
+    },
+    {
+      "name": "data-1c158602-8f0a7733b861cf4c.js",
+      "size": 18861,
+      "gzipSize": 6139,
+      "chunks": [
+        "data-1c158602-8f0a7733b861cf4c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196136
+    },
+    {
+      "name": "data-84f829b2-1a8f4dd5fd5bb60e.js",
+      "size": 3018,
+      "gzipSize": 1174,
+      "chunks": [
+        "data-84f829b2-1a8f4dd5fd5bb60e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196136
+    },
+    {
+      "name": "data-eb2fbf4c-78ab75fc6423da26.js",
+      "size": 62419,
+      "gzipSize": 15637,
+      "chunks": [
+        "data-eb2fbf4c-78ab75fc6423da26.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196138
+    },
+    {
+      "name": "data-e5ef5123-8a1a0ee6e29368d0.js",
+      "size": 56743,
+      "gzipSize": 12562,
+      "chunks": [
+        "data-e5ef5123-8a1a0ee6e29368d0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196139
+    },
+    {
+      "name": "main-962f5e05de8a567c.js",
+      "size": 5035,
+      "gzipSize": 2088,
+      "chunks": [
+        "main-962f5e05de8a567c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196139
+    },
+    {
+      "name": "data-fbd10709-5c751d7a8525ce62.js",
+      "size": 50755,
+      "gzipSize": 13709,
+      "chunks": [
+        "data-fbd10709-5c751d7a8525ce62.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196140
+    },
+    {
+      "name": "main-app-48e9c83a37faf7ed.js",
+      "size": 1908,
+      "gzipSize": 788,
+      "chunks": [
+        "main-app-48e9c83a37faf7ed.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196140
+    },
+    {
+      "name": "next-dist-15f16aba-002db58ff41317ec.js",
+      "size": 505,
+      "gzipSize": 253,
+      "chunks": [
+        "next-dist-15f16aba-002db58ff41317ec.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196140
+    },
+    {
+      "name": "next-dist-351e52ed-1fff7807f2669bce.js",
+      "size": 29479,
+      "gzipSize": 9380,
+      "chunks": [
+        "next-dist-351e52ed-1fff7807f2669bce.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196141
+    },
+    {
+      "name": "next-dist-1e2c8cff-b9d6576150fcce1c.js",
+      "size": 27903,
+      "gzipSize": 11485,
+      "chunks": [
+        "next-dist-1e2c8cff-b9d6576150fcce1c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196142
+    },
+    {
+      "name": "next-dist-359a1f64-7cb3eaaa81d0369d.js",
+      "size": 1275,
+      "gzipSize": 545,
+      "chunks": [
+        "next-dist-359a1f64-7cb3eaaa81d0369d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196142
+    },
+    {
+      "name": "next-dist-3d3a1b23-717a8157c56cb2fe.js",
+      "size": 4320,
+      "gzipSize": 1588,
+      "chunks": [
+        "next-dist-3d3a1b23-717a8157c56cb2fe.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196142
+    },
+    {
+      "name": "next-dist-45adea4d-5c698900ccc11e98.js",
+      "size": 1990,
+      "gzipSize": 460,
+      "chunks": [
+        "next-dist-45adea4d-5c698900ccc11e98.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196142
+    },
+    {
+      "name": "next-dist-4497f2ad-3ed2d1bcf8370901.js",
+      "size": 44921,
+      "gzipSize": 10532,
+      "chunks": [
+        "next-dist-4497f2ad-3ed2d1bcf8370901.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196143
+    },
+    {
+      "name": "next-dist-42bbf998-9dc2d621c0e25656.js",
+      "size": 80117,
+      "gzipSize": 18610,
+      "chunks": [
+        "next-dist-42bbf998-9dc2d621c0e25656.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196145
+    },
+    {
+      "name": "next-dist-4c7823de-1bffe73a071acc86.js",
+      "size": 12349,
+      "gzipSize": 3285,
+      "chunks": [
+        "next-dist-4c7823de-1bffe73a071acc86.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196146
+    },
+    {
+      "name": "next-dist-57e1b8d8-00f04cc582caab92.js",
+      "size": 163,
+      "gzipSize": 137,
+      "chunks": [
+        "next-dist-57e1b8d8-00f04cc582caab92.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196146
+    },
+    {
+      "name": "motion-ae080475.d761431e24f4d5f9.js",
+      "size": 10349,
+      "gzipSize": 4063,
+      "chunks": [
+        "motion-ae080475.d761431e24f4d5f9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196146
+    },
+    {
+      "name": "next-dist-70493527-7df9803496fe2817.js",
+      "size": 936,
+      "gzipSize": 317,
+      "chunks": [
+        "next-dist-70493527-7df9803496fe2817.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196146
+    },
+    {
+      "name": "next-dist-74690118-8d2787b962cd2749.js",
+      "size": 3635,
+      "gzipSize": 900,
+      "chunks": [
+        "next-dist-74690118-8d2787b962cd2749.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196146
+    },
+    {
+      "name": "next-dist-6a231639-b9bbc9f979969e7b.js",
+      "size": 19359,
+      "gzipSize": 6843,
+      "chunks": [
+        "next-dist-6a231639-b9bbc9f979969e7b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196147
+    },
+    {
+      "name": "next-dist-7bad328b-3aee3329412d24ff.js",
+      "size": 6548,
+      "gzipSize": 1478,
+      "chunks": [
+        "next-dist-7bad328b-3aee3329412d24ff.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196147
+    },
+    {
+      "name": "motion-dfc0d3ba.4222e10e39596916.js",
+      "size": 24952,
+      "gzipSize": 8422,
+      "chunks": [
+        "motion-dfc0d3ba.4222e10e39596916.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196151
+    },
+    {
+      "name": "next-dist-7477dd25-6e708b24a111a9c3.js",
+      "size": 12055,
+      "gzipSize": 3938,
+      "chunks": [
+        "next-dist-7477dd25-6e708b24a111a9c3.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196151
+    },
+    {
+      "name": "motion-aeee2aa1.04eb703117fac544.js",
+      "size": 56295,
+      "gzipSize": 17463,
+      "chunks": [
+        "motion-aeee2aa1.04eb703117fac544.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196153
+    },
+    {
+      "name": "next-dist-82831f5c-d0a170a177b7047c.js",
+      "size": 2892,
+      "gzipSize": 1239,
+      "chunks": [
+        "next-dist-82831f5c-d0a170a177b7047c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196153
+    },
+    {
+      "name": "next-dist-9a5e4ce4-d596ad84a7bba12a.js",
+      "size": 19580,
+      "gzipSize": 5898,
+      "chunks": [
+        "next-dist-9a5e4ce4-d596ad84a7bba12a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196154
+    },
+    {
+      "name": "next-dist-a6f90180-2301e4ef2a262953.js",
+      "size": 11980,
+      "gzipSize": 2427,
+      "chunks": [
+        "next-dist-a6f90180-2301e4ef2a262953.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196154
+    },
+    {
+      "name": "next-dist-9c587c8a-1ef87f9622d8b204.js",
+      "size": 8274,
+      "gzipSize": 2590,
+      "chunks": [
+        "next-dist-9c587c8a-1ef87f9622d8b204.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196154
+    },
+    {
+      "name": "next-dist-a73c26c6-4ecc75abbe092f5b.js",
+      "size": 7477,
+      "gzipSize": 2335,
+      "chunks": [
+        "next-dist-a73c26c6-4ecc75abbe092f5b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196154
+    },
+    {
+      "name": "next-dist-8bb010c3-69b5c59a61f48022.js",
+      "size": 173175,
+      "gzipSize": 53830,
+      "chunks": [
+        "next-dist-8bb010c3-69b5c59a61f48022.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196160
+    },
+    {
+      "name": "next-dist-c155a3aa-95e32944e56f875d.js",
+      "size": 488,
+      "gzipSize": 278,
+      "chunks": [
+        "next-dist-c155a3aa-95e32944e56f875d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196160
+    },
+    {
+      "name": "next-dist-c1d059fa-42f9d2a3fdee6a8e.js",
+      "size": 9684,
+      "gzipSize": 3930,
+      "chunks": [
+        "next-dist-c1d059fa-42f9d2a3fdee6a8e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196160
+    },
+    {
+      "name": "next-dist-fc2d4738-e9a3e25f338be45c.js",
+      "size": 19768,
+      "gzipSize": 6066,
+      "chunks": [
+        "next-dist-fc2d4738-e9a3e25f338be45c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196160
+    },
+    {
+      "name": "next-dist-d7c15829-3608bda90d60b246.js",
+      "size": 35100,
+      "gzipSize": 8529,
+      "chunks": [
+        "next-dist-d7c15829-3608bda90d60b246.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196161
+    },
+    {
+      "name": "react-54d06b9554e8584e.js",
+      "size": 7112,
+      "gzipSize": 2714,
+      "chunks": [
+        "react-54d06b9554e8584e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196161
+    },
+    {
+      "name": "react-dom-65a5698149a24118.js",
+      "size": 129117,
+      "gzipSize": 41276,
+      "chunks": [
+        "react-dom-65a5698149a24118.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196166
+    },
+    {
+      "name": "polyfills-42372ed130431b0a.js",
+      "size": 112594,
+      "gzipSize": 39627,
+      "chunks": [
+        "polyfills-42372ed130431b0a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196169
+    },
+    {
+      "name": "recharts-207d77d7.0a7d7e13592c33d1.js",
+      "size": 51600,
+      "gzipSize": 11675,
+      "chunks": [
+        "recharts-207d77d7.0a7d7e13592c33d1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196170
+    },
+    {
+      "name": "recharts-164ccfd2.fc1e155c5dddd78b.js",
+      "size": 62032,
+      "gzipSize": 17743,
+      "chunks": [
+        "recharts-164ccfd2.fc1e155c5dddd78b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196171
+    },
+    {
+      "name": "runtime-40a7fa11dc0ba3d1.js",
+      "size": 8366,
+      "gzipSize": 3993,
+      "chunks": [
+        "runtime-40a7fa11dc0ba3d1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196172
+    },
+    {
+      "name": "ui-5bdcc2d5-2d4c15605065c359.js",
+      "size": 25453,
+      "gzipSize": 8082,
+      "chunks": [
+        "ui-5bdcc2d5-2d4c15605065c359.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196172
+    },
+    {
+      "name": "ui-abda2f14-34ce734e74dce81e.js",
+      "size": 27561,
+      "gzipSize": 8701,
+      "chunks": [
+        "ui-abda2f14-34ce734e74dce81e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196173
+    },
+    {
+      "name": "recharts-66b14e9f.8c74c4258fcf2173.js",
+      "size": 37119,
+      "gzipSize": 11480,
+      "chunks": [
+        "recharts-66b14e9f.8c74c4258fcf2173.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196174
+    },
+    {
+      "name": "ui-ad6a2f20-1dce4547164bc040.js",
+      "size": 36292,
+      "gzipSize": 9798,
+      "chunks": [
+        "ui-ad6a2f20-1dce4547164bc040.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196175
+    },
+    {
+      "name": "vendor-cmdk-0f52dea574fe9ef4.js",
+      "size": 11864,
+      "gzipSize": 4537,
+      "chunks": [
+        "vendor-cmdk-0f52dea574fe9ef4.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196175
+    },
+    {
+      "name": "ui-cbdef5fd-2ddbac01f8dadd33.js",
+      "size": 43367,
+      "gzipSize": 13842,
+      "chunks": [
+        "ui-cbdef5fd-2ddbac01f8dadd33.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196176
+    },
+    {
+      "name": "recharts-9ce9d82d.730bd0f97581208c.js",
+      "size": 75557,
+      "gzipSize": 17628,
+      "chunks": [
+        "recharts-9ce9d82d.730bd0f97581208c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196178
+    },
+    {
+      "name": "vendor-d3-array-f44f8df32d1ea1ec.js",
+      "size": 4175,
+      "gzipSize": 1706,
+      "chunks": [
+        "vendor-d3-array-f44f8df32d1ea1ec.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196178
+    },
+    {
+      "name": "vendor-d3-color-29e9b25fc3f87bc7.js",
+      "size": 7273,
+      "gzipSize": 3087,
+      "chunks": [
+        "vendor-d3-color-29e9b25fc3f87bc7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196178
+    },
+    {
+      "name": "vendor-d3-format-b7d280757e90ed37.js",
+      "size": 5293,
+      "gzipSize": 2272,
+      "chunks": [
+        "vendor-d3-format-b7d280757e90ed37.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196178
+    },
+    {
+      "name": "vendor-d3-shape-2547a24930792233.js",
+      "size": 16273,
+      "gzipSize": 4099,
+      "chunks": [
+        "vendor-d3-shape-2547a24930792233.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196179
+    },
+    {
+      "name": "vendor-d3-scale-824352766c915c54.js",
+      "size": 16281,
+      "gzipSize": 5127,
+      "chunks": [
+        "vendor-d3-scale-824352766c915c54.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196179
+    },
+    {
+      "name": "vendor-d3-time-5256c0204dc610bc.js",
+      "size": 6032,
+      "gzipSize": 1894,
+      "chunks": [
+        "vendor-d3-time-5256c0204dc610bc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196179
+    },
+    {
+      "name": "vendor-fast-equals-1e5d710fb0b3f433.js",
+      "size": 3295,
+      "gzipSize": 1255,
+      "chunks": [
+        "vendor-fast-equals-1e5d710fb0b3f433.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196179
+    },
+    {
+      "name": "vendor-d3-time-format-5d81607f1ff31545.js",
+      "size": 9073,
+      "gzipSize": 2768,
+      "chunks": [
+        "vendor-d3-time-format-5d81607f1ff31545.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196180
+    },
+    {
+      "name": "vendor-decimal.js-light-ff713078b0aa0784.js",
+      "size": 13025,
+      "gzipSize": 5519,
+      "chunks": [
+        "vendor-decimal.js-light-ff713078b0aa0784.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196180
+    },
+    {
+      "name": "vendor-floating-ui-4ec28c45a74ddc13.js",
+      "size": 22063,
+      "gzipSize": 8437,
+      "chunks": [
+        "vendor-floating-ui-4ec28c45a74ddc13.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196180
+    },
+    {
+      "name": "vendor-immer-1ce97b2e21c4ad17.js",
+      "size": 10550,
+      "gzipSize": 3777,
+      "chunks": [
+        "vendor-immer-1ce97b2e21c4ad17.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196181
+    },
+    {
+      "name": "vendor-intl-messageformat-f0e01cb97d879fa3.js",
+      "size": 7160,
+      "gzipSize": 2399,
+      "chunks": [
+        "vendor-intl-messageformat-f0e01cb97d879fa3.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196181
+    },
+    {
+      "name": "vendor-lodash-934691c8-056cefbf5cd6f780.js",
+      "size": 3323,
+      "gzipSize": 1215,
+      "chunks": [
+        "vendor-lodash-934691c8-056cefbf5cd6f780.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196181
+    },
+    {
+      "name": "vendor-lodash-0bc5b059-cb8642337c6271da.js",
+      "size": 28788,
+      "gzipSize": 9071,
+      "chunks": [
+        "vendor-lodash-0bc5b059-cb8642337c6271da.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196182
+    },
+    {
+      "name": "vendor-react-draggable-fac5e53b227a8a93.js",
+      "size": 18515,
+      "gzipSize": 5490,
+      "chunks": [
+        "vendor-react-draggable-fac5e53b227a8a93.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196182
+    },
+    {
+      "name": "vendor-formatjs-c17fc29dbef2c124.js",
+      "size": 33926,
+      "gzipSize": 9770,
+      "chunks": [
+        "vendor-formatjs-c17fc29dbef2c124.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196183
+    },
+    {
+      "name": "vendor-react-remove-scroll-3e4b944d71e71ec4.js",
+      "size": 5814,
+      "gzipSize": 2375,
+      "chunks": [
+        "vendor-react-remove-scroll-3e4b944d71e71ec4.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196183
+    },
+    {
+      "name": "vendor-react-resizable-c506b49fd9a8f9d0.js",
+      "size": 12270,
+      "gzipSize": 3186,
+      "chunks": [
+        "vendor-react-resizable-c506b49fd9a8f9d0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196184
+    },
+    {
+      "name": "vendor-recharts-scale-7cfc96541b6016cc.js",
+      "size": 6437,
+      "gzipSize": 2121,
+      "chunks": [
+        "vendor-recharts-scale-7cfc96541b6016cc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196184
+    },
+    {
+      "name": "vendor-resize-observer-polyfill-0cd70d005b90e4fb.js",
+      "size": 7556,
+      "gzipSize": 2455,
+      "chunks": [
+        "vendor-resize-observer-polyfill-0cd70d005b90e4fb.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196184
+    },
+    {
+      "name": "vendor-motion-dom-50311dc0ed81937d.js",
+      "size": 42808,
+      "gzipSize": 15014,
+      "chunks": [
+        "vendor-motion-dom-50311dc0ed81937d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196185
+    },
+    {
+      "name": "vendor-react-grid-layout-5173f5d76031a473.js",
+      "size": 40820,
+      "gzipSize": 10889,
+      "chunks": [
+        "vendor-react-grid-layout-5173f5d76031a473.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196186
+    },
+    {
+      "name": "vendor-simplewebauthn-dcab8bd59226f0b1.js",
+      "size": 8581,
+      "gzipSize": 2826,
+      "chunks": [
+        "vendor-simplewebauthn-dcab8bd59226f0b1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196187
+    },
+    {
+      "name": "vendor-tslib-46c743290c772e21.js",
+      "size": 11600,
+      "gzipSize": 3978,
+      "chunks": [
+        "vendor-tslib-46c743290c772e21.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196187
+    },
+    {
+      "name": "vendor-react-smooth-4c35ff999a01ef78.js",
+      "size": 24730,
+      "gzipSize": 6817,
+      "chunks": [
+        "vendor-react-smooth-4c35ff999a01ef78.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196187
+    },
+    {
+      "name": "vendor-use-intl-dd731e860e4613c8.js",
+      "size": 11207,
+      "gzipSize": 3815,
+      "chunks": [
+        "vendor-use-intl-dd731e860e4613c8.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196188
+    },
+    {
+      "name": "vendor-zustand-63cbae382071014a.js",
+      "size": 7797,
+      "gzipSize": 3119,
+      "chunks": [
+        "vendor-zustand-63cbae382071014a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196188
+    },
+    {
+      "name": "pages/_app-3fedda7051ce9190.js",
+      "size": 408,
+      "gzipSize": 275,
+      "chunks": [
+        "pages/_app-3fedda7051ce9190.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196188
+    },
+    {
+      "name": "pages/_error-3094dc17bd5ca7e8.js",
+      "size": 375,
+      "gzipSize": 260,
+      "chunks": [
+        "pages/_error-3094dc17bd5ca7e8.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196188
+    },
+    {
+      "name": "app/global-error-50c985df22f04334.js",
+      "size": 2396,
+      "gzipSize": 1106,
+      "chunks": [
+        "app/global-error-50c985df22f04334.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196188
+    },
+    {
+      "name": "vendor-sonner-9926e63d7fc52203.js",
+      "size": 34311,
+      "gzipSize": 9388,
+      "chunks": [
+        "vendor-sonner-9926e63d7fc52203.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196189
+    },
+    {
+      "name": "app/not-found-7f2d6ab5a43c86be.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/not-found-7f2d6ab5a43c86be.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196189
+    },
+    {
+      "name": "app/layout-26b62d4da0eb0d6f.js",
+      "size": 4843,
+      "gzipSize": 1873,
+      "chunks": [
+        "app/layout-26b62d4da0eb0d6f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196189
+    },
+    {
+      "name": "app/page-0475d1352c0a3d36.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/page-0475d1352c0a3d36.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196189
+    },
+    {
+      "name": "app/clear-session/page-07fd4db5a717c2a0.js",
+      "size": 1455,
+      "gzipSize": 770,
+      "chunks": [
+        "app/clear-session/page-07fd4db5a717c2a0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196189
+    },
+    {
+      "name": "app/_not-found/page-663abdacaf51db4e.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/_not-found/page-663abdacaf51db4e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196189
+    },
+    {
+      "name": "app/login/page-d2811ee29a2ca36e.js",
+      "size": 542,
+      "gzipSize": 356,
+      "chunks": [
+        "app/login/page-d2811ee29a2ca36e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196189
+    },
+    {
+      "name": "recharts-c1c765c9.750be388cea21836.js",
+      "size": 60328,
+      "gzipSize": 12542,
+      "chunks": [
+        "recharts-c1c765c9.750be388cea21836.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196190
+    },
+    {
+      "name": "app/register/page-2f83e36f29b3d5cd.js",
+      "size": 515,
+      "gzipSize": 343,
+      "chunks": [
+        "app/register/page-2f83e36f29b3d5cd.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196190
+    },
+    {
+      "name": "app/privacy/page-c2e397a281990a5e.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/privacy/page-c2e397a281990a5e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196190
+    },
+    {
+      "name": "app/terms/page-1b48aa7327efc880.js",
+      "size": 323,
+      "gzipSize": 246,
+      "chunks": [
+        "app/terms/page-1b48aa7327efc880.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196191
+    },
+    {
+      "name": "app/landing/page-8bcfb63ccb97b005.js",
+      "size": 19970,
+      "gzipSize": 5137,
+      "chunks": [
+        "app/landing/page-8bcfb63ccb97b005.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196191
+    },
+    {
+      "name": "app/auth/error-85120334c389a7fd.js",
+      "size": 2237,
+      "gzipSize": 1022,
+      "chunks": [
+        "app/auth/error-85120334c389a7fd.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196191
+    },
+    {
+      "name": "app/auth/layout-d03deaeb3be6f779.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/auth/layout-d03deaeb3be6f779.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196191
+    },
+    {
+      "name": "app/auth/page-67e7811486f1ca29.js",
+      "size": 542,
+      "gzipSize": 356,
+      "chunks": [
+        "app/auth/page-67e7811486f1ca29.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196191
+    },
+    {
+      "name": "app/auth/device-flow/verify/page-c8d63e55f10936df.js",
+      "size": 9102,
+      "gzipSize": 3406,
+      "chunks": [
+        "app/auth/device-flow/verify/page-c8d63e55f10936df.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196191
+    },
+    {
+      "name": "app/auth/register/page-fadfd6dceea9d00a.js",
+      "size": 513,
+      "gzipSize": 342,
+      "chunks": [
+        "app/auth/register/page-fadfd6dceea9d00a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196191
+    },
+    {
+      "name": "app/auth/reset/confirm/page-27ece13e08803a6a.js",
+      "size": 14875,
+      "gzipSize": 4939,
+      "chunks": [
+        "app/auth/reset/confirm/page-27ece13e08803a6a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196192
+    },
+    {
+      "name": "app/(app)/layout-f5431d3f91d69d47.js",
+      "size": 21098,
+      "gzipSize": 6635,
+      "chunks": [
+        "app/(app)/layout-f5431d3f91d69d47.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196192
+    },
+    {
+      "name": "app/auth/reset/page-ff52e8f7c4ab62cc.js",
+      "size": 11814,
+      "gzipSize": 4444,
+      "chunks": [
+        "app/auth/reset/page-ff52e8f7c4ab62cc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196192
+    },
+    {
+      "name": "app/(app)/analytics/error-ec43f7f7b7c332a2.js",
+      "size": 5397,
+      "gzipSize": 2249,
+      "chunks": [
+        "app/(app)/analytics/error-ec43f7f7b7c332a2.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196192
+    },
+    {
+      "name": "app/(app)/analytics/layout-fdc8a0c31532fafa.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/analytics/layout-fdc8a0c31532fafa.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196193
+    },
+    {
+      "name": "app/(app)/analytics/page-949338f3e2e2108d.js",
+      "size": 29724,
+      "gzipSize": 6747,
+      "chunks": [
+        "app/(app)/analytics/page-949338f3e2e2108d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196193
+    },
+    {
+      "name": "app/(app)/civics/layout-e886fe4b0856ea08.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/civics/layout-e886fe4b0856ea08.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196193
+    },
+    {
+      "name": "app/(app)/civics/error-028b1b332767d53b.js",
+      "size": 2202,
+      "gzipSize": 1030,
+      "chunks": [
+        "app/(app)/civics/error-028b1b332767d53b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196193
+    },
+    {
+      "name": "app/(app)/civics/page-ea920150deeeb1b1.js",
+      "size": 26887,
+      "gzipSize": 8308,
+      "chunks": [
+        "app/(app)/civics/page-ea920150deeeb1b1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196194
+    },
+    {
+      "name": "app/(app)/civics/loading-fb233eac47e77260.js",
+      "size": 1563,
+      "gzipSize": 727,
+      "chunks": [
+        "app/(app)/civics/loading-fb233eac47e77260.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196194
+    },
+    {
+      "name": "app/(app)/dashboard/error-2166a466a6a7668d.js",
+      "size": 2187,
+      "gzipSize": 1030,
+      "chunks": [
+        "app/(app)/dashboard/error-2166a466a6a7668d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196194
+    },
+    {
+      "name": "app/(app)/dashboard/loading-e81d044e578f922f.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/dashboard/loading-e81d044e578f922f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196194
+    },
+    {
+      "name": "app/(app)/dashboard/page-aa41fcab63ccdde6.js",
+      "size": 369,
+      "gzipSize": 259,
+      "chunks": [
+        "app/(app)/dashboard/page-aa41fcab63ccdde6.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196194
+    },
+    {
+      "name": "app/(app)/hashtags/page-e345fe2e64df06fe.js",
+      "size": 3773,
+      "gzipSize": 1710,
+      "chunks": [
+        "app/(app)/hashtags/page-e345fe2e64df06fe.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196194
+    },
+    {
+      "name": "app/(app)/feed/error-ae33dfcdae1bce24.js",
+      "size": 5543,
+      "gzipSize": 2265,
+      "chunks": [
+        "app/(app)/feed/error-ae33dfcdae1bce24.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196195
+    },
+    {
+      "name": "app/(app)/feed/loading-b1904b5678b5fa0d.js",
+      "size": 1563,
+      "gzipSize": 727,
+      "chunks": [
+        "app/(app)/feed/loading-b1904b5678b5fa0d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196195
+    },
+    {
+      "name": "app/(app)/feed/page-4c05d99f-50570a053625e576.js",
+      "size": 6311,
+      "gzipSize": 2200,
+      "chunks": [
+        "app/(app)/feed/page-4c05d99f-50570a053625e576.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196195
+    },
+    {
+      "name": "app/(app)/feed/page-7737f789-736405ee9d5bb7fa.js",
+      "size": 250,
+      "gzipSize": 175,
+      "chunks": [
+        "app/(app)/feed/page-7737f789-736405ee9d5bb7fa.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196195
+    },
+    {
+      "name": "app/(app)/feed/page-69b0e4d4-30aa2b3beed5e4f9.js",
+      "size": 36749,
+      "gzipSize": 9760,
+      "chunks": [
+        "app/(app)/feed/page-69b0e4d4-30aa2b3beed5e4f9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196196
+    },
+    {
+      "name": "app/(app)/feed/page-857ba7e6-c9b8bebd0943bf72.js",
+      "size": 7756,
+      "gzipSize": 2406,
+      "chunks": [
+        "app/(app)/feed/page-857ba7e6-c9b8bebd0943bf72.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196196
+    },
+    {
+      "name": "app/(app)/feed/page-b58448c6-dfffaa656c2c22fa.js",
+      "size": 22901,
+      "gzipSize": 7088,
+      "chunks": [
+        "app/(app)/feed/page-b58448c6-dfffaa656c2c22fa.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196196
+    },
+    {
+      "name": "app/(app)/feed/page-eaff7ab0-545052b2b2ed74df.js",
+      "size": 119,
+      "gzipSize": 120,
+      "chunks": [
+        "app/(app)/feed/page-eaff7ab0-545052b2b2ed74df.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196196
+    },
+    {
+      "name": "app/(app)/feed/page-ef18c039-75bc99a99968772a.js",
+      "size": 5179,
+      "gzipSize": 1315,
+      "chunks": [
+        "app/(app)/feed/page-ef18c039-75bc99a99968772a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196197
+    },
+    {
+      "name": "app/(app)/feed/page-f3956634-7a6249426af8a2fa.js",
+      "size": 15955,
+      "gzipSize": 4908,
+      "chunks": [
+        "app/(app)/feed/page-f3956634-7a6249426af8a2fa.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196197
+    },
+    {
+      "name": "app/(app)/feed/page-f88dba18-befc95759097f372.js",
+      "size": 8793,
+      "gzipSize": 3216,
+      "chunks": [
+        "app/(app)/feed/page-f88dba18-befc95759097f372.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196197
+    },
+    {
+      "name": "app/(app)/integrity/layout-03fe634cd2f81ac6.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/integrity/layout-03fe634cd2f81ac6.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196197
+    },
+    {
+      "name": "app/(app)/integrity/page-8ab88b008a2dc8b5.js",
+      "size": 5362,
+      "gzipSize": 1851,
+      "chunks": [
+        "app/(app)/integrity/page-8ab88b008a2dc8b5.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196197
+    },
+    {
+      "name": "app/(app)/onboarding/error-74c889605f0cc2cc.js",
+      "size": 2270,
+      "gzipSize": 1048,
+      "chunks": [
+        "app/(app)/onboarding/error-74c889605f0cc2cc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196197
+    },
+    {
+      "name": "app/(app)/account/loading-fdadbf9ffe695f18.js",
+      "size": 369,
+      "gzipSize": 259,
+      "chunks": [
+        "app/(app)/account/loading-fdadbf9ffe695f18.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196198
+    },
+    {
+      "name": "app/(app)/onboarding/page-6a69d44d59435b96.js",
+      "size": 42099,
+      "gzipSize": 8576,
+      "chunks": [
+        "app/(app)/onboarding/page-6a69d44d59435b96.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196198
+    },
+    {
+      "name": "app/(app)/account/error-3f1c187151933bb0.js",
+      "size": 2285,
+      "gzipSize": 1042,
+      "chunks": [
+        "app/(app)/account/error-3f1c187151933bb0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196198
+    },
+    {
+      "name": "app/(app)/account/export/page-ad78100815709b70.js",
+      "size": 19820,
+      "gzipSize": 5534,
+      "chunks": [
+        "app/(app)/account/export/page-ad78100815709b70.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196199
+    },
+    {
+      "name": "app/(app)/account/delete/page-b42dc4873097811e.js",
+      "size": 20594,
+      "gzipSize": 5893,
+      "chunks": [
+        "app/(app)/account/delete/page-b42dc4873097811e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196199
+    },
+    {
+      "name": "app/(app)/account/privacy/page-29a8ec6c1cacb79f.js",
+      "size": 9144,
+      "gzipSize": 3202,
+      "chunks": [
+        "app/(app)/account/privacy/page-29a8ec6c1cacb79f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196199
+    },
+    {
+      "name": "app/(app)/account/privacy/layout-d0b9ff976b1e9d0b.js",
+      "size": 369,
+      "gzipSize": 259,
+      "chunks": [
+        "app/(app)/account/privacy/layout-d0b9ff976b1e9d0b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196200
+    },
+    {
+      "name": "app/(app)/candidates/loading-c08bc6d7870108c9.js",
+      "size": 1563,
+      "gzipSize": 726,
+      "chunks": [
+        "app/(app)/candidates/loading-c08bc6d7870108c9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196200
+    },
+    {
+      "name": "app/(app)/candidates/[slug]/page-8c25301ae7c59a82.js",
+      "size": 23475,
+      "gzipSize": 6625,
+      "chunks": [
+        "app/(app)/candidates/[slug]/page-8c25301ae7c59a82.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196200
+    },
+    {
+      "name": "app/(app)/civic-actions/error-ecac235c8a90e8e1.js",
+      "size": 2268,
+      "gzipSize": 1037,
+      "chunks": [
+        "app/(app)/civic-actions/error-ecac235c8a90e8e1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196200
+    },
+    {
+      "name": "app/(app)/civic-actions/create/page-c38e34c24d776d2f.js",
+      "size": 10723,
+      "gzipSize": 3863,
+      "chunks": [
+        "app/(app)/civic-actions/create/page-c38e34c24d776d2f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196200
+    },
+    {
+      "name": "app/(app)/contact/error-08cef4b451f67f8f.js",
+      "size": 2279,
+      "gzipSize": 1044,
+      "chunks": [
+        "app/(app)/contact/error-08cef4b451f67f8f.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196200
+    },
+    {
+      "name": "app/(app)/civic-actions/[id]/page-0bb28777696931f2.js",
+      "size": 11850,
+      "gzipSize": 4542,
+      "chunks": [
+        "app/(app)/civic-actions/[id]/page-0bb28777696931f2.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196201
+    },
+    {
+      "name": "app/(app)/contact/loading-6e864f7493202dfc.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/contact/loading-6e864f7493202dfc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196201
+    },
+    {
+      "name": "app/(app)/contact/history/page-252813bfd37e22de.js",
+      "size": 16268,
+      "gzipSize": 5906,
+      "chunks": [
+        "app/(app)/contact/history/page-252813bfd37e22de.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196201
+    },
+    {
+      "name": "app/(app)/contact/history/layout-5ab40e271acfca7e.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/contact/history/layout-5ab40e271acfca7e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196201
+    },
+    {
+      "name": "app/(app)/contact/submissions/page-0e4853b528e60fb9.js",
+      "size": 14529,
+      "gzipSize": 4601,
+      "chunks": [
+        "app/(app)/contact/submissions/page-0e4853b528e60fb9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196202
+    },
+    {
+      "name": "app/(app)/profile/error-f87acd8e528a8922.js",
+      "size": 2256,
+      "gzipSize": 1038,
+      "chunks": [
+        "app/(app)/profile/error-f87acd8e528a8922.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196202
+    },
+    {
+      "name": "app/(app)/profile/loading-2363e8fdae641288.js",
+      "size": 1562,
+      "gzipSize": 726,
+      "chunks": [
+        "app/(app)/profile/loading-2363e8fdae641288.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196202
+    },
+    {
+      "name": "app/(app)/profile/layout-2353c5a9677956de.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/profile/layout-2353c5a9677956de.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196202
+    },
+    {
+      "name": "app/(app)/profile/edit/layout-74a7aed243d7df07.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/profile/edit/layout-74a7aed243d7df07.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196202
+    },
+    {
+      "name": "app/(app)/profile/page-36c81980a4c7c36c.js",
+      "size": 27647,
+      "gzipSize": 8420,
+      "chunks": [
+        "app/(app)/profile/page-36c81980a4c7c36c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196202
+    },
+    {
+      "name": "app/(app)/profile/edit/page-61518930-e89a27dea1ef43e4.js",
+      "size": 145,
+      "gzipSize": 138,
+      "chunks": [
+        "app/(app)/profile/edit/page-61518930-e89a27dea1ef43e4.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196203
+    },
+    {
+      "name": "app/(app)/profile/edit/page-d00dba5c-347cdf54f73461e1.js",
+      "size": 14100,
+      "gzipSize": 5071,
+      "chunks": [
+        "app/(app)/profile/edit/page-d00dba5c-347cdf54f73461e1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196203
+    },
+    {
+      "name": "app/(app)/profile/edit/page-2a56fd1c-adbce5a29874fd61.js",
+      "size": 24323,
+      "gzipSize": 6938,
+      "chunks": [
+        "app/(app)/profile/edit/page-2a56fd1c-adbce5a29874fd61.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196203
+    },
+    {
+      "name": "app/(app)/profile/edit/page-f3956634-2e081d759ecf8490.js",
+      "size": 10683,
+      "gzipSize": 3121,
+      "chunks": [
+        "app/(app)/profile/edit/page-f3956634-2e081d759ecf8490.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196204
+    },
+    {
+      "name": "app/(app)/profile/biometric-setup/page-369ac18f71dd8d5d.js",
+      "size": 8179,
+      "gzipSize": 2792,
+      "chunks": [
+        "app/(app)/profile/biometric-setup/page-369ac18f71dd8d5d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196204
+    },
+    {
+      "name": "app/(app)/profile/preferences/layout-5517340caff12ffc.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/profile/preferences/layout-5517340caff12ffc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196204
+    },
+    {
+      "name": "app/(app)/admin/error-c5cbc7ca5453b148.js",
+      "size": 2250,
+      "gzipSize": 1034,
+      "chunks": [
+        "app/(app)/admin/error-c5cbc7ca5453b148.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196204
+    },
+    {
+      "name": "app/(app)/admin/layout-c643398da7061e23.js",
+      "size": 796,
+      "gzipSize": 521,
+      "chunks": [
+        "app/(app)/admin/layout-c643398da7061e23.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196204
+    },
+    {
+      "name": "app/(app)/admin/page-c93652fb175741b9.js",
+      "size": 1430,
+      "gzipSize": 826,
+      "chunks": [
+        "app/(app)/admin/page-c93652fb175741b9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196204
+    },
+    {
+      "name": "app/(app)/profile/preferences/page-733d7984689e5340.js",
+      "size": 38433,
+      "gzipSize": 10906,
+      "chunks": [
+        "app/(app)/profile/preferences/page-733d7984689e5340.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196205
+    },
+    {
+      "name": "app/(app)/admin/analytics/page-f3956634-a9f2af4e3fe99b97.js",
+      "size": 20977,
+      "gzipSize": 6600,
+      "chunks": [
+        "app/(app)/admin/analytics/page-f3956634-a9f2af4e3fe99b97.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196205
+    },
+    {
+      "name": "app/(app)/admin/feature-flags/page-e5ffda97b1019d08.js",
+      "size": 15790,
+      "gzipSize": 5292,
+      "chunks": [
+        "app/(app)/admin/feature-flags/page-e5ffda97b1019d08.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196206
+    },
+    {
+      "name": "app/(app)/admin/analytics/page-15216c44-e5033cf5bb59f181.js",
+      "size": 52193,
+      "gzipSize": 14697,
+      "chunks": [
+        "app/(app)/admin/analytics/page-15216c44-e5033cf5bb59f181.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196207
+    },
+    {
+      "name": "app/(app)/admin/moderation/page-6c3ca5fcc7c41d67.js",
+      "size": 21665,
+      "gzipSize": 5778,
+      "chunks": [
+        "app/(app)/admin/moderation/page-6c3ca5fcc7c41d67.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196208
+    },
+    {
+      "name": "app/(app)/admin/performance/page-fce6cac09e34a10b.js",
+      "size": 5828,
+      "gzipSize": 2356,
+      "chunks": [
+        "app/(app)/admin/performance/page-fce6cac09e34a10b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196208
+    },
+    {
+      "name": "app/(app)/admin/reimport/page-ef86de8988c56ed8.js",
+      "size": 8448,
+      "gzipSize": 2666,
+      "chunks": [
+        "app/(app)/admin/reimport/page-ef86de8988c56ed8.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196208
+    },
+    {
+      "name": "app/(app)/admin/contact/page-a2bc4071efce5da9.js",
+      "size": 2847,
+      "gzipSize": 1304,
+      "chunks": [
+        "app/(app)/admin/contact/page-a2bc4071efce5da9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196208
+    },
+    {
+      "name": "app/(app)/admin/monitoring/page-2d2d79d301ce01a1.js",
+      "size": 23957,
+      "gzipSize": 6843,
+      "chunks": [
+        "app/(app)/admin/monitoring/page-2d2d79d301ce01a1.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196208
+    },
+    {
+      "name": "app/(app)/admin/monitoring/loading-33d89716ff142246.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/admin/monitoring/loading-33d89716ff142246.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196209
+    },
+    {
+      "name": "app/(app)/admin/security/page-a994ebaca53b4636.js",
+      "size": 17547,
+      "gzipSize": 4994,
+      "chunks": [
+        "app/(app)/admin/security/page-a994ebaca53b4636.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196209
+    },
+    {
+      "name": "app/(app)/admin/system/page-7628f34dc6fc6670.js",
+      "size": 5808,
+      "gzipSize": 2351,
+      "chunks": [
+        "app/(app)/admin/system/page-7628f34dc6fc6670.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196209
+    },
+    {
+      "name": "app/(app)/admin/users/page-284d1235aa607939.js",
+      "size": 5768,
+      "gzipSize": 2322,
+      "chunks": [
+        "app/(app)/admin/users/page-284d1235aa607939.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196209
+    },
+    {
+      "name": "app/(app)/admin/dashboard/page-49c66bea2297ef1a.js",
+      "size": 1484,
+      "gzipSize": 840,
+      "chunks": [
+        "app/(app)/admin/dashboard/page-49c66bea2297ef1a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196209
+    },
+    {
+      "name": "app/(app)/admin/dashboard/overview/page-308d049550aeb2c8.js",
+      "size": 17610,
+      "gzipSize": 5343,
+      "chunks": [
+        "app/(app)/admin/dashboard/overview/page-308d049550aeb2c8.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196210
+    },
+    {
+      "name": "app/(app)/admin/site-messages/page-9c0984f53498154d.js",
+      "size": 20544,
+      "gzipSize": 4786,
+      "chunks": [
+        "app/(app)/admin/site-messages/page-9c0984f53498154d.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196210
+    },
+    {
+      "name": "app/(app)/admin/verify/civics-db/page-b1036f97d5da8ca0.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/admin/verify/civics-db/page-b1036f97d5da8ca0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196210
+    },
+    {
+      "name": "app/(app)/admin/feedback/enhanced/page-a7aaf851247980dc.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/admin/feedback/enhanced/page-a7aaf851247980dc.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196210
+    },
+    {
+      "name": "app/(app)/admin/feedback/page-6efb7d876a610738.js",
+      "size": 33355,
+      "gzipSize": 8113,
+      "chunks": [
+        "app/(app)/admin/feedback/page-6efb7d876a610738.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196211
+    },
+    {
+      "name": "app/(app)/polls/layout-175ce8dc428e8a60.js",
+      "size": 369,
+      "gzipSize": 258,
+      "chunks": [
+        "app/(app)/polls/layout-175ce8dc428e8a60.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196211
+    },
+    {
+      "name": "app/(app)/polls/page-59761a768e270298.js",
+      "size": 32095,
+      "gzipSize": 10004,
+      "chunks": [
+        "app/(app)/polls/page-59761a768e270298.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196211
+    },
+    {
+      "name": "app/(app)/polls/analytics/page-0ab05bce4fe1bf90.js",
+      "size": 16442,
+      "gzipSize": 4922,
+      "chunks": [
+        "app/(app)/polls/analytics/page-0ab05bce4fe1bf90.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196212
+    },
+    {
+      "name": "app/(app)/polls/error-9653742c9a071c37.js",
+      "size": 2253,
+      "gzipSize": 1035,
+      "chunks": [
+        "app/(app)/polls/error-9653742c9a071c37.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196212
+    },
+    {
+      "name": "app/(app)/polls/[id]/page-cb2cae6a97c895a8.js",
+      "size": 678,
+      "gzipSize": 397,
+      "chunks": [
+        "app/(app)/polls/[id]/page-cb2cae6a97c895a8.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196212
+    },
+    {
+      "name": "app/(app)/polls/[id]/results/page-19851fa79ce89aae.js",
+      "size": 678,
+      "gzipSize": 397,
+      "chunks": [
+        "app/(app)/polls/[id]/results/page-19851fa79ce89aae.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196212
+    },
+    {
+      "name": "app/(app)/polls/templates/page-f7ff648bef00dc10.js",
+      "size": 20229,
+      "gzipSize": 6163,
+      "chunks": [
+        "app/(app)/polls/templates/page-f7ff648bef00dc10.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196212
+    },
+    {
+      "name": "app/(app)/polls/[id]/error-9e511991cd049bbd.js",
+      "size": 2391,
+      "gzipSize": 1296,
+      "chunks": [
+        "app/(app)/polls/[id]/error-9e511991cd049bbd.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196213
+    },
+    {
+      "name": "app/(app)/polls/create/page-644afceb8813ef75.js",
+      "size": 58140,
+      "gzipSize": 14702,
+      "chunks": [
+        "app/(app)/polls/create/page-644afceb8813ef75.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196214
+    },
+    {
+      "name": "app/(app)/polls/create/constituent-will/page-d84fcbf25da15d66.js",
+      "size": 19428,
+      "gzipSize": 6548,
+      "chunks": [
+        "app/(app)/polls/create/constituent-will/page-d84fcbf25da15d66.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196214
+    },
+    {
+      "name": "app/(app)/representatives/page-01abf9087322dd71.js",
+      "size": 27373,
+      "gzipSize": 7037,
+      "chunks": [
+        "app/(app)/representatives/page-01abf9087322dd71.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196215
+    },
+    {
+      "name": "app/(app)/representatives/error-c390296d3529f74a.js",
+      "size": 2282,
+      "gzipSize": 1041,
+      "chunks": [
+        "app/(app)/representatives/error-c390296d3529f74a.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196215
+    },
+    {
+      "name": "app/(app)/representatives/my/page-51144983efe52da7.js",
+      "size": 6566,
+      "gzipSize": 2688,
+      "chunks": [
+        "app/(app)/representatives/my/page-51144983efe52da7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196215
+    },
+    {
+      "name": "app/(app)/representatives/[id]/page-724f7d19ba0453ad.js",
+      "size": 42245,
+      "gzipSize": 11261,
+      "chunks": [
+        "app/(app)/representatives/[id]/page-724f7d19ba0453ad.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196216
+    },
+    {
+      "name": "app/(app)/representatives/[id]/accountability/page-711a596e07187d27.js",
+      "size": 26326,
+      "gzipSize": 7523,
+      "chunks": [
+        "app/(app)/representatives/[id]/accountability/page-711a596e07187d27.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196217
+    },
+    {
+      "name": "app/(app)/e2e/admin-store/page-6c44db4c5f278c62.js",
+      "size": 10807,
+      "gzipSize": 2993,
+      "chunks": [
+        "app/(app)/e2e/admin-store/page-6c44db4c5f278c62.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196217
+    },
+    {
+      "name": "app/(app)/representatives/self/overrides/page-61b26386c8dddfa6.js",
+      "size": 5955,
+      "gzipSize": 2190,
+      "chunks": [
+        "app/(app)/representatives/self/overrides/page-61b26386c8dddfa6.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196217
+    },
+    {
+      "name": "app/(app)/e2e/analytics-store/page-053eabec78b0bcc9.js",
+      "size": 13338,
+      "gzipSize": 3162,
+      "chunks": [
+        "app/(app)/e2e/analytics-store/page-053eabec78b0bcc9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196217
+    },
+    {
+      "name": "app/(app)/e2e/app-store/page-2ae893db2995f2e7.js",
+      "size": 8899,
+      "gzipSize": 2571,
+      "chunks": [
+        "app/(app)/e2e/app-store/page-2ae893db2995f2e7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196218
+    },
+    {
+      "name": "app/(app)/e2e/admin-navigation/page-e0a264c42b78a941.js",
+      "size": 2443,
+      "gzipSize": 1246,
+      "chunks": [
+        "app/(app)/e2e/admin-navigation/page-e0a264c42b78a941.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196218
+    },
+    {
+      "name": "app/(app)/e2e/analytics-dashboard/page-ebf7bd62d5befd65.js",
+      "size": 4280,
+      "gzipSize": 1791,
+      "chunks": [
+        "app/(app)/e2e/analytics-dashboard/page-ebf7bd62d5befd65.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196218
+    },
+    {
+      "name": "app/(app)/e2e/civics-lure/page-bc2d13fd54de5b0e.js",
+      "size": 23779,
+      "gzipSize": 7011,
+      "chunks": [
+        "app/(app)/e2e/civics-lure/page-bc2d13fd54de5b0e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196218
+    },
+    {
+      "name": "app/(app)/e2e/auth-access/page-a6207057b05d9d66.js",
+      "size": 5137,
+      "gzipSize": 2105,
+      "chunks": [
+        "app/(app)/e2e/auth-access/page-a6207057b05d9d66.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196218
+    },
+    {
+      "name": "app/(app)/e2e/dashboard-journey/page-8bf22de062ad80d0.js",
+      "size": 5706,
+      "gzipSize": 2351,
+      "chunks": [
+        "app/(app)/e2e/dashboard-journey/page-8bf22de062ad80d0.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196219
+    },
+    {
+      "name": "app/(app)/e2e/feeds-store/page-3749a2962deb0edf.js",
+      "size": 9810,
+      "gzipSize": 2912,
+      "chunks": [
+        "app/(app)/e2e/feeds-store/page-3749a2962deb0edf.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196219
+    },
+    {
+      "name": "app/(app)/e2e/feeds-store/layout-8f29f8e64b74a028.js",
+      "size": 496,
+      "gzipSize": 339,
+      "chunks": [
+        "app/(app)/e2e/feeds-store/layout-8f29f8e64b74a028.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196219
+    },
+    {
+      "name": "app/(app)/e2e/feedback/page-b6267bd1b2f87b56.js",
+      "size": 5371,
+      "gzipSize": 2330,
+      "chunks": [
+        "app/(app)/e2e/feedback/page-b6267bd1b2f87b56.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196219
+    },
+    {
+      "name": "app/(app)/e2e/notification-store/page-dbed268e1c1d5605.js",
+      "size": 16719,
+      "gzipSize": 3876,
+      "chunks": [
+        "app/(app)/e2e/notification-store/page-dbed268e1c1d5605.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196220
+    },
+    {
+      "name": "app/(app)/e2e/navigation-shell/page-8e264d479842e4ab.js",
+      "size": 23820,
+      "gzipSize": 7012,
+      "chunks": [
+        "app/(app)/e2e/navigation-shell/page-8e264d479842e4ab.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196220
+    },
+    {
+      "name": "app/(app)/e2e/onboarding-auth/page-e46fef7c8167ccce.js",
+      "size": 19554,
+      "gzipSize": 5310,
+      "chunks": [
+        "app/(app)/e2e/onboarding-auth/page-e46fef7c8167ccce.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196220
+    },
+    {
+      "name": "app/(app)/e2e/onboarding-flow/page-ebef5c2f89c8276c.js",
+      "size": 20496,
+      "gzipSize": 6047,
+      "chunks": [
+        "app/(app)/e2e/onboarding-flow/page-ebef5c2f89c8276c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196221
+    },
+    {
+      "name": "app/(app)/e2e/global-navigation/page-26f418fde605a05c.js",
+      "size": 4377,
+      "gzipSize": 1950,
+      "chunks": [
+        "app/(app)/e2e/global-navigation/page-26f418fde605a05c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196221
+    },
+    {
+      "name": "app/(app)/e2e/onboarding-store/page-4eafb33292a473a7.js",
+      "size": 17549,
+      "gzipSize": 4984,
+      "chunks": [
+        "app/(app)/e2e/onboarding-store/page-4eafb33292a473a7.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196221
+    },
+    {
+      "name": "app/(app)/e2e/poll-create/page-32975b65e728937b.js",
+      "size": 6525,
+      "gzipSize": 2489,
+      "chunks": [
+        "app/(app)/e2e/poll-create/page-32975b65e728937b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196222
+    },
+    {
+      "name": "app/(app)/e2e/polls-store/page-4d23e740dc7a299b.js",
+      "size": 20957,
+      "gzipSize": 6000,
+      "chunks": [
+        "app/(app)/e2e/polls-store/page-4d23e740dc7a299b.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196222
+    },
+    {
+      "name": "app/(app)/e2e/push-notifications/page-f72966cbec748867.js",
+      "size": 23994,
+      "gzipSize": 6073,
+      "chunks": [
+        "app/(app)/e2e/push-notifications/page-f72966cbec748867.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196223
+    },
+    {
+      "name": "app/(app)/e2e/poll-wizard/page-cc8bfd8f0d307eae.js",
+      "size": 10503,
+      "gzipSize": 2802,
+      "chunks": [
+        "app/(app)/e2e/poll-wizard/page-cc8bfd8f0d307eae.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196223
+    },
+    {
+      "name": "app/(app)/e2e/profile-accessibility/page-12500039350f9c42.js",
+      "size": 21268,
+      "gzipSize": 7004,
+      "chunks": [
+        "app/(app)/e2e/profile-accessibility/page-12500039350f9c42.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196223
+    },
+    {
+      "name": "app/(app)/e2e/pwa-store/page-76b8079025b9ce66.js",
+      "size": 25298,
+      "gzipSize": 6241,
+      "chunks": [
+        "app/(app)/e2e/pwa-store/page-76b8079025b9ce66.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196224
+    },
+    {
+      "name": "app/(app)/e2e/voting-store/page-a019e70a7aa1a965.js",
+      "size": 19448,
+      "gzipSize": 5151,
+      "chunks": [
+        "app/(app)/e2e/voting-store/page-a019e70a7aa1a965.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196224
+    },
+    {
+      "name": "app/(app)/e2e/pwa-analytics/page-32f893a48f97204e.js",
+      "size": 9273,
+      "gzipSize": 3289,
+      "chunks": [
+        "app/(app)/e2e/pwa-analytics/page-32f893a48f97204e.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196224
+    },
+    {
+      "name": "app/(app)/e2e/widget-dashboard/page-924fbaf35e525f34.js",
+      "size": 25558,
+      "gzipSize": 8124,
+      "chunks": [
+        "app/(app)/e2e/widget-dashboard/page-924fbaf35e525f34.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196225
+    },
+    {
+      "name": "app/(app)/e2e/user-store/page-d18029c34bd3503c.js",
+      "size": 10168,
+      "gzipSize": 2922,
+      "chunks": [
+        "app/(app)/e2e/user-store/page-d18029c34bd3503c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196225
+    },
+    {
+      "name": "app/(app)/e2e/poll-run/[id]/page-34e5636361dea4ad.js",
+      "size": 2381,
+      "gzipSize": 1123,
+      "chunks": [
+        "app/(app)/e2e/poll-run/[id]/page-34e5636361dea4ad.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196225
+    },
+    {
+      "name": "app/(app)/candidate/error-719717c8376b9dc9.js",
+      "size": 2266,
+      "gzipSize": 1037,
+      "chunks": [
+        "app/(app)/candidate/error-719717c8376b9dc9.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196225
+    },
+    {
+      "name": "app/(app)/candidate/dashboard/page-7d800b37fe4d7525.js",
+      "size": 21708,
+      "gzipSize": 6416,
+      "chunks": [
+        "app/(app)/candidate/dashboard/page-7d800b37fe4d7525.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196226
+    },
+    {
+      "name": "app/(app)/candidate/declare/page-02d62c9aa3b5540c.js",
+      "size": 38278,
+      "gzipSize": 9594,
+      "chunks": [
+        "app/(app)/candidate/declare/page-02d62c9aa3b5540c.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196227
+    },
+    {
+      "name": "app/(app)/e2e/profile-store/page-e6c9b5daa8021945.js",
+      "size": 15392,
+      "gzipSize": 4235,
+      "chunks": [
+        "app/(app)/e2e/profile-store/page-e6c9b5daa8021945.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196227
+    },
+    {
+      "name": "app/(app)/candidate/platform/[id]/edit/page-9b29876efd67adb6.js",
+      "size": 9586,
+      "gzipSize": 3230,
+      "chunks": [
+        "app/(app)/candidate/platform/[id]/edit/page-9b29876efd67adb6.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196227
+    }
+  ],
+  "alerts": [],
+  "summary": {
+    "totalBundles": 367,
+    "totalSize": 5762487,
+    "averageSize": 15701.599455040872,
+    "largestBundle": {
+      "name": "next-dist-8bb010c3-69b5c59a61f48022.js",
+      "size": 173175,
+      "gzipSize": 53830,
+      "chunks": [
+        "next-dist-8bb010c3-69b5c59a61f48022.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196160
+    },
+    "smallestBundle": {
+      "name": "app/(app)/feed/page-eaff7ab0-545052b2b2ed74df.js",
+      "size": 119,
+      "gzipSize": 120,
+      "chunks": [
+        "app/(app)/feed/page-eaff7ab0-545052b2b2ed74df.js"
+      ],
+      "dependencies": [],
+      "timestamp": 1773484196196
+    },
+    "alertsCount": 0
+  },
+  "thresholds": {
+    "maxBundleSize": 512000,
+    "maxChunkSize": 244000,
+    "warningBundleSize": 400000,
+    "warningChunkSize": 200000
+  },
+  "timestamp": 1773484196229
+}

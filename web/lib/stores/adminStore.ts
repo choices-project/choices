@@ -161,6 +161,7 @@ export type AdminActions = Pick<BaseStore, 'setLoading' | 'setError' | 'clearErr
   selectAllUsers: () => void;
   deselectAllUsers: () => void;
   updateUserRole: (userId: string, role: string) => Promise<void>;
+  updateUser: (userId: string, updates: Partial<{ username: string; is_admin: boolean; role?: string }>) => Promise<void>;
   updateUserStatus: (userId: string, status: string) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
 
@@ -1269,6 +1270,44 @@ export const createAdminActions = (
           }
         },
 
+        updateUser: async (userId, updates) => {
+          try {
+            const payload: Record<string, unknown> = {};
+            if (updates.username !== undefined) payload.username = updates.username;
+            if (updates.is_admin !== undefined) payload.is_admin = updates.is_admin;
+            if (Object.keys(payload).length === 0) return;
+
+            const response = await fetch('/api/admin/users', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, updates: payload }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({ error: response.statusText }));
+              throw new Error(errorData.error || `Failed to update user: ${response.statusText}`);
+            }
+
+            setState((state) => {
+              const target = state.users.find((u) => u.id === userId);
+              if (target) {
+                if (updates.username !== undefined) target.name = updates.username;
+                if (updates.is_admin !== undefined) {
+                  target.is_admin = updates.is_admin;
+                  target.role = updates.role ?? (updates.is_admin ? 'admin' : 'user');
+                }
+              }
+            });
+
+            logger.info('User updated successfully', { userId, updatedFields: Object.keys(payload) });
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            setErrorState(message);
+            logger.error('Failed to update user', error instanceof Error ? error : new Error(message));
+            throw error;
+          }
+        },
+
         updateUserStatus: async (userId, status) => {
           try {
             const supabase = await getSupabaseBrowserClient();
@@ -1820,6 +1859,7 @@ const selectAdminUserActions = (state: AdminStore) => ({
   selectAllUsers: state.selectAllUsers,
   deselectAllUsers: state.deselectAllUsers,
   updateUserRole: state.updateUserRole,
+  updateUser: state.updateUser,
   updateUserStatus: state.updateUserStatus,
   deleteUser: state.deleteUser,
 });

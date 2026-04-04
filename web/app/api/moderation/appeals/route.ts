@@ -10,6 +10,7 @@ import {
   parseBody,
 } from '@/lib/api';
 import { MODERATION_APPEAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -34,9 +35,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { data, error } = await (supabase as any)
     .from('moderation_appeals')
     .insert({
-      action_id: parsedBody.data.action_id,
+      action_id: sanitizeInput(String(parsedBody.data.action_id).trim()),
       user_id: user.id,
-      message: parsedBody.data.message,
+      message: sanitizeInput(String(parsedBody.data.message).trim()),
       status: 'open',
     })
     .select(MODERATION_APPEAL_SELECT_COLUMNS)

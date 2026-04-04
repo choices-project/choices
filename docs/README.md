@@ -1,6 +1,6 @@
 # Documentation
 
-_Last updated: March 2026_
+_Last updated: April 4, 2026_
 
 ## Getting Started
 
@@ -8,6 +8,9 @@ _Last updated: March 2026_
 |------|------|
 | **New contributor?** | [GETTING_STARTED.md](GETTING_STARTED.md) |
 | Project vision | [VISION.md](VISION.md) |
+| Trust layer (verification, equal votes) | [TRUST_LAYER.md](TRUST_LAYER.md) |
+| Community guidelines | [COMMUNITY_GUIDELINES.md](COMMUNITY_GUIDELINES.md) |
+| Theory of change (optional deep read) | [THEORY_OF_CHANGE.md](THEORY_OF_CHANGE.md) |
 | System architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Contributing workflow | [../CONTRIBUTING.md](../CONTRIBUTING.md) |
 
@@ -19,7 +22,7 @@ _Last updated: March 2026_
 | State management (Zustand) | [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) |
 | Testing guide | [TESTING.md](TESTING.md) |
 | Environment variables | [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) |
-| Database schema | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) |
+| Database schema | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) · full `public` lists: [DATABASE_SCHEMA_PUBLIC_INDEX.generated.md](DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) (`npm run docs:public-schema-index`) |
 | API documentation | [API/README.md](API/README.md) |
 | Troubleshooting | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
@@ -31,6 +34,7 @@ _Last updated: March 2026_
 | Security model | [SECURITY.md](SECURITY.md) |
 | WebAuthn / passkeys | [WEBAUTHN_DESIGN.md](WEBAUTHN_DESIGN.md) |
 | Roadmap & remaining work | [ROADMAP.md](ROADMAP.md) |
+| **Documentation ↔ code audit checklist** | [DOCUMENTATION_AUDIT_ROADMAP.md](DOCUMENTATION_AUDIT_ROADMAP.md) |
 
 ## Compliance
 
@@ -42,6 +46,7 @@ _Last updated: March 2026_
 ## API Reference
 
 - [API/README.md](API/README.md) — Overview and authentication
+- [API/inventory.md](API/inventory.md) — Full route handler listing (regenerate from repo root: `npm run docs:api-inventory`)
 - [API/contracts.md](API/contracts.md) — Response format standards
 - [API/civic-actions.md](API/civic-actions.md) — Civic actions API
 - [API/response-guide.md](API/response-guide.md) — Response patterns

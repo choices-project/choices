@@ -14,6 +14,7 @@ import { useI18n } from '@/hooks/useI18n';
 
 import { usePollResults } from '../hooks/usePollResults';
 import { optimizedPollService } from '../lib/poll-service';
+import { PollOptionComparison } from './PollOptionComparison';
 
 
 type OptimizedPollResultsProps = {
@@ -283,6 +284,11 @@ export default function OptimizedPollResults({
         <h2 id={resultsHeadingId} className="text-lg font-semibold text-foreground">
           {t('polls.view.results.heading')}
         </h2>
+        <PollOptionComparison
+          options={sortedOptions}
+          totalVotes={totalVotes}
+          className="mb-4"
+        />
         <div className="space-y-3">
           {sortedOptions.map((option, index) => {
             const optionId = option.optionId ?? option.option;

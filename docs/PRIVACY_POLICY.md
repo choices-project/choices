@@ -1,7 +1,7 @@
 # Privacy Policy
 
-**Last Updated:** November 5, 2025  
-**Effective Date:** November 5, 2025
+**Last Updated:** April 4, 2026  
+**Effective Date:** April 4, 2026
 
 ## Our Privacy Philosophy
 
@@ -26,7 +26,7 @@ At Choices, we believe privacy is a fundamental human right. We are committed to
 
 **What We Don't Do:**
 - ❌ Collect data without your explicit consent
-- ❌ Sell your data to third parties
+- ❌ Sell **personal** or **row-level** data that identifies you to third parties
 - ❌ Use dark patterns to trick you into sharing data
 - ❌ Track you without permission
 - ❌ Make opting out difficult
@@ -241,9 +241,11 @@ You have **16 granular privacy controls** to manage your data. All default to OF
 
 ## Data Sharing
 
-### We Never Sell Your Data
+### We do not sell personal information
 
-**We do not sell, rent, or trade your personal information to third parties. Period.**
+**We do not sell, rent, or trade your personal information** (for example, your account profile, precise location, or tied vote history) **as a commercial data broker would.** Any **optional** program that supports public-interest research—such as an aggregate **Insights Panel**—uses **coarsened or aggregated** outputs, explicit **opt-in**, easy **revocation**, and contractual limits on re-identification. Those programs are **not** permission to expose your individual record in a dataset sold to others.
+
+_This section describes product intent. It is not legal advice; confirm final language with counsel._
 
 ### When We Share Data
 
@@ -493,7 +495,7 @@ We comply with the California Consumer Privacy Act (CCPA).
 **Your CCPA Rights:**
 - Right to know what data we collect
 - Right to delete your data
-- Right to opt-out of data sales (we don't sell data)
+- Right to opt-out of “sales” and certain sharing as defined by the CCPA (we do not sell personal information in the row-level sense described above; some aggregate research sharing may still require granular choices and notices depending on rule updates—use in-app controls or contact us)
 - Right to non-discrimination
 
 **California Residents:** Email privacy@choices.app with "CCPA Request" in subject
@@ -519,9 +521,9 @@ Our code is open source and auditable. You can review:
 
 We conduct regular privacy audits and publish summaries.
 
-**Latest Audit:** November 2025  
-**Status:** All 4 critical privacy violations fixed  
-**Details:** See /docs/library-audit-nov2025/
+**Latest Audit:** November 2025 (historical)  
+**Status:** Prior critical fixes documented in repo audit materials  
+**Details:** See project `docs/archive/` and internal audit notes where published
 
 ### Metrics We Track
 
@@ -554,9 +556,9 @@ At Choices, we believe privacy is not a luxury—it's a right. We've designed ou
 
 ---
 
-**Last Updated:** November 5, 2025  
-**Version:** 1.0  
-**Status:** Production
+**Last Updated:** April 4, 2026  
+**Version:** 1.1  
+**Status:** Production (copy reflects trust-layer and aggregate-research nuance)
 
 **Questions?** privacy@choices.app  
 **Ready to adjust your privacy?** My Data Dashboard
@@ -565,5 +567,5 @@ At Choices, we believe privacy is not a luxury—it's a right. We've designed ou
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

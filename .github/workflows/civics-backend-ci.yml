@@ -48,3 +48,10 @@ jobs:
 
       - name: Unit tests
         run: npm run test
+
+      - name: Ingest smoke test (quick)
+        run: npm run tools:smoke-test -- --quick --json
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'dev-only-secret' }}
+        continue-on-error: true

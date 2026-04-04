@@ -1,6 +1,6 @@
 # API Documentation
 
-_Last updated: January 2026_
+_Last updated: April 4, 2026_
 
 This directory contains API documentation for the Choices platform.
 
@@ -12,6 +12,7 @@ The Choices API is a RESTful API built on Next.js API routes. All endpoints retu
 
 - **[API Response Guide](response-guide.md)** - successResponse, error handling, client patterns
 - **[API Contracts](contracts.md)** - Response formats, error codes, and standards
+- **[Route inventory](inventory.md)** - Auto-generated list of all `web/app/api/**/route.ts` handlers (`npm run docs:api-inventory` from repository root; row count should match `nextJsRouteHandlers` from `npm run docs:surface-counts`)
 - **[Civic Actions API](civic-actions.md)** - Civic engagement endpoints
 
 ## Base URL
@@ -168,5 +169,5 @@ See [`docs/TESTING.md`](../TESTING.md) for testing guidelines.
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-02-26
+- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
 

@@ -8,6 +8,7 @@ import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
 
 import { AnimatedCard } from '@/components/shared/AnimatedCard';
+import { BackToTop } from '@/components/shared/BackToTop';
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -25,10 +26,12 @@ import {
   usePollsActions,
   usePollsError,
   usePollsLoading,
+  usePollsLoadingMore,
 } from '@/lib/stores/pollsStore';
 import logger from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 // Stable defaults for URL filters to avoid useMemo dependency churn
@@ -54,6 +57,7 @@ function PollsPageContent() {
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const polls = useFilteredPollCards();
   const isLoading = usePollsLoading();
+  const isLoadingMore = usePollsLoadingMore();
   const error = usePollsError();
   const filters = usePollFilters();
   const search = usePollSearch();
@@ -329,6 +333,46 @@ function PollsPageContent() {
     [pagination.totalPages],
   );
 
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const handleLoadMore = useCallback(() => {
+    const nextPage = pagination.currentPage + 1;
+    if (nextPage <= pagination.totalPages && !isLoadingMore && !isLoading) {
+      setCurrentPageRef.current(nextPage);
+      void loadPollsRef.current({ page: nextPage, append: true });
+    }
+  }, [pagination.currentPage, pagination.totalPages, isLoadingMore, isLoading]);
+
+  const handleLoadMoreRef = useRef(handleLoadMore);
+  React.useEffect(() => { handleLoadMoreRef.current = handleLoadMore; }, [handleLoadMore]);
+
+  const handleRefresh = useCallback(async () => {
+    setCurrentPageRef.current(1);
+    await loadPollsRef.current();
+  }, []);
+
+  const { containerRef: pullToRefreshRef, indicator: pullToRefreshIndicator } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    disabled: isLoading,
+  });
+
+  useEffect(() => {
+    if (!isMounted || polls.length === 0) return;
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || pagination.currentPage >= pagination.totalPages || isLoadingMore || isLoading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          handleLoadMoreRef.current();
+        }
+      },
+      { rootMargin: '200px', threshold: 0 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [isMounted, polls.length, pagination.currentPage, pagination.totalPages, isLoadingMore, isLoading]);
+
   // Show loading state until component is mounted
   // Use data attribute to help with debugging and ensure consistent SSR/client rendering
   if (!isMounted) {
@@ -343,7 +387,9 @@ function PollsPageContent() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data" role="status" aria-busy="true" aria-live="polite" aria-label="Loading polls">
-        <PollFiltersPanel />
+        <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40 mb-4">
+          <PollFiltersPanel />
+        </div>
         <div className="mt-6">
           <PollListSkeleton count={6} />
         </div>
@@ -353,7 +399,8 @@ function PollsPageContent() {
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto px-4 py-8">
+      <div ref={pullToRefreshRef} className="container mx-auto px-4 py-8">
+        {pullToRefreshIndicator}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
             <div className="flex-1">
@@ -396,7 +443,9 @@ function PollsPageContent() {
           </div>
         )}
 
-        <PollFiltersPanel />
+        <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40 mb-4">
+          <PollFiltersPanel />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {polls.length === 0 ? (
@@ -507,6 +556,34 @@ function PollsPageContent() {
             ))
           )}
         </div>
+
+        {pagination.totalPages > 1 && pagination.currentPage < pagination.totalPages && (
+          <div
+            ref={loadMoreRef}
+            className="mt-6 flex min-h-[120px] items-center justify-center"
+            role="status"
+            aria-live="polite"
+            aria-label="Load more polls"
+          >
+            {isLoadingMore ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-hidden />
+                Loading more…
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                className="min-h-[44px]"
+                aria-label="Load more polls"
+              >
+                {tRef.current('polls.page.pagination.loadMore', { defaultValue: 'Load more' })}
+              </Button>
+            )}
+          </div>
+        )}
+
+        <BackToTop />
 
         {pagination.totalPages > 1 && (
           <div className="mt-6 flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">

@@ -2,7 +2,7 @@
 
 **Privacy-first participatory democracy platform.**
 
-Citizens engage with polls, representatives, and civic actions — all built on transparent, open-source infrastructure with zero data selling, zero weighted votes, and full user control over personal data.
+Citizens engage with polls, representatives, and civic actions on transparent, open-source infrastructure. We do not sell **personal** or row-level data. Optional programs (for example an aggregate **Insights Panel**) are **opt-in**, use coarsened or aggregated outputs with safeguards, and can be revoked in privacy settings. Poll results use **equal voting** (one person, one counted vote in tallies you see). **Trust tiers** are optional and intended for verification, abuse resistance, and contextual signals—not to sell votes or replace equal tabulation in product surfaces that promise it.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-0_errors-blue)](#) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
@@ -13,7 +13,7 @@ Citizens engage with polls, representatives, and civic actions — all built on 
 ```bash
 git clone <repository-url> && cd Choices/web
 npm install
-cp .env.local.example .env.local   # Configure Supabase keys
+# Create web/.env.local with Supabase + base URL — see docs/GETTING_STARTED.md
 npm run dev                         # http://localhost:3000
 ```
 
@@ -31,9 +31,9 @@ See [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) for the full setup guid
 
 **Trust & Privacy**
 - **WebAuthn / Passkeys** — Passwordless biometric authentication
-- **Trust Tiers** — T0–T3 progressive verification
+- **Trust Tiers** — T0–T3 optional verification (abuse resistance, visibility context; not for selling personal data)
 - **Privacy Controls** — 16 granular GDPR/CCPA-compliant settings
-- **Equal Voting** — "A vote is a vote. Period." No weighted results.
+- **Equal Voting** — Equal tabulation in public poll results; no pay-to-weight or bought vote multipliers in those tallies
 
 **Platform**
 - **PWA** — Offline-first, push notifications, installable
@@ -50,8 +50,8 @@ See [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) for the full setup guid
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript (strict mode) |
 | UI | React + Tailwind CSS + shadcn/ui + Framer Motion |
-| State | Zustand + Immer (17 stores) |
-| Database | PostgreSQL via Supabase (70+ tables, RLS) |
+| State | Zustand + Immer (**21** store modules; **17** reset in logout cascade—see `docs/ARCHITECTURE.md`) |
+| Database | PostgreSQL via Supabase (**~93** public tables in generated types; RLS—run `npm run docs:surface-counts` at repo root) |
 | Auth | Supabase Auth + WebAuthn passkeys |
 | Rate Limiting | Upstash Redis |
 | Email | Resend |
@@ -89,6 +89,9 @@ npm run build         # Production build
 | Database schema | [docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md) |
 | Security | [docs/SECURITY.md](./docs/SECURITY.md) |
 | Vision & roadmap | [docs/VISION.md](./docs/VISION.md) |
+| Trust layer | [docs/TRUST_LAYER.md](./docs/TRUST_LAYER.md) |
+| Community guidelines | [docs/COMMUNITY_GUIDELINES.md](./docs/COMMUNITY_GUIDELINES.md) |
+| Theory of change (optional) | [docs/THEORY_OF_CHANGE.md](./docs/THEORY_OF_CHANGE.md) |
 | Full doc index | [docs/README.md](./docs/README.md) |
 
 ---

@@ -2,7 +2,7 @@
  * FEC Service
  * 
  * Service for Federal Election Commission data operations
- * Handles campaign finance transparency, independence scoring, and "bought off" detection
+ * Handles campaign finance transparency, independence scoring, and contribution-vs-record alignment signals
  */
 
 import { createClient } from '@supabase/supabase-js';

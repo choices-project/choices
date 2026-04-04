@@ -59,22 +59,22 @@ const rules = [
     name: 'store-governance',
     triggers: [/^web\/lib\/stores\//],
     requireAll: [
-      'docs/ROADMAP_SINGLE_SOURCE.md',
+      'docs/ROADMAP.md',
       'docs/STATE_MANAGEMENT.md',
     ],
     message:
-      'Store changes require updating `docs/ROADMAP_SINGLE_SOURCE.md` (section C) and `docs/STATE_MANAGEMENT.md` (selector contract).',
+      'Store changes require updating `docs/ROADMAP.md` (relevant sections) and `docs/STATE_MANAGEMENT.md` (selector contract / cascade if touched).',
   },
   {
     name: 'api-contracts',
     triggers: [/^web\/app\/api\//],
     requireAll: ['docs/API/contracts.md'],
     requireOne: [
-      'docs/TESTING/api-contract-plan.md',
+      'docs/TESTING.md',
       'docs/archive/release-notes/CHANGELOG.md',
     ],
     message:
-      'API handler changes require updating `docs/API/contracts.md` plus either `docs/TESTING/api-contract-plan.md` or the changelog to document the contract impact.',
+      'API handler changes require updating `docs/API/contracts.md` plus either `docs/TESTING.md` or `docs/archive/release-notes/CHANGELOG.md` to document the contract impact.',
   },
 ];
 

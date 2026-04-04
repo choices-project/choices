@@ -1,11 +1,7 @@
 /**
- * Campaign Finance Transparency & "Bought Off" Indicator System
- *
- * Exposes financial influence and creates accountability for campaign funding
- * Shows who's buying whom and how it affects voting patterns
- *
- * @author Agent E
- * @date 2025-01-15
+ * Campaign finance transparency — dashboards, contribution patterns, and evidence-style
+ * alignment signals (independence, transparency, red-flag heuristics). Outputs are
+ * contextual analytics, not legal findings or accusations about any person.
  */
 
 import { NotImplementedError } from '@/lib/errors';
@@ -114,7 +110,7 @@ export type FinancialInfluenceDashboard = {
   }>;
 }
 
-export type BoughtOffIndicator = {
+export type FinanceAlignmentIndicator = {
   candidateId: string;
 
   // Red Flags
@@ -308,11 +304,12 @@ export class FinancialTransparencySystem {
   }
 
   /**
-   * Generate "bought off" indicator analysis
+   * Combine red flags, independence, and transparency scores for campaign-finance context
+   * (evidence-based signals; not a legal or factual finding about any person).
    */
-  async generateBoughtOffIndicator(candidateId: string): Promise<BoughtOffIndicator> {
+  async generateFinanceAlignmentIndicator(candidateId: string): Promise<FinanceAlignmentIndicator> {
     try {
-      logger.info('Generating bought off indicator', { candidateId });
+      logger.info('Generating finance alignment indicator', { candidateId });
 
       // Identify red flags
       const redFlags = await this.identifyRedFlags(candidateId);
@@ -323,14 +320,14 @@ export class FinancialTransparencySystem {
       // Calculate transparency score
       const transparencyScore = await this.calculateTransparencyScore(candidateId);
 
-      const indicator: BoughtOffIndicator = {
+      const indicator: FinanceAlignmentIndicator = {
         candidateId,
         redFlags,
         independenceScore,
         transparencyScore
       };
 
-      logger.info('Bought off indicator generated', {
+      logger.info('Finance alignment indicator generated', {
         candidateId,
         redFlagsCount: redFlags.length,
         independenceScore: independenceScore.overall,
@@ -340,8 +337,8 @@ export class FinancialTransparencySystem {
       return indicator;
 
     } catch (error) {
-      logger.error('Failed to generate bought off indicator', { candidateId, error });
-      throw new Error(`Failed to generate bought off indicator: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      logger.error('Failed to generate finance alignment indicator', { candidateId, error });
+      throw new Error(`Failed to generate finance alignment indicator: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
