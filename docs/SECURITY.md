@@ -162,6 +162,15 @@ _(**30** `route.ts` files call `apiRateLimiter.checkLimit` at least once—the m
 
 If a row says **default**, the effective cap is **50 / 15 min** until the route passes explicit options. Inline comments in handlers may lag—**trust the `checkLimit` call**.
 
+### Postgres `rate_limits` vs Upstash (`apiRateLimiter`)
+
+| Layer | Where it lives | `web/` usage for HTTP throttling |
+|-------|----------------|----------------------------------|
+| **`apiRateLimiter`** | Upstash Redis (`web/lib/rate-limiting/upstash-rate-limiter.ts`) | **Yes** — every `checkLimit` call in `web/app/api/**/route.ts` |
+| **`public.rate_limits`** | Postgres (Supabase) | **No** — no `.from('rate_limits')` (or equivalent) in app TS except generated types; optional **`cleanup_expired_rate_limits`** RPC in schema |
+
+**Implication:** [API/README.md](API/README.md) lists three layers (middleware, Upstash limiter, DB table); only the first two enforce traffic for Route Handlers today. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) describes the table columns for migrations and visibility—**not** as the backing store for Upstash keys.
+
 ---
 
 ## Service role (`getSupabaseAdminClient`) in API routes

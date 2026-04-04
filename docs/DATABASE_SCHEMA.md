@@ -926,18 +926,15 @@ System health monitoring.
 - `created_at` TIMESTAMPTZ
 
 ### `rate_limits`
-Rate limit tracking.
+Postgres table holding **per-endpoint / IP** counters with an **`expires_at`** window (`web/types/supabase.ts` `Row`). **HTTP rate limiting for this codebase’s Next.js routes is Upstash-backed** via `apiRateLimiter`—there are **no** `.from('rate_limits')` calls under `web/` outside generated types (see [`SECURITY.md`](./SECURITY.md), Postgres vs Upstash). The table and RPC **`cleanup_expired_rate_limits`** remain in schema for housekeeping or future server-side use.
 
 **Columns**:
 - `id` UUID PRIMARY KEY
-- `identifier` TEXT (user_id, ip_address, api_key)
-- `identifier_type` TEXT
 - `endpoint` TEXT
-- `request_count` INTEGER
-- `window_start` TIMESTAMPTZ
-- `window_end` TIMESTAMPTZ
-- `limit_exceeded` BOOLEAN
-- `created_at` TIMESTAMPTZ
+- `ip_address` INET (generated client types this as `unknown`)
+- `request_count` INTEGER | null
+- `expires_at` TIMESTAMPTZ | null
+- `created_at` TIMESTAMPTZ | null
 
 ---
 
@@ -1182,6 +1179,8 @@ npx supabase gen types typescript --project-id muqwrehywjrbaeerjgfb > types/supa
 - `created_at` timestamptz | null
 
 ### `rate_limits`
+_See [Performance & Health § `rate_limits`](#rate_limits) for usage vs Upstash._
+
 - `id` uuid (PK)
 - `endpoint` text
 - `ip_address` inet

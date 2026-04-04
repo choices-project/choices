@@ -75,7 +75,7 @@ Limits are **not** a single global “requests per minute” tier. The stack com
 
 1. **Edge middleware** (`web/middleware.ts`, `web/lib/core/security/config.ts`) — default **100** requests per **15 minutes** per IP in production (development uses a higher cap). Stricter caps apply to prefixes such as `/api/auth`, `/login`, and `/api/admin`.
 2. **`apiRateLimiter` (Upstash-backed)** (`web/lib/rate-limiting/api-rate-limiter.ts`) — per-route overrides. Examples: feedback and poll voting use **10** requests per **minute** per IP; WebAuthn verify uses **30** per **15 minutes** per IP. Other routes use the limiter’s defaults or custom windows—**read the handler** for the route you care about.
-3. **`rate_limits` table** — server-side persistence for some flows (see migrations and `web/types/supabase.ts`).
+3. **`public.rate_limits` (Postgres)** — table (and RPC `cleanup_expired_rate_limits`) exist in `web/types/supabase.ts` / migrations. **Current `web/` application code does not read or write this table for request throttling**; route limits use **Upstash** (item 2). Treat the table as schema/housekeeping unless a new caller is introduced (then document it).
 
 Responses may include `429` with a `RATE_LIMIT` (or route-specific) error payload. Header names vary by layer; do not assume `X-RateLimit-*` on every response.
 

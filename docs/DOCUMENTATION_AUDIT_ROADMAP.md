@@ -99,7 +99,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 |----|------|---------------------|
 | P1-1 | **`docs/ARCHITECTURE.md`**: replace “70+ tables”, “19 RPC” | Use **generated counts** or say “see `web/types/supabase.ts` / run `scripts/…`”. Include **view** count if you mention analytics. |
 | P1-2 | **`docs/DATABASE_SCHEMA.md`**: RPC section title | Rename to **“Key RPC functions (documented subset)”** or **“RPC catalog”** with full list vs migration names; add **“Total RPCs in generated types: N”**. |
-| P1-3 | Reconcile **`calculate_trust_weighted_votes`** | Still appears in generated `Functions` in this snapshot—docs claim removal. **Either** document current DB truth **or** remove from types via migration + regen; docs and DB must **agree.** |
+| P1-3 | Reconcile **`calculate_trust_weighted_votes`** | **Done (doc policy):** RPC may remain on remote DB / types until dropped by migration; **`docs/DATABASE_SCHEMA.md`** + **`docs/TRUST_LAYER.md`** mark it **legacy / forbidden for product tallies**. Optional later: migration to drop function + regen types. |
 | P1-4 | Scripts at repo root | **`npm run docs:surface-counts`** (JSON counts) and **`npm run docs:public-schema-index`** (full table/view/RPC lists). Optional: fold into **`npm run verify:docs`** (P5). |
 
 ### 5.2 State management
@@ -126,7 +126,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
 | P2-1 | **RLS** | **`docs/SECURITY.md`** — overview + **policy domains** + **service-role** section with **`rg`** inventory; distinct admin-route **count** auto-synced (**`docs:security-snapshots`** / **`verify:docs`**). **Stretch:** per-table policy appendix. |
-| P2-2 | **Rate limiting** | **`docs/API/README.md`** + **`docs/SECURITY.md`** — **`apiRateLimiter`** table + auto snapshot (**`npm run docs:security-snapshots`**) of how many `route.ts` files call `checkLimit`; verified in **`verify:docs`**. **Stretch:** `rate_limits` table usage matrix. |
+| P2-2 | **Rate limiting** | **`docs/API/README.md`** + **`docs/SECURITY.md`** — **`apiRateLimiter`** inventory table + auto snapshot (**`docs:security-snapshots`** / **`verify:docs`**); **Postgres `rate_limits` vs Upstash** matrix in **`SECURITY.md`** (DB table not used from `web/` for throttling; Upstash enforces route limits). |
 | P2-3 | **Equal voting vs trust-tier analytics** | **`docs/TRUST_LAYER.md`** — “Database analytics (`calculate_trust_*` RPCs)” links `DATABASE_SCHEMA.md`, voting integrity policy, `ROADMAP.md`. |
 | P2-4 | **Feature flags** | **`docs/FEATURE_FLAGS.md`** — mutable + always-on tables sync from `feature-flags.ts` via **`npm run docs:feature-flags`**; **`verify:docs`** runs **`generate-feature-flags-doc.mjs --check`**. |
 | P2-5 | **WebAuthn / session** | **`docs/WEBAUTHN_DESIGN.md`** — “Sessions, cookies, and logout” + rate-limit bypass pointer to **`authenticate/verify/route.ts`**. |
