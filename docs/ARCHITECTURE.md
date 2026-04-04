@@ -157,7 +157,7 @@ Zustand stores follow the creator pattern with Immer middleware. See [STATE_MANA
 All API routes live under `web/app/api/*` and follow consistent patterns:
 
 - **Authentication** — Supabase session auth on all mutating endpoints; admin endpoints require admin role
-- **Rate limiting** — Upstash Redis via `apiRateLimiter` on 20+ routes
+- **Rate limiting** — Upstash Redis via `apiRateLimiter`; per-route keys and windows in **[`docs/SECURITY.md`](SECURITY.md)** (*Upstash API rate limits*). Edge middleware has separate limits (`web/middleware.ts`).
 - **Input validation** — Zod schemas + `sanitizeInput` on user-generated content
 - **Response format** — Standard `{ success: boolean, data: T }` envelope via `successResponse()`/`errorResponse()`
 - **CSRF protection** — Double-submit token validation on auth endpoints

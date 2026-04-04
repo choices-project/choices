@@ -69,16 +69,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const startTime = Date.now();
 
-  // Rate limiting: 10 messages per minute per user
+  // Rate limiting: 10 messages per minute per IP (see docs/SECURITY.md apiRateLimiter inventory)
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
   const userAgent = request.headers.get('user-agent');
-  const rateLimitOptions: any = {};
-  if (userAgent) rateLimitOptions.userAgent = userAgent;
-  const rateLimitResult = await apiRateLimiter.checkLimit(
-    ip,
-    '/api/contact/messages',
-    rateLimitOptions
-  );
+  const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/contact/messages', {
+    maxRequests: 10,
+    windowMs: 60 * 1000,
+    ...(userAgent ? { userAgent } : {}),
+  });
   if (!rateLimitResult.allowed) {
     return rateLimitError('Too many messages. Please wait before sending another message.');
   }

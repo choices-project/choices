@@ -126,7 +126,7 @@ rg 'apiRateLimiter\.checkLimit' web/app/api --glob '**/route.ts'
 | Area | Route module | Limiter key (Redis namespace) | Limits (max / window) | Notes |
 |------|----------------|-------------------------------|-------------------------|--------|
 | Auth | `api/auth/login/route.ts` | `/api/auth/login` | default | Only when `AUTH_RATE_LIMIT_ENABLED=1`; skipped in E2E harness |
-| Auth | `api/auth/register/route.ts` | `/api/auth/register` | default | Code comment may say “5/15m”; implementation uses default unless options added |
+| Auth | `api/auth/register/route.ts` | `/api/auth/register` | **5 / 15 min** | |
 | Auth | `api/auth/device-flow/route.ts` | `/api/auth/device-flow` | **3 / 1 hour** | |
 | Auth | `api/auth/device-flow/verify/route.ts` | `/api/auth/device-flow/verify` | **10 / 15 min** | |
 | Auth | `api/auth/device-flow/poll/route.ts` | `/api/auth/device-flow/poll` | **60 / 5 min** | |
@@ -139,7 +139,7 @@ rg 'apiRateLimiter\.checkLimit' web/app/api --glob '**/route.ts'
 | Shared | `api/shared/vote/route.ts` | `/api/shared/vote` | **10 / 1 min** | |
 | Feedback | `api/feedback/route.ts` | `/api/feedback` | **10 / 1 min** | |
 | Contact | `api/contact/submit/route.ts` | `/api/contact/submit` | **5 / 1 min** | |
-| Contact | `api/contact/messages/route.ts` | `/api/contact/messages` | default | |
+| Contact | `api/contact/messages/route.ts` | `/api/contact/messages` | **10 / 1 min** | Per IP |
 | Civics | `api/civic-actions/route.ts` (POST) | `/api/civic-actions` | **10 / 15 min** | |
 | Civics | `api/civic-actions/[id]/route.ts` (PATCH) | `/api/civic-actions/{id}` | **20 / 15 min** | Per-action id in key |
 | Civics | `api/civic-actions/[id]/route.ts` (DELETE) | `/api/civic-actions/{id}` | **5 / 15 min** | Stricter |

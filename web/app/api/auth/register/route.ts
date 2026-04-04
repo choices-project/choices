@@ -45,11 +45,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Rate limiting: 5 registration attempts per 15 minutes per IP
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
     const userAgent = request.headers.get('user-agent') ?? undefined;
-    const rateLimitResult = await apiRateLimiter.checkLimit(
-      ip,
-      '/api/auth/register',
-      { ...(userAgent ? { userAgent } : {}) }
-    );
+    const rateLimitResult = await apiRateLimiter.checkLimit(ip, '/api/auth/register', {
+      maxRequests: 5,
+      windowMs: 15 * 60 * 1000,
+      ...(userAgent ? { userAgent } : {}),
+    });
 
     if (!rateLimitResult.allowed) {
       return rateLimitError('Too many registration attempts. Please try again later.');

@@ -257,7 +257,7 @@ This verifies that:
 - API changes include contract tests
 - Documentation is updated
 
-Full audit checklist (counts, schema lists, phases): [`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](docs/DOCUMENTATION_AUDIT_ROADMAP.md).
+Full audit checklist (counts, schema lists, phases): [`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](docs/DOCUMENTATION_AUDIT_ROADMAP.md). If you change **`apiRateLimiter.checkLimit`** options in `web/app/api/`, update the **Upstash API rate limits** table in [`docs/SECURITY.md`](docs/SECURITY.md).
 
 Use `GOVERNANCE_BYPASS=1 npm run governance:check` only when explicitly approved by an owner.
 
