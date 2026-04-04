@@ -1,26 +1,23 @@
 #!/usr/bin/env node
 /**
- * Fails fast when generated API inventory drifts from the route tree, or when
- * banned doc path strings appear under web/ (historical broken pointers).
+ * Fails fast when generated API inventory drifts from the route tree, when the
+ * public schema index counts drift from web/types/supabase.ts, or when banned
+ * doc path strings appear under web/ (historical broken pointers).
  *
  * Run from repo root: node scripts/verify-docs.mjs
  */
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import {
+  computeSurfaceCounts,
+  parsePublicIndexGeneratedCounts,
+  walkRouteFiles,
+} from './lib/surface-counts.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
-
-function walkRouteFiles(dir, acc = []) {
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walkRouteFiles(p, acc);
-    else if (name === 'route.ts') acc.push(p);
-  }
-  return acc;
-}
 
 const apiRoot = join(root, 'web/app/api');
 const routeCount = walkRouteFiles(apiRoot).length;
@@ -45,6 +42,54 @@ if (inventoryTotal !== routeCount) {
   console.error(
     `verify-docs: docs/API/inventory.md claims ${inventoryTotal} route modules but ` +
       `web/app/api has ${routeCount} route.ts files. Run: npm run docs:api-inventory`,
+  );
+  process.exit(1);
+}
+
+let surface;
+try {
+  surface = computeSurfaceCounts(root);
+} catch (e) {
+  console.error('verify-docs: surface counts failed:', e?.message ?? e);
+  process.exit(1);
+}
+
+if (surface.nextJsRouteHandlers !== routeCount) {
+  console.error(
+    `verify-docs: internal error — route tally ${routeCount} != computeSurfaceCounts ${surface.nextJsRouteHandlers}`,
+  );
+  process.exit(1);
+}
+
+const indexPath = join(root, 'docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md');
+let indexText;
+try {
+  indexText = readFileSync(indexPath, 'utf8');
+} catch {
+  console.error(
+    'verify-docs: missing docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md — run npm run docs:public-schema-index',
+  );
+  process.exit(1);
+}
+
+const idx = parsePublicIndexGeneratedCounts(indexText);
+if (idx.publicTables == null || idx.publicViews == null || idx.publicRpcs == null) {
+  console.error(
+    'verify-docs: could not parse Public tables/views/RPC counts in docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md',
+  );
+  process.exit(1);
+}
+
+if (
+  idx.publicTables !== surface.publicTables ||
+  idx.publicViews !== surface.publicViews ||
+  idx.publicRpcs !== surface.publicRpcFunctions
+) {
+  console.error(
+    'verify-docs: docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md counts do not match web/types/supabase.ts.\n' +
+      `  generated md: tables=${idx.publicTables} views=${idx.publicViews} rpcs=${idx.publicRpcs}\n` +
+      `  types file:   tables=${surface.publicTables} views=${surface.publicViews} rpcs=${surface.publicRpcFunctions}\n` +
+      'Run: npm run docs:public-schema-index',
   );
   process.exit(1);
 }
@@ -80,5 +125,5 @@ try {
 }
 
 console.log(
-  `verify-docs: OK (${routeCount} API route modules, inventory in sync; feature flags doc; no banned patterns in web/)`,
+  `verify-docs: OK (${routeCount} API route modules; inventory + public schema index + feature flags; no banned patterns in web/)`,
 );

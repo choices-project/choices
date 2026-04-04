@@ -27,7 +27,7 @@ _Last updated: April 4, 2026_
 | Feature flags | [FEATURE_FLAGS.md](FEATURE_FLAGS.md) |
 | Troubleshooting | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
-From repository root, **`npm run verify:docs`** checks that `docs/API/inventory.md` matches the `web/app/api/**/route.ts` tree, that **`docs/FEATURE_FLAGS.md`** matches `web/lib/core/feature-flags.ts`, and that `web/` does not reference removed doc paths. After editing feature flags, run **`npm run docs:feature-flags`** before `verify:docs`.
+From repository root, **`npm run verify:docs`** checks that `docs/API/inventory.md` matches the `web/app/api/**/route.ts` tree, that **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** counts (tables / views / RPCs) match **`web/types/supabase.ts`**, that **`docs/FEATURE_FLAGS.md`** matches `web/lib/core/feature-flags.ts`, and that `web/` does not reference removed doc paths. After schema or flag changes, run **`npm run docs:public-schema-index`** and/or **`npm run docs:feature-flags`** before `verify:docs`.
 
 ## Operations
 
