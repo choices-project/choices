@@ -162,7 +162,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** table/view/RPC counts vs `web/types/supabase.ts` (shared `scripts/lib/surface-counts.mjs` with `docs:surface-counts`); feature-flags `--check`; **`docs/SECURITY.md`** rg snapshots via **`sync-security-snapshots.mjs --check`**; `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. Optional: link checker. |
+| P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** table/view/RPC counts vs `web/types/supabase.ts` (shared `scripts/lib/surface-counts.mjs` with `docs:surface-counts`); feature-flags `--check`; **`docs/SECURITY.md`** rg snapshots via **`sync-security-snapshots.mjs --check`**; **`scripts/verify-doc-links.mjs`** (canonical `docs/**` except `archive/`, plus root `README` / `CONTRIBUTING` / `AGENTS` / `DEPLOYMENT`); `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. |
 | P5-2 | CI job | **`verify:docs`** runs in **`.github/workflows/ci.yml`** (quality job) after installing `ripgrep`. |
 | P5-3 | PR template | **Updated:** checklist item for **`npm run verify:docs`** when API routes change. |
 

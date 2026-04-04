@@ -23,6 +23,7 @@
     "ci:verify": "npm audit --audit-level=moderate",
     "governance:check": "node scripts/check-governance.js",
     "verify:docs": "node scripts/verify-docs.mjs",
+    "verify:doc-links": "node scripts/verify-doc-links.mjs",
     "docs:feature-flags": "node scripts/generate-feature-flags-doc.mjs",
     "docs:security-snapshots": "node scripts/sync-security-snapshots.mjs",
     "docs:api-inventory": "node scripts/generate-api-inventory.mjs",
