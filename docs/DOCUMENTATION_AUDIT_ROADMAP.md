@@ -5,7 +5,7 @@ _Audience: new developers and maintainers doing a truth-alignment pass_
 
 This document is the **master checklist** for making every piece of documentation, inline comment, governance rule, and onboarding step **match the actual application** (routes, schema, stores, env, feature flags, security boundaries). It is intentionally detailed so you can execute it in order without guessing what “done” means.
 
-**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/DATABASE_SCHEMA.md` (RPC narrative + **generated** [`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) for full table/view/RPC lists), `docs/STATE_MANAGEMENT.md` (21 modules vs 17-cascade), `docs/DEPLOYMENT.md`, `docs/API/contracts.md`, and `docs/archive/README.md` (canonical `ROADMAP.md`) were aligned with the codebase. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
+**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/DATABASE_SCHEMA.md` (RPC narrative + **generated** [`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) for full table/view/RPC lists), `docs/STATE_MANAGEMENT.md` (21 modules vs 17-cascade), `docs/DEPLOYMENT.md`, `docs/API/contracts.md`, `docs/SECURITY.md` (RLS overview), `docs/FEATURE_FLAGS.md`, `docs/API/README.md` (accurate rate-limit layering), and `docs/archive/README.md` (canonical `ROADMAP.md`) were aligned with the codebase. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`verify:docs`** (inventory parity + banned pattern grep in `web/`). §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
 
 ---
 
@@ -114,7 +114,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
 | P1-7 | **`docs/API/inventory.md`** (generated) | Table: path, methods (`npm run docs:api-inventory`); row count must match `nextJsRouteHandlers` from `docs:surface-counts` unless exclusions are documented (`route.ts` only). |
-| P1-8 | **`docs/API/README.md`** | Either **summarizes** domains and links to inventory **or** states “representative examples only—full list in inventory.” |
+| P1-8 | **`docs/API/README.md`** | **Done:** overview states illustrative sections; links **`inventory.md`** + **`verify:docs`**. |
 | P1-9 | Spot-check high-risk areas | Admin routes, civics (`/api/v1/civics/...`), auth, webhooks—folder names = URL segments. |
 
 ---
@@ -125,10 +125,10 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P2-1 | **RLS** | `docs/SECURITY.md` + `docs/DATABASE_SCHEMA.md`: for each **user-owned** table, note policy pattern (owner read/write, public read, admin bypass via service role). |
-| P2-2 | **Rate limiting** | Map Upstash / middleware usage to documented limits; grep `rate_limit` table + API middleware. |
+| P2-1 | **RLS** | **`docs/SECURITY.md`** — RLS overview + service-role warning + migration pointer. **Stretch:** per-table policy appendix (or generated from migrations). |
+| P2-2 | **Rate limiting** | **`docs/API/README.md`** — middleware vs `apiRateLimiter` vs per-route overrides. **Stretch:** matrix of every limited route + `rate_limits` usage. |
 | P2-3 | **Equal voting vs trust-tier analytics** | Single canonical explanation: product surfaces vs `calculate_trust_*` analytics-only—cross-link `TRUST_LAYER.md`, `ROADMAP.md`, and code comments. |
-| P2-4 | **Feature flags** | Table: flag → default → where read (server/client) → UI entry points; remove references to missing `FEATURE_STATUS.md` or **revive** a short canonical `docs/FEATURE_FLAGS.md` fed from the same registry. |
+| P2-4 | **Feature flags** | **`docs/FEATURE_FLAGS.md`** (+ `verify:docs` guard). **Stretch:** auto-sync table from `feature-flags.ts` via script. |
 | P2-5 | **WebAuthn / session** | `WEBAUTHN_DESIGN.md` vs `userStore` + API routes—cookie names, logout clearing, E2E harness flags. |
 
 ---
@@ -162,7 +162,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P5-1 | `npm run verify:docs` | Runs: link checker (optional), count scripts, grep guard for removed paths (`FEATURE_STATUS` without file). |
+| P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. Optional: add link checker / fold in `docs:surface-counts`. |
 | P5-2 | CI job (optional) | Fails if `route.ts` count changes but `docs/API/inventory.md` not updated (allowlist or generated file committed). |
 | P5-3 | PR template | Checklist: “Updated docs/RULEMAP affected by this PR.” |
 
@@ -187,6 +187,7 @@ These are **process and quality** improvements beyond single files.
 npm run docs:surface-counts
 npm run docs:public-schema-index
 npm run docs:api-inventory
+npm run verify:docs
 
 # Store modules (must equal cascade narrative in docs/STATE_MANAGEMENT.md)
 ls web/lib/stores/*Store.ts 2>/dev/null | wc -l

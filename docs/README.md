@@ -24,7 +24,10 @@ _Last updated: April 4, 2026_
 | Environment variables | [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) |
 | Database schema | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) · full `public` lists: [DATABASE_SCHEMA_PUBLIC_INDEX.generated.md](DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) (`npm run docs:public-schema-index`) |
 | API documentation | [API/README.md](API/README.md) |
+| Feature flags | [FEATURE_FLAGS.md](FEATURE_FLAGS.md) |
 | Troubleshooting | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
+
+From repository root, **`npm run verify:docs`** checks that `docs/API/inventory.md` matches the `web/app/api/**/route.ts` tree and that `web/` does not reference removed doc paths.
 
 ## Operations
 

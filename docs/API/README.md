@@ -8,6 +8,8 @@ This directory contains API documentation for the Choices platform.
 
 The Choices API is a RESTful API built on Next.js API routes. All endpoints return standardized response envelopes and follow consistent error handling patterns.
 
+**Coverage:** Sections below (sample paths, rate limits) are **illustrative**. The complete handler list is **[`inventory.md`](inventory.md)** (regenerate with `npm run docs:api-inventory`). Drift is caught by **`npm run verify:docs`** at the repository root.
+
 ## Quick Links
 
 - **[API Response Guide](response-guide.md)** - successResponse, error handling, client patterns
@@ -69,18 +71,15 @@ Standard error codes:
 
 ## Rate Limiting
 
-API endpoints are rate-limited using Upstash Redis. Rate limits vary by endpoint:
+Limits are **not** a single global “requests per minute” tier. The stack combines:
 
-- **Public endpoints**: 100 requests/minute
-- **Authenticated endpoints**: 1000 requests/minute
-- **Admin endpoints**: 5000 requests/minute
+1. **Edge middleware** (`web/middleware.ts`, `web/lib/core/security/config.ts`) — default **100** requests per **15 minutes** per IP in production (development uses a higher cap). Stricter caps apply to prefixes such as `/api/auth`, `/login`, and `/api/admin`.
+2. **`apiRateLimiter` (Upstash-backed)** (`web/lib/rate-limiting/api-rate-limiter.ts`) — per-route overrides. Examples: feedback and poll voting use **10** requests per **minute** per IP; WebAuthn verify uses **30** per **15 minutes** per IP. Other routes use the limiter’s defaults or custom windows—**read the handler** for the route you care about.
+3. **`rate_limits` table** — server-side persistence for some flows (see migrations and `web/types/supabase.ts`).
 
-Rate limit headers:
-- `X-RateLimit-Limit` - Request limit
-- `X-RateLimit-Remaining` - Remaining requests
-- `X-RateLimit-Reset` - Reset timestamp
+Responses may include `429` with a `RATE_LIMIT` (or route-specific) error payload. Header names vary by layer; do not assume `X-RateLimit-*` on every response.
 
-Exceeding rate limits returns `429 Too Many Requests` with error code `RATE_LIMIT`.
+Authoritative detail: **[`docs/SECURITY.md`](../SECURITY.md)** (rate limiting bullet list) and the specific `route.ts` for the endpoint.
 
 ## API Endpoints
 

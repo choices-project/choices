@@ -86,6 +86,19 @@ The following security improvements were implemented across the application:
 
 ---
 
+## Row Level Security (PostgreSQL / Supabase)
+
+**Source of truth:** `supabase/migrations/*.sql` and the live Supabase project—not this prose alone.
+
+- **RLS is enabled** on user- and content-facing tables according to migration history (search for `ENABLE ROW LEVEL SECURITY` and `CREATE POLICY`). Policies typically tie rows to **`auth.uid()`** for reads/writes on owner data, with additional **`SELECT`** rules for intentionally public or aggregate data (e.g. some poll/feedback read paths—verify the migration that introduced the policy).
+- **Anonymous key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`)** — browser and untrusted clients; every query is subject to RLS.
+- **Service role (`SUPABASE_SERVICE_ROLE_KEY`)** — **bypasses RLS**. Use only in trusted server/API routes; never expose to clients or log in full.
+- **Drift check:** After schema changes, regenerate `web/types/supabase.ts` and run `npm run docs:public-schema-index` so table/RPC inventories stay aligned.
+
+For API-layer limits (middleware, Upstash), see **Application Security** and **Rate limiting** notes elsewhere in this document.
+
+---
+
 ## 🔐 **Authentication Security**
 
 ### **WebAuthn Implementation**

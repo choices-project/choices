@@ -89,6 +89,7 @@ npm run lint          # Check code style
 npm run types:ci       # Verify TypeScript
 npm run test           # Run unit tests
 npm run governance:check  # Verify roadmap/doc updates (if needed)
+npm run verify:docs    # From repo root: API inventory vs route tree + doc pointer guard
 ```
 
 **CI will run:**
