@@ -69,4 +69,16 @@ try {
   }
 }
 
-console.log(`verify-docs: OK (${routeCount} API route modules, inventory in sync; no banned patterns in web/)`);
+try {
+  execSync('node scripts/generate-feature-flags-doc.mjs --check', {
+    cwd: root,
+    stdio: 'inherit',
+  });
+} catch (e) {
+  const status = e && typeof e === 'object' ? e.status : undefined;
+  process.exit(typeof status === 'number' ? status : 1);
+}
+
+console.log(
+  `verify-docs: OK (${routeCount} API route modules, inventory in sync; feature flags doc; no banned patterns in web/)`,
+);
