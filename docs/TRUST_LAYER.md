@@ -24,6 +24,18 @@ T0–T3 label **progressive verification** (exact rules are product-specific). I
 - **Equal tabulation** — For standard poll results in the UI, **one participant counts as one vote** in that tally (subject to one legitimate account / anti-fraud rules).
 - **Verified-weighted or analyst views** — If the product ever exposes breakdowns that weight or filter by tier, they must be **clearly labeled** as distinct from the default public tally.
 
+## Database analytics (`calculate_trust_*` RPCs)
+
+Some PostgreSQL functions segment or analyze votes **by trust tier** for dashboards, admin tooling, or experiments. They are **not** a license to change the default **equal-weight** story users see in the primary poll UI.
+
+| Function (generated types) | Intended use |
+|----------------------------|---------------|
+| **`calculate_trust_filtered_votes`** | **Display / analytics** — filtered or segmented views; must stay clearly labeled if shown to users. |
+| **`get_poll_results_by_trust_tier`**, **`get_poll_votes_by_trust_tier`** | Same bucket: breakdowns for analysis or labeled UI. |
+| **`calculate_trust_weighted_votes`** | **Do not use for product tallies.** May still appear in `web/types/supabase.ts` if the remote DB retains the symbol; application code must not call it for official results. |
+
+Canonical detail: **[`DATABASE_SCHEMA.md` § RPC Functions](DATABASE_SCHEMA.md#rpc-functions)** (including the legacy-weight subsection), **[`archive/reference/VOTING_INTEGRITY_POLICY.md`](archive/reference/VOTING_INTEGRITY_POLICY.md)** (policy), and **[`ROADMAP.md`](ROADMAP.md)** (product status).
+
 ## Data we try not to sell
 
 - **Never:** Row-level exports that identify individuals tied to votes, exact location, or contact fields for commercial resale.

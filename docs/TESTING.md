@@ -4,6 +4,8 @@ _Last updated: April 4, 2026 (E2E curated for CI and production)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
+**API contracts:** Response envelopes and error codes are defined in **[`docs/API/contracts.md`](API/contracts.md)**. When you change a route’s JSON shape or status codes, update that doc and the matching **`web/tests/contracts/*.test.ts`** (or add one).
+
 ---
 
 ## Test Commands
@@ -41,7 +43,8 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
     ```
 
 - **Contracts**
-  - Contract tests live under `web/tests/contracts/**`.
+  - Contract tests live under `web/tests/contracts/**`. Spec: **[`docs/API/contracts.md`](API/contracts.md)**.
+  - From the **repository root**, `npm run verify:docs` ensures `docs/API/inventory.md` matches the `route.ts` tree (run after adding/removing API routes; see also `npm run docs:api-inventory`).
   - Local equivalent for a single contract:
     ```bash
     cd web

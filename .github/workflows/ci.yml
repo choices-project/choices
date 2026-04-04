@@ -36,6 +36,12 @@ jobs:
     - name: Governance check
       run: npm run governance:check
 
+    - name: Install ripgrep (for verify:docs)
+      run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+    - name: Verify documentation artifacts
+      run: npm run verify:docs
+
     - name: Setup gtimeout compatibility (Linux uses 'timeout')
       run: |
         if ! command -v gtimeout &> /dev/null; then

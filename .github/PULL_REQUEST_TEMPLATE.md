@@ -50,6 +50,7 @@ Confirm the surfaces touched in this PR meet the governance standards:
 
 ## 📚 Docs & Release Checklist
 - [ ] Impacted docs updated (architecture, governance, runbooks, README, etc.).
+- [ ] **`npm run verify:docs`** (repository root) passes when `web/app/api/**/route.ts` changed; run **`npm run docs:api-inventory`** first if the inventory needs regenerating.
 - [ ] Release checklist in `docs/DEPLOYMENT.md#release-checklist` reviewed; call out any boxes that cannot be checked.
 - [ ] Support/partner comms noted if behaviour changes (link to draft or ticket).
 

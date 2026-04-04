@@ -197,6 +197,19 @@ Do not use deprecated paths: `@/lib/utils/http`, `@/lib/utils/cors`, `@/lib/util
 
 ---
 
+## Where to change what
+
+| Change | Starting points |
+|--------|-----------------|
+| Poll create / vote / results UI | `web/features/polls/`, `web/app/api/polls/`, `web/lib/stores/pollsStore.ts`, `votes` / `polls` RLS in `supabase/migrations/` |
+| Representative list / card | `web/features/civics/`, `web/lib/stores/representativeStore.ts`, civics API under `web/app/api/v1/civics/` |
+| Logout / auth cascade | `web/lib/stores/userStore.ts` (`cascadeDependentStoreReset`), [`docs/STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) |
+| Feature gating | `web/lib/core/feature-flags.ts`, [`docs/FEATURE_FLAGS.md`](FEATURE_FLAGS.md), `GET /api/feature-flags` |
+| API response shape | `@/lib/api`, [`docs/API/contracts.md`](API/contracts.md), `web/tests/contracts/` |
+| DB schema / types | `supabase/migrations/`, then `npm run types:generate` in `web/`; generated lists: `npm run docs:public-schema-index` (repo root) |
+
+---
+
 ## Testing
 
 - **Unit/RTL** — Jest suites in `tests/unit/` and `tests/integration/`

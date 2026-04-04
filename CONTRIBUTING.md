@@ -249,12 +249,15 @@ When modifying stores or API routes, run:
 
 ```bash
 npm run governance:check
+npm run verify:docs    # repository root — API inventory vs route tree
 ```
 
 This verifies that:
 - Store changes include roadmap/doc updates
 - API changes include contract tests
 - Documentation is updated
+
+Full audit checklist (counts, schema lists, phases): [`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](docs/DOCUMENTATION_AUDIT_ROADMAP.md).
 
 Use `GOVERNANCE_BYPASS=1 npm run governance:check` only when explicitly approved by an owner.
 

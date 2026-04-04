@@ -5,7 +5,7 @@ _Audience: new developers and maintainers doing a truth-alignment pass_
 
 This document is the **master checklist** for making every piece of documentation, inline comment, governance rule, and onboarding step **match the actual application** (routes, schema, stores, env, feature flags, security boundaries). It is intentionally detailed so you can execute it in order without guessing what “done” means.
 
-**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/DATABASE_SCHEMA.md` (RPC narrative + **generated** [`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md) for full table/view/RPC lists), `docs/STATE_MANAGEMENT.md` (21 modules vs 17-cascade), `docs/DEPLOYMENT.md`, `docs/API/contracts.md`, `docs/SECURITY.md` (RLS overview), `docs/FEATURE_FLAGS.md`, `docs/API/README.md` (accurate rate-limit layering), and `docs/archive/README.md` (canonical `ROADMAP.md`) were aligned with the codebase. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`verify:docs`** (inventory parity + banned pattern grep in `web/`). §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
+**Progress (April 2026):** `docs/ARCHITECTURE.md` (“Where to change what”), `docs/TRUST_LAYER.md` (`calculate_trust_*` RPC clarification), `docs/TESTING.md` (contracts + `verify:docs`), `docs/DATABASE_SCHEMA.md` (generated index), `docs/STATE_MANAGEMENT.md`, `docs/DEPLOYMENT.md`, `docs/API/*`, `docs/SECURITY.md`, `docs/FEATURE_FLAGS.md`, `AGENTS.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, **`ci.yml`** (`verify:docs` + ripgrep). **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`verify:docs`**. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
 
 ---
 
@@ -127,7 +127,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 |----|------|---------------------|
 | P2-1 | **RLS** | **`docs/SECURITY.md`** — RLS overview + service-role warning + migration pointer. **Stretch:** per-table policy appendix (or generated from migrations). |
 | P2-2 | **Rate limiting** | **`docs/API/README.md`** — middleware vs `apiRateLimiter` vs per-route overrides. **Stretch:** matrix of every limited route + `rate_limits` usage. |
-| P2-3 | **Equal voting vs trust-tier analytics** | Single canonical explanation: product surfaces vs `calculate_trust_*` analytics-only—cross-link `TRUST_LAYER.md`, `ROADMAP.md`, and code comments. |
+| P2-3 | **Equal voting vs trust-tier analytics** | **`docs/TRUST_LAYER.md`** — “Database analytics (`calculate_trust_*` RPCs)” links `DATABASE_SCHEMA.md`, voting integrity policy, `ROADMAP.md`. |
 | P2-4 | **Feature flags** | **`docs/FEATURE_FLAGS.md`** (+ `verify:docs` guard). **Stretch:** auto-sync table from `feature-flags.ts` via script. |
 | P2-5 | **WebAuthn / session** | `WEBAUTHN_DESIGN.md` vs `userStore` + API routes—cookie names, logout clearing, E2E harness flags. |
 
@@ -139,7 +139,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P3-1 | **`docs/TESTING.md`** | Sections for unit, integration, E2E; where API contracts are asserted; link **`docs/API/contracts.md`**. |
+| P3-1 | **`docs/TESTING.md`** | **Updated:** intro + Contracts CI bullets link **`docs/API/contracts.md`** and **`npm run verify:docs`**. |
 | P3-2 | **`docs/API/contracts.md`** | Error shape, pagination, auth errors—grep `createErrorResponse` / shared helpers and align examples. |
 | P3-3 | Archived **`api-contract-plan.md`** | Either **extract** still-valid checklist into `TESTING.md` or mark archive as **historical only** in archive README. |
 | P3-4 | Contract tests | List each route with tests vs untested; prioritize auth and mutation routes. |
@@ -153,8 +153,8 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
 | P4-1 | **`docs/ARCHITECTURE.md`** diagram or table | Layers: `app/` routes, `components/`, `lib/`, `contexts/`, `supabase/`, external services. |
-| P4-2 | **`AGENTS.md` / `CONTRIBUTING.md`** | Point to this roadmap when touching API, stores, or schema. |
-| P4-3 | **“Change X → file Y”** mini-index | e.g. poll creation → wizard store + API route + RLS tables; representative card → store + civics API. |
+| P4-2 | **`AGENTS.md` / `CONTRIBUTING.md`** | **Updated:** `AGENTS.md` + governance section in **`CONTRIBUTING.md`** link **`DOCUMENTATION_AUDIT_ROADMAP.md`**. |
+| P4-3 | **“Change X → file Y”** mini-index | **`docs/ARCHITECTURE.md`** — “Where to change what” table. |
 
 ---
 
@@ -163,8 +163,8 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
 | P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. Optional: add link checker / fold in `docs:surface-counts`. |
-| P5-2 | CI job (optional) | Fails if `route.ts` count changes but `docs/API/inventory.md` not updated (allowlist or generated file committed). |
-| P5-3 | PR template | Checklist: “Updated docs/RULEMAP affected by this PR.” |
+| P5-2 | CI job | **`verify:docs`** runs in **`.github/workflows/ci.yml`** (quality job) after installing `ripgrep`. |
+| P5-3 | PR template | **Updated:** checklist item for **`npm run verify:docs`** when API routes change. |
 
 ---
 

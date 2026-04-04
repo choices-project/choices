@@ -4,7 +4,7 @@
 
 ### Project overview
 
-Choices is a privacy-first participatory democracy platform (Next.js 14 App Router + Supabase). The main application lives in `web/`. See `README.md` for the full stack and `docs/GETTING_STARTED.md` for developer setup.
+Choices is a privacy-first participatory democracy platform (Next.js 14 App Router + Supabase). The main application lives in `web/`. See `README.md` for the full stack and `docs/GETTING_STARTED.md` for developer setup. When you touch **API routes**, **stores**, or **DB/schema docs**, follow **`docs/DOCUMENTATION_AUDIT_ROADMAP.md`** so inventories and contracts stay aligned.
 
 ### Runtime requirements
 
@@ -27,12 +27,13 @@ PLAYWRIGHT_USE_MOCKS=1
 
 These CI-safe placeholder values allow the dev server and E2E smoke tests to run without a real Supabase project. Pages that fetch from Supabase will show error/empty states, but routing, rendering, and harness pages work correctly.
 
-### Key commands (all run from `web/`)
+### Key commands
 
 | Task | Command |
 |------|---------|
-| Dev server | `npm run dev` (port 3000) |
-| Lint | `npm run lint` |
+| Doc inventory parity (repo root) | `npm run verify:docs` |
+| Dev server (from `web/`) | `npm run dev` (port 3000) |
+| Lint (from `web/`) | `npm run lint` |
 | Type check (app code) | `npm run types:ci` |
 | Unit tests | `npm run test` (Jest) |
 | E2E smoke tests | `npm run test:e2e:smoke` |
