@@ -13,6 +13,7 @@ The Choices platform is a TypeScript/React application built with the Next.js Ap
 │ Client (Next.js 14 / React)                          │
 │ ├─ App Router routes (web/app/)                      │
 │ ├─ Feature modules (web/features/*)                  │
+│ ├─ React contexts (web/contexts/*)                   │
 │ ├─ Zustand stores (web/lib/stores/*)                 │
 │ ├─ UI primitives (web/components/)                   │
 │ ├─ Design tokens (web/app/globals.css)               │
@@ -80,6 +81,7 @@ Choices/
 │   │   └── charts/             # Recharts wrappers
 │   ├── messages/               # i18n translation files
 │   ├── hooks/                  # Shared custom hooks
+│   ├── contexts/               # App-wide React providers (e.g. AuthContext)
 │   ├── scripts/                # Operational scripts (ingest, audits, CI helpers)
 │   ├── tests/                  # Jest + Playwright test suites
 │   └── types/                  # TypeScript type definitions
@@ -203,7 +205,7 @@ Do not use deprecated paths: `@/lib/utils/http`, `@/lib/utils/cors`, `@/lib/util
 |--------|-----------------|
 | Poll create / vote / results UI | `web/features/polls/`, `web/app/api/polls/`, `web/lib/stores/pollsStore.ts`, `votes` / `polls` RLS in `supabase/migrations/` |
 | Representative list / card | `web/features/civics/`, `web/lib/stores/representativeStore.ts`, civics API under `web/app/api/v1/civics/` |
-| Logout / auth cascade | `web/lib/stores/userStore.ts` (`cascadeDependentStoreReset`), [`docs/STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) |
+| Logout / auth cascade | `web/contexts/AuthContext.tsx` (session ↔ UI), `web/lib/stores/userStore.ts` (`cascadeDependentStoreReset`), [`docs/STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md), [`docs/WEBAUTHN_DESIGN.md`](WEBAUTHN_DESIGN.md) |
 | Feature gating | `web/lib/core/feature-flags.ts`, [`docs/FEATURE_FLAGS.md`](FEATURE_FLAGS.md), `GET /api/feature-flags` |
 | API response shape | `@/lib/api`, [`docs/API/contracts.md`](API/contracts.md), `web/tests/contracts/` |
 | DB schema / types | `supabase/migrations/`, then `npm run types:generate` in `web/`; generated lists: `npm run docs:public-schema-index` (repo root) |

@@ -142,7 +142,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | P3-1 | **`docs/TESTING.md`** | **Updated:** intro + Contracts CI bullets link **`docs/API/contracts.md`** and **`npm run verify:docs`**. |
 | P3-2 | **`docs/API/contracts.md`** | **Updated:** “Error codes and helpers” table aligned to **`response-utils.ts`** / **`types.ts`**. |
 | P3-3 | Archived **`api-contract-plan.md`** | **Done:** superseded banner in archive file; **`contracts.md`** links it as historical. |
-| P3-4 | Contract tests | **Partial:** **`contracts.md`** lists representative contract files; full route↔test matrix optional. |
+| P3-4 | Contract tests | **`docs/TESTING.md`** — contract file ↔ route table; **`contracts.md`** links to it. Massive inventory still uncovered by design. |
 
 ---
 
@@ -152,7 +152,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P4-1 | **`docs/ARCHITECTURE.md`** | **Partial:** high-level diagram + project tree + **Where to change what**; optional: explicit `contexts/` row. |
+| P4-1 | **`docs/ARCHITECTURE.md`** | **Done:** diagram + tree include **`web/contexts/`**; **Where to change what** links **AuthContext** + WebAuthn doc. |
 | P4-2 | **`AGENTS.md` / `CONTRIBUTING.md`** | **Updated:** `AGENTS.md` + governance section in **`CONTRIBUTING.md`** link **`DOCUMENTATION_AUDIT_ROADMAP.md`**. |
 | P4-3 | **“Change X → file Y”** mini-index | **`docs/ARCHITECTURE.md`** — “Where to change what” table. |
 

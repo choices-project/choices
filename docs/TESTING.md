@@ -48,10 +48,24 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
   - Local equivalent for a single contract:
     ```bash
     cd web
-    npm run test:contracts -- tests/contracts/candidate-journey.contract.test.ts
+    npm run test:contracts -- tests/contracts/health.contract.test.ts
     ```
   - When adding new contracts:
     - Keep mocks hoisted and avoid referencing `jest.mock`-local variables before initialization (no TDZ/hoist issues).
+
+  **Contract files ↔ API routes** (not exhaustive vs `docs/API/inventory.md`; add a row when you add a suite):
+
+  | Contract file (`web/tests/contracts/`) | Route module(s) under test |
+  |------------------------------------------|----------------------------|
+  | `health.contract.test.ts` | `api/health/route`, `api/health/ingest/route` |
+  | `feature-flags-public.contract.test.ts` | `api/feature-flags/public/route` |
+  | `profile.contract.test.ts` | `api/profile/route` |
+  | `contact.contract.test.ts` | `api/contact/messages/route`, `api/contact/threads/route` |
+  | `device-flow.contract.test.ts` | `api/auth/device-flow/route` |
+  | `feeds.contract.test.ts` | `api/feeds/route` |
+  | `analytics.contract.test.ts` | `api/analytics/dashboard/layout/route`, `trends`, `trust-tiers`, `temporal`, `poll/[id]/route` |
+  | `admin-breaking-news.contract.test.ts` | `api/admin/breaking-news/route` |
+  | `admin-vote-audit.contract.test.ts` | `api/admin/polls/[id]/vote-audit/route` |
 
 - **Playwright E2E**
   - CI currently runs the curated Playwright projects defined in `web/playwright.config.ts` (e.g., `chromium`, `api-tests`, `pwa-tests`).

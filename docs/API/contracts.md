@@ -173,7 +173,7 @@ Common metadata fields in API responses:
 
 ## Contract testing
 
-Jest contract suites live in **`web/tests/contracts/`** (representative files: `health`, `feature-flags-public`, `profile`, `contact`, `device-flow`, `feeds`, `analytics`, `admin-breaking-news`, `admin-vote-audit`, … — see directory listing). Commands and CI wiring: [`docs/TESTING.md`](../TESTING.md). Full route listing: [`inventory.md`](inventory.md) (`npm run docs:api-inventory`). **Drift guard:** `npm run verify:docs` (repo root).
+Jest contract suites live in **`web/tests/contracts/`**. A **file ↔ route** map (maintain when adding suites) is in [`docs/TESTING.md` § CI Test Jobs](../TESTING.md#ci-test-jobs-github-actions). Directory listing may include helpers under `contracts/helpers/`. Full route listing: [`inventory.md`](inventory.md) (`npm run docs:api-inventory`). **Drift guard:** `npm run verify:docs` (repo root).
 
 The archived planning doc [`docs/archive/reference/testing/TESTING/api-contract-plan.md`](../archive/reference/testing/TESTING/api-contract-plan.md) is **historical only** (superseded by this file + `TESTING.md`).
 
