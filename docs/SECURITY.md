@@ -95,7 +95,66 @@ The following security improvements were implemented across the application:
 - **Service role (`SUPABASE_SERVICE_ROLE_KEY`)** — **bypasses RLS**. Use only in trusted server/API routes; never expose to clients or log in full.
 - **Drift check:** After schema changes, regenerate `web/types/supabase.ts` and run `npm run docs:public-schema-index` so table/RPC inventories stay aligned.
 
-For API-layer limits (middleware, Upstash), see **Application Security** and **Rate limiting** notes elsewhere in this document.
+### RLS policy domains (informal)
+
+Use this as a **navigation aid** only—predicates and exceptions live in SQL.
+
+| Domain | Example tables | Typical RLS theme |
+|--------|----------------|-------------------|
+| Identity & sessions | `user_profiles`, `user_sessions`, `webauthn_credentials` | Owner (`auth.uid()`) read/write; tight on credentials |
+| Polls & voting | `polls`, `poll_options`, `votes` | Creator/moderator writes; public or member **SELECT** for published polls per migration |
+| Civic actions | `civic_actions`, related metadata | Creator + visibility (`is_public`); signing flows check migrations |
+| Contact | `contact_messages`, `contact_threads` | Submitter + admin/moderation paths |
+| Representatives / OpenStates mirror | `representatives_core`, `openstates_*` | Mostly read-heavy; writes often admin or ingest |
+| Admin & audit | `admin_activity_log`, `audit_logs`, moderation tables | Role / service-role patterns in later migrations |
+| System | `rate_limits`, `idempotency_keys`, health/metrics tables | Service or restricted policies |
+
+---
+
+## Upstash API rate limits (`apiRateLimiter`)
+
+**Separate from** edge **middleware** throttles (`web/middleware.ts`, `web/lib/core/security/config.ts`). Those apply to **all** matched requests; this section lists **per-route** `apiRateLimiter.checkLimit` calls under `web/app/api/**/route.ts`.
+
+**Default** when `maxRequests` / `windowMs` are omitted: **50** requests per **15 minutes** per IP per limiter **key** (`web/lib/rate-limiting/api-rate-limiter.ts`).
+
+**Maintenance:** Re-sync this table when adding or changing limits:
+
+```bash
+rg 'apiRateLimiter\.checkLimit' web/app/api --glob '**/route.ts'
+```
+
+| Area | Route module | Limiter key (Redis namespace) | Limits (max / window) | Notes |
+|------|----------------|-------------------------------|-------------------------|--------|
+| Auth | `api/auth/login/route.ts` | `/api/auth/login` | default | Only when `AUTH_RATE_LIMIT_ENABLED=1`; skipped in E2E harness |
+| Auth | `api/auth/register/route.ts` | `/api/auth/register` | default | Code comment may say “5/15m”; implementation uses default unless options added |
+| Auth | `api/auth/device-flow/route.ts` | `/api/auth/device-flow` | **3 / 1 hour** | |
+| Auth | `api/auth/device-flow/verify/route.ts` | `/api/auth/device-flow/verify` | **10 / 15 min** | |
+| Auth | `api/auth/device-flow/poll/route.ts` | `/api/auth/device-flow/poll` | **60 / 5 min** | |
+| WebAuthn | `api/v1/auth/webauthn/native/*/route.ts` | `/api/v1/auth/webauthn` | **30 / 15 min** | `authenticate/verify` skips limiter when E2E harness / `PLAYWRIGHT_USE_MOCKS==='0'` (see route) |
+| Profile | `api/profile/route.ts` | `/api/profile` | **10 / 1 min** | Multiple mutating methods |
+| Polls | `api/polls/route.ts` (POST) | `/api/polls` | **10 / 1 min** | Create poll |
+| Polls | `api/polls/[id]/vote/route.ts` | `/api/polls/vote` | **10 / 1 min** | |
+| Polls | `api/polls/[id]/lock/route.ts` | `/api/polls/lock` | **10 / 1 min** | GET + POST paths in file |
+| Polls | `api/polls/[id]/close/route.ts` | `/api/polls/close` | **10 / 1 min** | |
+| Shared | `api/shared/vote/route.ts` | `/api/shared/vote` | **10 / 1 min** | |
+| Feedback | `api/feedback/route.ts` | `/api/feedback` | **10 / 1 min** | |
+| Contact | `api/contact/submit/route.ts` | `/api/contact/submit` | **5 / 1 min** | |
+| Contact | `api/contact/messages/route.ts` | `/api/contact/messages` | default | |
+| Civics | `api/civic-actions/route.ts` (POST) | `/api/civic-actions` | **10 / 15 min** | |
+| Civics | `api/civic-actions/[id]/route.ts` (PATCH) | `/api/civic-actions/{id}` | **20 / 15 min** | Per-action id in key |
+| Civics | `api/civic-actions/[id]/route.ts` (DELETE) | `/api/civic-actions/{id}` | **5 / 15 min** | Stricter |
+| Civics | `api/civic-actions/[id]/sign/route.ts` | `/api/civic-actions/{id}/sign` | **10 / 15 min** | |
+| Representatives | `api/representatives/route.ts` | `/api/representatives` | **100 / 15 min** | |
+| Representatives | `api/representatives/bulk/route.ts` | `/api/representatives/bulk` | **50 / 15 min** | |
+| Feeds | `api/feeds/route.ts` | `/api/feeds` | **100 / 1 min** | |
+| Health | `api/health/route.ts` | `/api/health` | default | Applied when `type` triggers expensive checks (`database` / `all`) |
+| CSP | `api/csp-report/route.ts` | `/api/csp-report` | **30 / 1 min** | |
+| PWA | `api/pwa/notifications/send/route.ts` | `/api/pwa/notifications/send` | **30 / 1 min** | |
+| Admin | `api/admin/candidates/stats/route.ts` | `admin:candidates:stats` | **30 / 5 min** | |
+| Admin | `api/admin/audit/revert/route.ts` | `admin:audit:revert` | **10 / 1 min** | Sensitive |
+| Analytics | `api/analytics/performance-metrics/route.ts` | `analytics:performance-metrics` | **8 / 5 min** | Constant `ENDPOINT_KEY` in route |
+
+If a row says **default**, the effective cap is **50 / 15 min** until the route passes explicit options. Inline comments in handlers may lag—**trust the `checkLimit` call**.
 
 ---
 

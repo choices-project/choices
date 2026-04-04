@@ -79,7 +79,7 @@ Limits are **not** a single global “requests per minute” tier. The stack com
 
 Responses may include `429` with a `RATE_LIMIT` (or route-specific) error payload. Header names vary by layer; do not assume `X-RateLimit-*` on every response.
 
-Authoritative detail: **[`docs/SECURITY.md`](../SECURITY.md)** (rate limiting bullet list) and the specific `route.ts` for the endpoint.
+Authoritative detail: **[`docs/SECURITY.md`](../SECURITY.md)** — **Upstash API rate limits** table (`apiRateLimiter` per route) and middleware config pointers; cross-check the exact `route.ts` if the table and code disagree.
 
 ## API Endpoints
 
