@@ -101,6 +101,23 @@ Passkeys are the strongest available proof-of-personhood:
 
 ---
 
+## Sessions, cookies, and logout (client + server)
+
+**Cookies**
+
+- Supabase session cookies are **httpOnly**; JavaScript cannot read them for security. Passkey and auth UIs rely on the session established after **`verifyOtp`** / login flows (see `getSupabaseApiRouteClient` and **`web/app/api/auth/login/route.ts`**), which sets project-scoped names such as **`sb-{projectRef}-auth-token`** derived from the Supabase URL.
+- **`POST /api/auth/logout`** (`web/app/api/auth/logout/route.ts`) calls **`supabase.auth.signOut()`** and clears **`sb-access-token`**, **`sb-refresh-token`**, and **`sb-session-expires`** with `maxAge: 0` (production domain cookie domain when on `choices-app.com`). If cookie names change in SSR upgrades, keep this route aligned with what login/SSR actually set.
+
+**Zustand**
+
+- **`userStore.signOut()`** (`web/lib/stores/userStore.ts`) resets user/session fields and runs **`cascadeDependentStoreReset()`** so dependent stores do not keep the previous user’s data. The client should call the logout API and then refresh client auth state (e.g. via **`AuthContext`**) so the store matches the cleared session.
+
+**E2E / harness**
+
+- When **`NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`**, **middleware** relaxes auth checks for automated tests (see **`web/middleware.ts`** and **`AGENTS.md`**). Native WebAuthn **`authenticate/verify`** **skips `apiRateLimiter`** when `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` **or** **`PLAYWRIGHT_USE_MOCKS`** is literally **`'0'`** (see `web/app/api/v1/auth/webauthn/native/authenticate/verify/route.ts`).
+
+---
+
 ## UI Entry Points
 
 | Location | Purpose |
@@ -186,7 +203,7 @@ Error and success regions use ARIA for screen readers:
 
 ### Implemented (continued)
 
-- **Rate limiting** — All four WebAuthn routes (register/options, register/verify, authenticate/options, authenticate/verify) enforce 30 requests per 15 minutes per IP via `apiRateLimiter`. Shared key `/api/v1/auth/webauthn`; bypassed when `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` or `PLAYWRIGHT_USE_MOCKS=0`.
+- **Rate limiting** — Native WebAuthn routes use **`apiRateLimiter`** (e.g. **30 / 15 min** per IP on **authenticate/verify**; others may differ—grep `@/lib/rate-limiting` per file). **Bypass** conditions for verify are documented above under **Sessions, cookies, and logout**.
 
 ### Recommended
 
@@ -197,5 +214,7 @@ Error and success regions use ARIA for screen readers:
 
 ## Related Docs
 
+- [State management / logout cascade](STATE_MANAGEMENT.md) — `userStore` + `cascadeDependentStoreReset`
+- [SECURITY.md](SECURITY.md) — RLS, rate limiting, headers
 - [WEBAUTHN_SUPABASE_AUDIT](archive/2026-02-docs-consolidation/WEBAUTHN_SUPABASE_AUDIT.md) — RLS, indexes, troubleshooting (archived)
 - [RLS_VERIFICATION_GUIDE (archived)](./archive/2026-03-consolidation/root/RLS_VERIFICATION_GUIDE.md) — RLS verification

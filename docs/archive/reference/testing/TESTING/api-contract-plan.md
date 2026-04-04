@@ -1,5 +1,7 @@
 # API Contract Test Plan
 
+> **Archived — historical plan only.** Current contracts and workflow: [`docs/API/contracts.md`](../../../../../API/contracts.md), [`docs/TESTING.md`](../../../../../TESTING.md), and `web/tests/contracts/`. Do not treat this file as an active checklist.
+
 _Last updated: 2025-11-14 · Owner: GPT-5 Codex_
 
 ## Objective

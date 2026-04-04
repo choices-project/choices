@@ -5,7 +5,7 @@ _Audience: new developers and maintainers doing a truth-alignment pass_
 
 This document is the **master checklist** for making every piece of documentation, inline comment, governance rule, and onboarding step **match the actual application** (routes, schema, stores, env, feature flags, security boundaries). It is intentionally detailed so you can execute it in order without guessing what “done” means.
 
-**Progress (April 2026):** `docs/ARCHITECTURE.md` (“Where to change what”), `docs/TRUST_LAYER.md` (`calculate_trust_*` RPC clarification), `docs/TESTING.md` (contracts + `verify:docs`), `docs/DATABASE_SCHEMA.md` (generated index), `docs/STATE_MANAGEMENT.md`, `docs/DEPLOYMENT.md`, `docs/API/*`, `docs/SECURITY.md`, `docs/FEATURE_FLAGS.md`, `AGENTS.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, **`ci.yml`** (`verify:docs` + ripgrep). **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`verify:docs`**. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
+**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/TRUST_LAYER.md`, `docs/TESTING.md`, `docs/DATABASE_SCHEMA.md`, `docs/STATE_MANAGEMENT.md`, `docs/DEPLOYMENT.md`, `docs/API/contracts.md` (error helper table), `docs/WEBAUTHN_DESIGN.md` (sessions/logout/E2E), archived **`api-contract-plan.md`** banner, `docs/SECURITY.md`, `docs/FEATURE_FLAGS.md`, `AGENTS.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, **`ci.yml`**. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`verify:docs`**. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
 
 ---
 
@@ -129,7 +129,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | P2-2 | **Rate limiting** | **`docs/API/README.md`** — middleware vs `apiRateLimiter` vs per-route overrides. **Stretch:** matrix of every limited route + `rate_limits` usage. |
 | P2-3 | **Equal voting vs trust-tier analytics** | **`docs/TRUST_LAYER.md`** — “Database analytics (`calculate_trust_*` RPCs)” links `DATABASE_SCHEMA.md`, voting integrity policy, `ROADMAP.md`. |
 | P2-4 | **Feature flags** | **`docs/FEATURE_FLAGS.md`** (+ `verify:docs` guard). **Stretch:** auto-sync table from `feature-flags.ts` via script. |
-| P2-5 | **WebAuthn / session** | `WEBAUTHN_DESIGN.md` vs `userStore` + API routes—cookie names, logout clearing, E2E harness flags. |
+| P2-5 | **WebAuthn / session** | **`docs/WEBAUTHN_DESIGN.md`** — “Sessions, cookies, and logout” + rate-limit bypass pointer to **`authenticate/verify/route.ts`**. |
 
 ---
 
@@ -140,9 +140,9 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
 | P3-1 | **`docs/TESTING.md`** | **Updated:** intro + Contracts CI bullets link **`docs/API/contracts.md`** and **`npm run verify:docs`**. |
-| P3-2 | **`docs/API/contracts.md`** | Error shape, pagination, auth errors—grep `createErrorResponse` / shared helpers and align examples. |
-| P3-3 | Archived **`api-contract-plan.md`** | Either **extract** still-valid checklist into `TESTING.md` or mark archive as **historical only** in archive README. |
-| P3-4 | Contract tests | List each route with tests vs untested; prioritize auth and mutation routes. |
+| P3-2 | **`docs/API/contracts.md`** | **Updated:** “Error codes and helpers” table aligned to **`response-utils.ts`** / **`types.ts`**. |
+| P3-3 | Archived **`api-contract-plan.md`** | **Done:** superseded banner in archive file; **`contracts.md`** links it as historical. |
+| P3-4 | Contract tests | **Partial:** **`contracts.md`** lists representative contract files; full route↔test matrix optional. |
 
 ---
 
@@ -152,7 +152,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P4-1 | **`docs/ARCHITECTURE.md`** diagram or table | Layers: `app/` routes, `components/`, `lib/`, `contexts/`, `supabase/`, external services. |
+| P4-1 | **`docs/ARCHITECTURE.md`** | **Partial:** high-level diagram + project tree + **Where to change what**; optional: explicit `contexts/` row. |
 | P4-2 | **`AGENTS.md` / `CONTRIBUTING.md`** | **Updated:** `AGENTS.md` + governance section in **`CONTRIBUTING.md`** link **`DOCUMENTATION_AUDIT_ROADMAP.md`**. |
 | P4-3 | **“Change X → file Y”** mini-index | **`docs/ARCHITECTURE.md`** — “Where to change what” table. |
 

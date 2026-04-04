@@ -10,20 +10,25 @@ This document defines the API contract standards for the Choices platform, inclu
 
 All API endpoints return standardized response envelopes:
 
+Success (`ApiSuccessResponse`):
+
 ```typescript
 {
-  success: boolean;
-  data?: any;
-  metadata?: {
-    timestamp: string;
-    cached?: boolean;
-    // ... other metadata fields
-  };
-  error?: {
-    code: string;
-    message: string;
-    details?: any;
-  };
+  success: true;
+  data: T;
+  metadata?: { timestamp: string; pagination?: {...}; ... };
+}
+```
+
+Error (`ApiErrorResponse` — see `web/lib/api/types.ts`):
+
+```typescript
+{
+  success: false;
+  error: string;       // human-readable message (sanitized in production for generic errors)
+  code?: string;       // e.g. VALIDATION_ERROR, AUTH_ERROR, RATE_LIMIT
+  details?: string | Record<string, unknown>;
+  metadata?: { timestamp: string; ... };
 }
 ```
 
@@ -131,15 +136,31 @@ Deletes a site message.
 - Replaced mock data with real API calls in SiteMessagesAdmin component
 - Added edit form functionality for updating messages
 
-## Error Codes
+## Error codes and helpers (implementation)
 
-Standard error codes used across API endpoints:
+**Source of truth:** `web/lib/api/response-utils.ts` (import from `@/lib/api` alongside `withErrorHandling`).
 
-- `VALIDATION_ERROR`: Request validation failed
-- `AUTH_ERROR`: Authentication/authorization failure
-- `RATE_LIMIT`: Rate limit exceeded
-- `NOT_FOUND`: Resource not found
-- `INTERNAL_ERROR`: Server error
+| Helper | HTTP | `code` (when set) | Notes |
+|--------|------|-------------------|--------|
+| `validationError` | 400 | `VALIDATION_ERROR` | Field map in `details` |
+| `authError` | 401 | `AUTH_ERROR` | |
+| `forbiddenError` | 403 | `FORBIDDEN` | |
+| `notFoundError` | 404 | `NOT_FOUND` | |
+| `rateLimitError` | 429 | `RATE_LIMIT` | Optional **`Retry-After`** header (seconds) |
+| `errorResponse` | configurable | optional 4th arg | Production sanitizes message body |
+
+**Types:** `web/lib/api/types.ts` — `ApiErrorResponse`: `success: false`, **`error: string`**, optional **`details`**, optional **`code`**, **`metadata`** (includes `timestamp` on helpers). Success: `ApiSuccessResponse` with `data` + `metadata`.
+
+Legacy routes may still drift; **`web/tests/contracts/**`** and **`npm run verify:docs`** (inventory vs routes) catch gaps.
+
+### Documented error codes (semantic)
+
+- `VALIDATION_ERROR` — Request validation failed
+- `AUTH_ERROR` — Authentication required / invalid session
+- `FORBIDDEN` — Authenticated but not allowed
+- `RATE_LIMIT` — Too many requests
+- `NOT_FOUND` — Resource not found
+- Handlers may define additional `code` strings for domain errors; prefer the helpers for common HTTP semantics.
 
 ## Metadata Fields
 
@@ -150,9 +171,11 @@ Common metadata fields in API responses:
 - `ttl`: Cache time-to-live in seconds
 - `version`: API version identifier
 
-## Contract Testing
+## Contract testing
 
-All API contracts are verified via Jest contract tests in `web/tests/contracts/`. Current workflow and commands are in [`docs/TESTING.md`](../TESTING.md). A generated listing of every `route.ts` under `web/app/api/` is in [`inventory.md`](inventory.md) (refresh with `node scripts/generate-api-inventory.mjs`). The archived matrix at `docs/archive/reference/testing/TESTING/api-contract-plan.md` is historical context only.
+Jest contract suites live in **`web/tests/contracts/`** (representative files: `health`, `feature-flags-public`, `profile`, `contact`, `device-flow`, `feeds`, `analytics`, `admin-breaking-news`, `admin-vote-audit`, … — see directory listing). Commands and CI wiring: [`docs/TESTING.md`](../TESTING.md). Full route listing: [`inventory.md`](inventory.md) (`npm run docs:api-inventory`). **Drift guard:** `npm run verify:docs` (repo root).
+
+The archived planning doc [`docs/archive/reference/testing/TESTING/api-contract-plan.md`](../archive/reference/testing/TESTING/api-contract-plan.md) is **historical only** (superseded by this file + `TESTING.md`).
 
 ## Governance
 
