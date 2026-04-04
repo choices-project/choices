@@ -124,6 +124,16 @@ try {
   process.exit(typeof status === 'number' ? status : 1);
 }
 
+try {
+  execSync('node scripts/sync-security-snapshots.mjs --check', {
+    cwd: root,
+    stdio: 'inherit',
+  });
+} catch (e) {
+  const status = e && typeof e === 'object' ? e.status : undefined;
+  process.exit(typeof status === 'number' ? status : 1);
+}
+
 console.log(
-  `verify-docs: OK (${routeCount} API route modules; inventory + public schema index + feature flags; no banned patterns in web/)`,
+  `verify-docs: OK (${routeCount} API route modules; inventory + schema index + feature flags + SECURITY snapshots; no banned patterns in web/)`,
 );

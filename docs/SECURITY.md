@@ -22,7 +22,7 @@ The Choices platform implements a comprehensive, multi-layered security model de
 
 The following security improvements were implemented across the application:
 
-- **Rate limiting** — Applied to 20+ API routes via Upstash Redis (`apiRateLimiter`): polls (create/vote), feedback, profile (all mutations), poll close/lock, push notifications, CSP reports, health ingest
+- **Rate limiting** — **`apiRateLimiter`** is used in **30** `web/app/api/**/route.ts` files (snapshot in § Upstash API rate limits); covers polls (create/vote), feedback, profile mutations, poll close/lock, push notifications, CSP reports, health ingest, and more
 - **CSRF protection** — Double-submit token validation on the login endpoint via `validateCsrfProtection`
 - **E2E bypass hardening** — Test authentication bypasses are locked out when `NODE_ENV === 'production'`; debug headers (`X-Auth-Debug-*`) only set in non-production
 - **Input sanitization** — `sanitizeInput()` applied to all user-generated fields in poll creation (title, description, question, category, tags, options)
@@ -123,6 +123,12 @@ Use this as a **navigation aid** only—predicates and exceptions live in SQL.
 rg 'apiRateLimiter\.checkLimit' web/app/api --glob '**/route.ts'
 ```
 
+<!-- AUTO-GENERATED:RATE_LIMIT_ROUTE_SNAPSHOT -->
+
+_(**30** `route.ts` files call `apiRateLimiter.checkLimit` at least once—the markdown table below is a curated overview and may group methods; trust `rg` for completeness.)_
+
+<!-- END AUTO-GENERATED:RATE_LIMIT_ROUTE_SNAPSHOT -->
+
 | Area | Route module | Limiter key (Redis namespace) | Limits (max / window) | Notes |
 |------|----------------|-------------------------------|-------------------------|--------|
 | Auth | `api/auth/login/route.ts` | `/api/auth/login` | default | Only when `AUTH_RATE_LIMIT_ENABLED=1`; skipped in E2E harness |
@@ -168,7 +174,11 @@ If a row says **default**, the effective cap is **50 / 15 min** until the route 
 rg -l "getSupabaseAdminClient" web/app/api --glob '**/route.ts' | sort
 ```
 
-_(Snapshot: **~29** `route.ts` files in this repo used the admin client—re-run the command after adding routes.)_
+<!-- AUTO-GENERATED:ADMIN_CLIENT_ROUTE_SNAPSHOT -->
+
+_(Snapshot: **29** distinct `route.ts` files under `web/app/api` import `getSupabaseAdminClient`—re-run the `rg` command above after adding routes.)_
+
+<!-- END AUTO-GENERATED:ADMIN_CLIENT_ROUTE_SNAPSHOT -->
 
 **Dominant patterns:**
 
