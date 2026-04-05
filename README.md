@@ -51,7 +51,7 @@ See [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) for the full setup guid
 | Language | TypeScript (strict mode) |
 | UI | React + Tailwind CSS + shadcn/ui + Framer Motion |
 | State | Zustand + Immer (**21** store modules; **17** reset in logout cascade—see `docs/ARCHITECTURE.md`) |
-| Database | PostgreSQL via Supabase (**~93** public tables in generated types; RLS—run `npm run docs:surface-counts` at repo root) |
+| Database | PostgreSQL via Supabase (RLS); after migrations, regenerate `web/types/supabase.ts` and run **`npm run verify:docs`** from the **repository root** so inventories and **`docs/ARCHITECTURE.md`** counts stay aligned ([`docs/README.md`](./docs/README.md)) |
 | Auth | Supabase Auth + WebAuthn passkeys |
 | Rate Limiting | Upstash Redis |
 | Email | Resend |
@@ -71,6 +71,14 @@ npm run test          # Jest unit tests
 npm run test:e2e      # Playwright E2E
 npm run build         # Production build
 ```
+
+**Repository root** (parent of `web/`) — run when you touch API routes, `web/types/supabase.ts`, feature flags, stores, or canonical docs under `docs/`:
+
+```bash
+npm run verify:docs   # inventories, SECURITY snapshots, links, Zustand cascade, ARCHITECTURE counts, etc.—see docs/README.md
+```
+
+CI runs this in the quality job (requires `ripgrep`).
 
 ---
 
