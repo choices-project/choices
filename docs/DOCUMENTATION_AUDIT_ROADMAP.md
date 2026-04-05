@@ -5,7 +5,7 @@ _Audience: new developers and maintainers doing a truth-alignment pass_
 
 This document is the **master checklist** for making every piece of documentation, inline comment, governance rule, and onboarding step **match the actual application** (routes, schema, stores, env, feature flags, security boundaries). It is intentionally detailed so you can execute it in order without guessing what “done” means.
 
-**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/TRUST_LAYER.md`, `docs/TESTING.md`, `docs/DATABASE_SCHEMA.md`, `docs/STATE_MANAGEMENT.md`, `docs/DEPLOYMENT.md`, `docs/API/contracts.md`, `docs/API/README.md`, `docs/WEBAUTHN_DESIGN.md`, archived **`api-contract-plan.md`** banner, **`docs/SECURITY.md`** (RLS domains, **`apiRateLimiter`** inventory, **`getSupabaseAdminClient`** route patterns + `rg`), `docs/FEATURE_FLAGS.md`, `AGENTS.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, **`ci.yml`**. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`docs:feature-flags`**, **`docs:security-snapshots`**, **`verify:docs`**. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
+**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/TRUST_LAYER.md`, `docs/TESTING.md`, `docs/DATABASE_SCHEMA.md`, `docs/STATE_MANAGEMENT.md`, `docs/DEPLOYMENT.md`, `docs/API/contracts.md`, `docs/API/README.md`, `docs/WEBAUTHN_DESIGN.md`, archived **`api-contract-plan.md`** banner, **`docs/SECURITY.md`** (RLS domains, **`apiRateLimiter`** inventory, **`getSupabaseAdminClient`** route patterns + `rg`), `docs/FEATURE_FLAGS.md`, `AGENTS.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, **`ci.yml`**. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`docs:feature-flags`**, **`docs:security-snapshots`**, plus focused **`verify:doc-links`**, **`verify:store-docs`**, **`verify:architecture-boundaries`**, all rolled into **`verify:docs`**. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
 
 ---
 
@@ -162,7 +162,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** table/view/RPC counts vs `web/types/supabase.ts` (shared `scripts/lib/surface-counts.mjs` with `docs:surface-counts`); feature-flags `--check`; **`docs/SECURITY.md`** rg snapshots via **`sync-security-snapshots.mjs --check`**; **`scripts/verify-doc-links.mjs`**; **`scripts/verify-store-docs.mjs`** (`*Store.ts` count + `cascadeDependentStoreReset` length vs **`ARCHITECTURE.md`** / **`STATE_MANAGEMENT.md`**); `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. |
+| P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** table/view/RPC counts vs `web/types/supabase.ts` (shared `scripts/lib/surface-counts.mjs` with `docs:surface-counts`); feature-flags `--check`; **`docs/SECURITY.md`** rg snapshots via **`sync-security-snapshots.mjs --check`**; **`scripts/verify-doc-links.mjs`**; **`scripts/verify-store-docs.mjs`** (`*Store.ts` + cascade order); **`scripts/verify-architecture-boundaries.mjs`** (`web/app` `error.tsx` / `loading.tsx` counts vs **`ARCHITECTURE.md`**); `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. |
 | P5-2 | CI job | **`verify:docs`** runs in **`.github/workflows/ci.yml`** (quality job) after installing `ripgrep`. |
 | P5-3 | PR template | **Updated:** checklist item for **`npm run verify:docs`** when API routes change. |
 
@@ -189,6 +189,10 @@ npm run docs:public-schema-index
 npm run docs:api-inventory
 npm run docs:feature-flags
 npm run docs:security-snapshots
+# Focused checks (also run inside verify:docs):
+npm run verify:doc-links
+npm run verify:store-docs
+npm run verify:architecture-boundaries
 npm run verify:docs
 
 # Store modules (must equal cascade narrative in docs/STATE_MANAGEMENT.md)

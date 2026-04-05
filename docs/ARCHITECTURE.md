@@ -175,7 +175,7 @@ All API routes live under `web/app/api/*` and follow consistent patterns:
 - **Service role** (`getSupabaseAdminClient`) bypasses RLS—see **[`SECURITY.md`](SECURITY.md)** (*Service role in API routes*) and `rg` maintenance command there
 - E2E test bypasses locked out of production (`NODE_ENV !== 'production'`)
 - Environment validation at startup (Zod schema in `lib/config/env.ts`)
-- `global-error.tsx` root boundary + 6 route-level `error.tsx` + 7 `loading.tsx` files
+- **`global-error.tsx`** root boundary + **15** route-level `error.tsx` + **8** `loading.tsx` files under `web/app/` (counts checked by `npm run verify:architecture-boundaries` / `verify:docs`)
 - Cookie secure flags, webhook secret enforcement, UUID validation
 
 ---
