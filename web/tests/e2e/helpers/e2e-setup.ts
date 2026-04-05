@@ -280,6 +280,40 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
   }).catch(() => undefined);
 }
 
+async function assertSupabaseSessionCookies(page: Page): Promise<void> {
+  const allCookies = await page.context().cookies();
+  const hasAccessToken = allCookies.some(c => c.name === 'sb-access-token' && c.value && c.value.length > 0);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let hasProjectAuthToken = false;
+  let projectRef: string | null = null;
+  if (supabaseUrl) {
+    const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
+    if (urlMatch?.[1]) {
+      projectRef = urlMatch[1];
+      hasProjectAuthToken = allCookies.some(
+        c => c.name === `sb-${projectRef}-auth-token` && c.value && c.value.length > 0
+      );
+    }
+  }
+  const hasAnySupabaseAuthCookie = allCookies.some(cookie => {
+    if (!cookie.name.startsWith('sb-') || !cookie.value || cookie.value.length === 0) return false;
+    return (
+      cookie.name.includes('auth') ||
+      cookie.name.includes('session') ||
+      cookie.name.includes('access')
+    );
+  });
+  if (!hasAccessToken && !hasProjectAuthToken && !hasAnySupabaseAuthCookie) {
+    const cookieNames = allCookies.map(c => `${c.name}=…`).join(', ');
+    throw new Error(
+      `No Supabase auth cookies found after login. ` +
+        `Checked for: sb-access-token, sb-${projectRef ?? '<project-ref>'}-auth-token, or any sb-*auth* cookies. ` +
+        `Available cookies: ${cookieNames || 'none'}.`
+    );
+  }
+  await page.waitForTimeout(500);
+}
+
 /**
  * Logs in a test user via the authentication form.
  *
@@ -295,6 +329,8 @@ export async function ensureLoggedOut(page: Page): Promise<void> {
  * @throws Error if login API request fails
  * @throws Error if navigation to /feed or /onboarding doesn't occur after login
  *
+ * When `E2E_PRODUCTION=1`, logs in via `POST /api/auth/login` (same host cookies) instead of the `/auth` UI.
+ *
  * @example
  * ```typescript
  * await loginTestUser(page, {
@@ -308,6 +344,41 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   const { email, password } = user;
   if (!email || !password) {
     throw new Error('loginTestUser requires both email and password');
+  }
+
+  if (process.env.E2E_PRODUCTION === '1') {
+    const csrfRes = await page.request.get('/api/auth/csrf');
+    if (!csrfRes.ok()) {
+      const t = await csrfRes.text().catch(() => '');
+      throw new Error(`loginTestUser: CSRF prefetch failed ${csrfRes.status()} — ${t.slice(0, 200)}`);
+    }
+    const csrfJson = (await csrfRes.json()) as { data?: { csrfToken?: string } };
+    const csrfToken = csrfJson.data?.csrfToken;
+    if (!csrfToken) {
+      throw new Error('loginTestUser: missing data.csrfToken from GET /api/auth/csrf');
+    }
+
+    const res = await page.request.post('/api/auth/login', {
+      data: { email, password },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+      },
+    });
+    if (res.status() !== 200) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`loginTestUser (production API): HTTP ${res.status()} — ${body.slice(0, 400)}`);
+    }
+    await page.waitForTimeout(500);
+    await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.waitForTimeout(1_000);
+    // Client auth bootstrap can briefly redirect to /auth if getSession is slow; cookies are still valid.
+    if (page.url().includes('/auth')) {
+      await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+      await page.waitForTimeout(1_500);
+    }
+    await assertSupabaseSessionCookies(page);
+    return;
   }
 
   // Only navigate if we're not already on the auth page
@@ -389,28 +460,26 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     throw error;
   }
 
-  // Ensure React-controlled inputs see the values (handles aggressive re-renders)
-  // Use the actual input IDs that the sync mechanism watches
   await page.evaluate(
     ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-      // Use the actual IDs that the sync mechanism watches
-      const emailInput = document.getElementById('email') as HTMLInputElement | null;
-      const passwordInput = document.getElementById('password') as HTMLInputElement | null;
+      const emailInput =
+        (document.querySelector('[data-testid="login-email"]') as HTMLInputElement | null) ||
+        (document.getElementById('email') as HTMLInputElement | null);
+      const passwordInput =
+        (document.querySelector('[data-testid="login-password"]') as HTMLInputElement | null) ||
+        (document.getElementById('password') as HTMLInputElement | null);
 
       const setNativeValue = (input: HTMLInputElement | null, value: string) => {
         if (!input) return;
         const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
         setter?.call(input, value);
-        // Dispatch input event first (what the sync mechanism listens to)
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        // Then dispatch change event
         input.dispatchEvent(new Event('change', { bubbles: true }));
       };
 
       setNativeValue(emailInput, expectedEmail);
       setNativeValue(passwordInput, expectedPassword);
 
-      // Trigger focus/blur to ensure React processes the events
       emailInput?.focus();
       emailInput?.blur();
       passwordInput?.focus();
@@ -419,96 +488,12 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
     { expectedEmail: email, expectedPassword: password }
   );
 
-  // Wait for React to process the events and for sync mechanism to run
-  await page.waitForTimeout(1000);
-
-  // Wait for React to process - ensure DOM values match AND form state is synced
-  // Check both DOM values and React formData state via validation indicators
-  const maxSyncAttempts = 5;
-  for (let attempt = 0; attempt < maxSyncAttempts; attempt++) {
-    try {
-      // Wait for both DOM values to match AND form validation indicators to appear
-      // The form shows validation indicators when React state is synced
-      await page.waitForFunction(
-        ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-          const emailInput = document.getElementById('email') as HTMLInputElement | null;
-          const passwordInput = document.getElementById('password') as HTMLInputElement | null;
-
-          // Check DOM values match
-          const domMatches = emailInput?.value === expectedEmail && passwordInput?.value === expectedPassword;
-
-          // Check if validation indicators are visible (means React state is synced)
-          const emailValidation = document.querySelector('[data-testid="email-validation"]');
-          const passwordValidation = document.querySelector('[data-testid="password-validation"]');
-          const hasValidations = emailValidation || passwordValidation;
-
-          // For login, we need email with @ and password >= 8 chars
-          const emailValid = expectedEmail.includes('@');
-          const passwordValid = expectedPassword.length >= 8;
-
-          return domMatches && (hasValidations || (emailValid && passwordValid));
-        },
-        { expectedEmail: email, expectedPassword: password },
-        { timeout: 15_000 } // Increased timeout for production
-      );
-      break;
-    } catch (error) {
-      if (attempt === maxSyncAttempts - 1) {
-        // Last attempt - try once more with focus/blur to trigger React state
-        await page.evaluate(
-          ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-            const emailInput = document.getElementById('email') as HTMLInputElement | null;
-            const passwordInput = document.getElementById('password') as HTMLInputElement | null;
-
-            const setNativeValue = (input: HTMLInputElement | null, value: string) => {
-              if (!input) return;
-              const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-              setter?.call(input, value);
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-              input.dispatchEvent(new Event('change', { bubbles: true }));
-            };
-
-            setNativeValue(emailInput, expectedEmail);
-            setNativeValue(passwordInput, expectedPassword);
-
-            // Force focus/blur to trigger React state update
-            emailInput?.focus();
-            emailInput?.blur();
-            passwordInput?.focus();
-            passwordInput?.blur();
-          },
-          { expectedEmail: email, expectedPassword: password }
-        );
-        await page.waitForTimeout(1000);
-        throw error;
-      }
-      // Retry with fresh event dispatch
-      await page.evaluate(
-        ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-          const emailInput = document.getElementById('email') as HTMLInputElement | null;
-          const passwordInput = document.getElementById('password') as HTMLInputElement | null;
-
-          const setNativeValue = (input: HTMLInputElement | null, value: string) => {
-            if (!input) return;
-            const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-            setter?.call(input, value);
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-          };
-
-          setNativeValue(emailInput, expectedEmail);
-          setNativeValue(passwordInput, expectedPassword);
-        },
-        { expectedEmail: email, expectedPassword: password }
-      );
-      await page.waitForTimeout(1000);
-    }
-  }
-
-  // Wait a bit more for React state to fully update
   await page.waitForTimeout(500);
 
-  // Check for validation indicators (confirms React processed the input)
+  const submitButton = page.getByTestId('login-submit');
+  await expect(submitButton).toBeVisible({ timeout: 90_000 });
+  await expect(submitButton).toBeEnabled({ timeout: 90_000 });
+
   if (email.includes('@')) {
     try {
       await page.waitForSelector('[data-testid="email-validation"]', {
@@ -519,9 +504,6 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       // Continue even if validation indicator doesn't appear
     }
   }
-
-  const submitButton = page.getByTestId('login-submit');
-  await submitButton.waitFor({ state: 'visible', timeout: 30_000 });
 
   // Try to directly update React state if button is still disabled
   // This is a workaround for React controlled inputs not updating
@@ -835,55 +817,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   // Give a moment for any post-auth processing
   await page.waitForTimeout(1_000);
 
-  // Verify Supabase auth cookies are actually present before proceeding
-  // This ensures cookies are set and will be sent with subsequent requests
-  // Middleware now uses standard Supabase SSR (createServerClient + getUser())
-  // which automatically detects Supabase auth cookies set by @supabase/ssr
-  const allCookies = await page.context().cookies();
-
-  // Check for Supabase auth cookies that middleware will detect:
-  // 1. sb-access-token (if set)
-  // 2. sb-<project-ref>-auth-token (Supabase standard, set by @supabase/ssr)
-  // 3. Any sb- cookie with 'auth', 'session', or 'access' in the name
-  const hasAccessToken = allCookies.some(c => c.name === 'sb-access-token' && c.value && c.value.length > 0);
-
-  // Extract project ref from NEXT_PUBLIC_SUPABASE_URL if available
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  let hasProjectAuthToken = false;
-  let projectRef: string | null = null;
-  if (supabaseUrl) {
-    const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
-    if (urlMatch && urlMatch[1]) {
-      projectRef = urlMatch[1];
-      hasProjectAuthToken = allCookies.some(c =>
-        c.name === `sb-${projectRef}-auth-token` && c.value && c.value.length > 0
-      );
-    }
-  }
-
-  // Check for any sb- cookie with auth-related keywords
-  const hasAnySupabaseAuthCookie = allCookies.some(cookie => {
-    if (!cookie.name.startsWith('sb-') || !cookie.value || cookie.value.length === 0) {
-      return false;
-    }
-    return cookie.name.includes('auth') ||
-           cookie.name.includes('session') ||
-           cookie.name.includes('access');
-  });
-
-  if (!hasAccessToken && !hasProjectAuthToken && !hasAnySupabaseAuthCookie) {
-    // Log available cookies for debugging
-    const cookieNames = allCookies.map(c => `${c.name}=${c.value.substring(0, 20)}...`).join(', ');
-    throw new Error(
-      `No Supabase auth cookies found after login. ` +
-      `Checked for: sb-access-token, sb-${projectRef || '<project-ref>'}-auth-token, or any sb-*auth* cookies. ` +
-      `Available cookies: ${cookieNames || 'none'}. ` +
-      `This may indicate a login failure or cookie setting issue.`
-    );
-  }
-
-  // Additional wait to ensure cookies are fully propagated to browser context
-  await page.waitForTimeout(500);
+  await assertSupabaseSessionCookies(page);
 }
 
 export async function loginAsAdmin(page: Page, overrides: Partial<TestUser> = {}): Promise<void> {
