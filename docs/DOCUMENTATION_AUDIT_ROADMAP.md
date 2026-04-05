@@ -107,7 +107,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
 | P1-5 | **`docs/ARCHITECTURE.md`**, **`docs/STATE_MANAGEMENT.md`** | Distinguish **“N Zustand store modules”** vs **“M stores in logout cascade”**; list the **4** stores (example: `userStore`, `appStore`, `deviceStore`, `performanceStore`) **not** in cascade if still true—verify in `userStore.ts`. |
-| P1-6 | **`docs/STATE_MANAGEMENT.md`** cascade list | Matches **order and names** in `cascadeDependentStoreReset` exactly. **`verify:store-docs`** enforces **numeric** parity (module count + cascade length); extend the script if you want order/name diffing. |
+| P1-6 | **`docs/STATE_MANAGEMENT.md`** cascade list | Matches **order and names** in `cascadeDependentStoreReset` exactly. **`verify:store-docs`** enforces counts plus **cascade order** vs **`STATE_MANAGEMENT.md`** and **`ARCHITECTURE.md`** (label map in `scripts/verify-store-docs.mjs`). |
 
 ### 5.3 API inventory
 

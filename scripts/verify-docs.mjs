@@ -2,8 +2,9 @@
 /**
  * Fails fast when generated API inventory drifts from the route tree, when the
  * public schema index counts drift from web/types/supabase.ts, when relative
- * links in canonical docs break, when Zustand store counts in ARCHITECTURE /
- * STATE_MANAGEMENT drift from web/lib/stores, or when banned doc path strings
+ * links in canonical docs break, when Zustand store counts / logout-cascade
+ * order in ARCHITECTURE / STATE_MANAGEMENT drift from userStore.ts, or when
+ * banned doc path strings
  * appear under web/ (historical broken pointers).
  *
  * Run from repo root: node scripts/verify-docs.mjs
