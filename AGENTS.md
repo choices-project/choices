@@ -31,7 +31,7 @@ These CI-safe placeholder values allow the dev server and E2E smoke tests to run
 
 | Task | Command |
 |------|---------|
-| Doc inventory parity (repo root) | `npm run verify:docs` |
+| Doc / inventory parity (repo root) | `npm run verify:docs` (bundles link, store, boundary, SECURITY, feature-flag, and schema checks—[`docs/README.md`](docs/README.md)) |
 | Dev server (from `web/`) | `npm run dev` (port 3000) |
 | Lint (from `web/`) | `npm run lint` |
 | Type check (app code) | `npm run types:ci` |

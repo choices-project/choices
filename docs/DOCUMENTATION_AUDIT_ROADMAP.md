@@ -100,7 +100,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | P1-1 | **`docs/ARCHITECTURE.md`**: replace “70+ tables”, “19 RPC” | Use **generated counts** or say “see `web/types/supabase.ts` / run `scripts/…`”. Include **view** count if you mention analytics. |
 | P1-2 | **`docs/DATABASE_SCHEMA.md`**: RPC section title | Rename to **“Key RPC functions (documented subset)”** or **“RPC catalog”** with full list vs migration names; add **“Total RPCs in generated types: N”**. |
 | P1-3 | Reconcile **`calculate_trust_weighted_votes`** | **Done (doc policy):** RPC may remain on remote DB / types until dropped by migration; **`docs/DATABASE_SCHEMA.md`** + **`docs/TRUST_LAYER.md`** mark it **legacy / forbidden for product tallies**. Optional later: migration to drop function + regen types. |
-| P1-4 | Scripts at repo root | **`npm run docs:surface-counts`** (JSON counts) and **`npm run docs:public-schema-index`** (full table/view/RPC lists). Optional: fold into **`npm run verify:docs`** (P5). |
+| P1-4 | Scripts at repo root | **`npm run docs:surface-counts`** (JSON counts). **`npm run docs:public-schema-index`** → generated index; **`verify:docs`** asserts index counts vs `web/types/supabase.ts`. |
 
 ### 5.2 State management
 

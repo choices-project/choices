@@ -3,7 +3,7 @@
 **Last Updated:** April 4, 2026  
 **Status:** ✅ **ALL CRITICAL VARIABLES CONFIGURED** (Production Ready — validated by Zod schema at startup)
 
-This document lists all environment variables required for the Choices application.
+This document lists environment variables for the Choices application. **Startup validation** (required vs optional for server/client) is implemented in **`web/lib/config/env.ts`** (Zod)—extend that schema when adding new validated keys, then update this file.
 
 > **Current Status:** All 6 critical (P0) environment variables are configured in Vercel.  
 > See [`docs/DEPLOYMENT.md`](./DEPLOYMENT.md) for deployment checklist.

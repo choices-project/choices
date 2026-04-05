@@ -44,7 +44,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 
 - **Contracts**
   - Contract tests live under `web/tests/contracts/**`. Spec: **[`docs/API/contracts.md`](API/contracts.md)**.
-  - From the **repository root**, `npm run verify:docs` ensures `docs/API/inventory.md` matches the `route.ts` tree (run after adding/removing API routes; see also `npm run docs:api-inventory`).
+  - From the **repository root**, `npm run verify:docs` includes inventory vs `route.ts` plus other doc guards (schema index, feature flags, SECURITY snapshots, links, stores, App Router boundaries—see [`docs/README.md`](README.md)).
   - Local equivalent for a single contract:
     ```bash
     cd web

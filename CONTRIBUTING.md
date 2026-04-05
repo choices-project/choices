@@ -89,7 +89,7 @@ npm run lint          # Check code style
 npm run types:ci       # Verify TypeScript
 npm run test           # Run unit tests
 npm run governance:check  # Verify roadmap/doc updates (if needed)
-npm run verify:docs    # From repo root: API inventory vs route tree + doc pointer guard
+npm run verify:docs    # Repo root — full doc parity (inventory, schema index, feature flags, SECURITY snapshots, links, Zustand cascade, App Router boundaries, banned paths in web/); see docs/README.md
 ```
 
 **CI will run:**
@@ -249,13 +249,14 @@ When modifying stores or API routes, run:
 
 ```bash
 npm run governance:check
-npm run verify:docs    # repository root — API inventory vs route tree
+npm run verify:docs    # repository root — see docs/README.md for everything this runs
 ```
 
 This verifies that:
 - Store changes include roadmap/doc updates
 - API changes include contract tests
 - Documentation is updated
+- **`verify:docs`** catches drift between generated inventories, security snapshots, canonical Markdown links, store/cascade docs, and `ARCHITECTURE` boundary counts (CI runs it in the quality job)
 
 Full audit checklist (counts, schema lists, phases): [`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](docs/DOCUMENTATION_AUDIT_ROADMAP.md). If you change **`apiRateLimiter.checkLimit`** options in `web/app/api/`, update the **Upstash API rate limits** table in [`docs/SECURITY.md`](docs/SECURITY.md).
 
