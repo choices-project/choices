@@ -2,8 +2,9 @@
 /**
  * Fails fast when generated API inventory drifts from the route tree, when the
  * public schema index counts drift from web/types/supabase.ts, when relative
- * links in canonical docs break, or when banned doc path strings appear under
- * web/ (historical broken pointers).
+ * links in canonical docs break, when Zustand store counts in ARCHITECTURE /
+ * STATE_MANAGEMENT drift from web/lib/stores, or when banned doc path strings
+ * appear under web/ (historical broken pointers).
  *
  * Run from repo root: node scripts/verify-docs.mjs
  */
@@ -145,6 +146,16 @@ try {
   process.exit(typeof status === 'number' ? status : 1);
 }
 
+try {
+  execSync('node scripts/verify-store-docs.mjs', {
+    cwd: root,
+    stdio: 'inherit',
+  });
+} catch (e) {
+  const status = e && typeof e === 'object' ? e.status : undefined;
+  process.exit(typeof status === 'number' ? status : 1);
+}
+
 console.log(
-  `verify-docs: OK (${routeCount} API route modules; inventory + schema index + feature flags + SECURITY snapshots + doc links; no banned patterns in web/)`,
+  `verify-docs: OK (${routeCount} API route modules; inventory + schema index + feature flags + SECURITY snapshots + doc links + store counts; no banned patterns in web/)`,
 );
