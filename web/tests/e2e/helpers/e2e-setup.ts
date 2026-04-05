@@ -370,11 +370,14 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       throw new Error(`loginTestUser (production API): HTTP ${res.status()} — ${body.slice(0, 400)}`);
     }
     await page.waitForTimeout(500);
-    await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    // Prime the document on the app origin so HttpOnly session cookies attach before loading the (app) shell + RSC tree.
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.waitForTimeout(400);
+    await page.goto('/feed', { waitUntil: 'load', timeout: 90_000 });
     await page.waitForTimeout(1_000);
     // Client auth bootstrap can briefly redirect to /auth if getSession is slow; cookies are still valid.
     if (page.url().includes('/auth')) {
-      await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+      await page.goto('/feed', { waitUntil: 'load', timeout: 90_000 });
       await page.waitForTimeout(1_500);
     }
     await assertSupabaseSessionCookies(page);

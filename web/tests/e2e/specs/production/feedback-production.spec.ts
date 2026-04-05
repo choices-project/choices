@@ -33,19 +33,25 @@ test.describe('Production feedback (user + admin)', () => {
     const unique = `prod-feedback-${Date.now()}`;
     await page.emulateMedia({ reducedMotion: 'reduce' });
 
+    const pageErrors: string[] = [];
+    page.on('pageerror', (err) => pageErrors.push(err.message));
+
     await ensureLoggedOut(page);
     await loginTestUser(page, user!);
-    await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    // loginTestUser (production) already navigates / → /feed with load; avoid a second bare /feed goto that can miss cookie priming.
     await waitForPageReady(page);
+    // Match root global-error.tsx only (h1), not ErrorBoundary (h2) inside the app shell — the widget can still be usable with the latter.
+    const globalErrorH1 = page.getByRole('heading', { level: 1, name: /^Something went wrong$/i });
+    const globalErrorBody = page.getByText('An unexpected error occurred. Please try again.', {
+      exact: true,
+    });
     if (
-      await page
-        .getByRole('heading', { name: /Something went wrong/i })
-        .isVisible({ timeout: 5_000 })
-        .catch(() => false)
+      (await globalErrorH1.isVisible({ timeout: 4_000 }).catch(() => false)) &&
+      (await globalErrorBody.isVisible({ timeout: 1_000 }).catch(() => false))
     ) {
       test.skip(
         true,
-        'Production /feed hit the global error boundary after API login — check prod logs and client errors.',
+        `Production hit Next.js global-error (root). pageerror: ${pageErrors.slice(0, 5).join(' | ') || 'none'}`,
       );
     }
     await page.evaluate(
