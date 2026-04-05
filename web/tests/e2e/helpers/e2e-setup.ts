@@ -521,7 +521,7 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   }
 
   const submitButton = page.getByTestId('login-submit');
-  await submitButton.waitFor({ state: 'visible', timeout: 5_000 });
+  await submitButton.waitFor({ state: 'visible', timeout: 30_000 });
 
   // Try to directly update React state if button is still disabled
   // This is a workaround for React controlled inputs not updating

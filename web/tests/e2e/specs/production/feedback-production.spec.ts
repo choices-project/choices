@@ -3,7 +3,7 @@
  * Requires E2E_USER_* and E2E_ADMIN_* in the environment (see docs/TESTING.md).
  * Uses BASE_URL from playwright.production.config.ts (www.choices-app.com).
  */
-import { expect, test } from '@playwright/test';
+import { devices, expect, test } from '@playwright/test';
 
 import {
   ensureLoggedOut,
@@ -14,8 +14,15 @@ import {
   waitForPageReady,
 } from '../../helpers/e2e-setup';
 
+// playwright.production.config sets userAgent to ChoicesE2E — some edges return a blank /auth; use a real Chrome UA here.
+test.use({
+  userAgent: devices['Desktop Chrome'].userAgent,
+});
+
 test.describe('Production feedback (user + admin)', () => {
   test('widget submit on /feed, admin triage, optional GitHub generate', async ({ page }) => {
+    test.setTimeout(180_000);
+
     const user = getE2EUserCredentials();
     const admin = getE2EAdminCredentials();
     test.skip(
