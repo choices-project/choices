@@ -16,6 +16,7 @@
  * @date 2026-01-25
  */
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 // Runtime assertion to prevent client-side usage
@@ -141,10 +142,10 @@ class GovInfoRestClient {
   private timeout = 30000; // 30 seconds
 
   constructor() {
-    const apiKey = process.env.GOVINFO_API_KEY ||
-                   process.env.GPO_API_KEY ||
-                   process.env.GOVINFO_APIKEY ||
-                   process.env.GOVINFO_KEY;
+    const apiKey = env.GOVINFO_API_KEY ||
+                   env.GPO_API_KEY ||
+                   env.GOVINFO_APIKEY ||
+                   env.GOVINFO_KEY;
 
     if (!apiKey) {
       logger.warn('GovInfo API key not found - bill content features will be limited');

@@ -18,6 +18,8 @@ build/
 .env.production.local
 .env.admin
 .env.*
+!.env.local.example
+!.env.test.local.example
 
 # Secrets rotation tracking
 .secrets-rotation.json

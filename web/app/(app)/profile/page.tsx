@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
+import { env } from '@/lib/config/env';
 import { haptic } from '@/lib/haptics';
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -110,7 +111,7 @@ function ProfilePageContent() {
 
   useEffect(() => {
     // In E2E harness mode, authentication is mocked - don't redirect
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
     // Only redirect if we're certain user is not authenticated

@@ -4,7 +4,7 @@
 
 ### Project overview
 
-Choices is a privacy-first participatory democracy platform (Next.js 14 App Router + Supabase). The main application lives in `web/`. See `README.md` for the full stack and `docs/GETTING_STARTED.md` for developer setup. When you touch **API routes**, **stores**, or **DB/schema docs**, follow **`docs/DOCUMENTATION_AUDIT_ROADMAP.md`** so inventories and contracts stay aligned.
+Choices is a privacy-first participatory democracy platform (Next.js 14 App Router + Supabase). The main application lives in `web/`. The project is structured for **human contributors and collaborators**: see `README.md` (contributor table), `CONTRIBUTING.md`, and `CODE_OF_CONDUCT.md`. See `docs/GETTING_STARTED.md` for developer setup. For **Cursor MCP**, **project rules**, **skills**, and optional **Vercel AI Gateway** (CLI agents), see **`docs/AGENT_SETUP.md`**. When you touch **API routes**, **stores**, or **DB/schema docs**, follow **`docs/DOCUMENTATION_AUDIT_ROADMAP.md`** so inventories and contracts stay aligned. When you change the **feedback widget**, **`/api/feedback`**, **admin feedback**, or **GitHub issue templates**, keep **`docs/FEEDBACK_AND_ISSUES.md`** (§4 for admin API truth) aligned with the code.
 
 ### Runtime requirements
 
@@ -14,7 +14,7 @@ Choices is a privacy-first participatory democracy platform (Next.js 14 App Rout
 
 ### Environment variables
 
-Create `web/.env.local` with at minimum:
+From `web/`, you can start with **`cp .env.local.example .env.local`** (all keys from Zod; edit values). For a **minimal CI-style** setup, create `web/.env.local` with at least:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co

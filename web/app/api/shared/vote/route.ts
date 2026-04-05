@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { env } from '@/lib/config/env';
 import { withErrorHandling, successResponse, validationError, notFoundError, errorResponse } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -37,8 +38,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return validationError({ voter_session: 'Voter session must be a valid UUID v4' });
   }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Supabase environment variables are not configured');
     }

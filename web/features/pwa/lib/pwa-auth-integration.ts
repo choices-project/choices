@@ -5,6 +5,7 @@
  * providing enhanced security and privacy features.
  */
 
+import { env } from '@/lib/config/env';
 import { devLog } from '@/lib/utils/logger';
 
 import { isFeatureEnabled } from './feature-flags';
@@ -217,7 +218,7 @@ export class PWAAuth {
         // Subscribe to push notifications
         if ('serviceWorker' in navigator && 'PushManager' in window) {
           const registration = await navigator.serviceWorker.ready;
-          const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? 
+          const vapidKey = env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ??
                            process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
           if (!vapidKey) {
             devLog('PWA: VAPID public key not configured');

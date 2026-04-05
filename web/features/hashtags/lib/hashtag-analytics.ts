@@ -11,6 +11,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+import { env } from '@/lib/config/env';
 import {
   HASHTAG_ENGAGEMENT_SELECT_COLUMNS,
   HASHTAGS_SELECT_COLUMNS,
@@ -32,8 +33,8 @@ import type {
   HashtagCategory
 } from '../types';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Lazily-configured Supabase client: avoid throwing at module load time so builds
 // (including CI/E2E) can succeed even when env vars are not present.

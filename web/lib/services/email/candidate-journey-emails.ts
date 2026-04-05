@@ -1,3 +1,4 @@
+import { env } from '@/lib/config/env';
 import logger from '@/lib/utils/logger';
 /**
  * Candidate Journey Email Service
@@ -368,7 +369,7 @@ export async function sendCandidateJourneyEmail(
     const html = generateEmailContent(type, data)
     
     // Check if Resend is configured
-    const resendApiKey = process.env.RESEND_API_KEY
+    const resendApiKey = env.RESEND_API_KEY
     
     if (!resendApiKey) {
       // In development, log email instead of sending
@@ -394,7 +395,7 @@ export async function sendCandidateJourneyEmail(
     // Determine "from" email
     // Note: In production, you'll need to verify a domain with Resend
     // For now, use Resend's test email or your verified domain
-    const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev'
+    const fromEmail = env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev'
     
     const result = await resend.emails.send({
       from: `Choices <${fromEmail}>`,

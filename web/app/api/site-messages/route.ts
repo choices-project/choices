@@ -1,3 +1,4 @@
+import { env } from '@/lib/config/env';
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { SITE_MESSAGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { logger } from '@/lib/utils/logger';
@@ -27,10 +28,10 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
     // In CI/test/E2E environments, if Supabase is not configured or using fake credentials, return empty messages
     // This allows the app to build and run tests without real Supabase credentials
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1';
-    const isCI = process.env.CI === 'true' || process.env.NODE_ENV === 'test';
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
+    const isE2E = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || env.PLAYWRIGHT_USE_MOCKS === '1';
+    const isCI = env.CI === 'true' || process.env.NODE_ENV === 'test';
     const isFakeCredentials = supabaseUrl?.includes('example.supabase.co') || supabaseKey === 'dev-only-secret';
 
     if (!supabaseUrl || !supabaseKey || isFakeCredentials || isE2E || isCI) {

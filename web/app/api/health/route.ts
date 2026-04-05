@@ -19,7 +19,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
 
-
+import { env } from '@/lib/config/env';
 import { withErrorHandling, rateLimitError, successResponse, errorResponse, validationError, methodNotAllowed } from '@/lib/api';
 import { getQueryOptimizer } from '@/lib/core/database/optimizer';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
@@ -45,7 +45,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   const timestamp = new Date().toISOString();
   const environment = process.env.NODE_ENV ?? 'development';
-  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? '1.0.0';
+  const appVersion = env.NEXT_PUBLIC_APP_VERSION ?? '1.0.0';
 
   if (type === 'database' || type === 'all') {
     const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
@@ -66,7 +66,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       status: 'ok',
       timestamp,
       environment,
-      maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
+      maintenance: env.NEXT_PUBLIC_MAINTENANCE === '1',
       version: appVersion
     });
   }
@@ -103,8 +103,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         },
         environment: {
           nodeEnv: environment,
-          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
-          databaseUrl: process.env.DATABASE_URL ? 'configured' : 'missing'
+          supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
+          databaseUrl: env.DATABASE_URL ? 'configured' : 'missing'
         }
       };
 
@@ -129,7 +129,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   if (type === 'supabase') {
     try {
       const supabase = await getSupabaseServerClient();
-      const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
+      const supabaseConfigured = !!(env.NEXT_PUBLIC_SUPABASE_URL && env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
       if (!supabase) {
         return successResponse({
@@ -147,8 +147,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           timestamp,
           environment: {
             NODE_ENV: environment,
-            SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
-            SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
+            SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
+            SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
           }
         }, undefined, 200);
       }
@@ -169,8 +169,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         timestamp,
         environment: {
           NODE_ENV: environment,
-          SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
-          SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
+          SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
+          SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
         }
       };
 
@@ -195,8 +195,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           timestamp,
           environment: {
             NODE_ENV: environment,
-            SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
-            SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
+            SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
+            SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
           }
         }
       );
@@ -208,7 +208,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       const issues: string[] = [];
       let status: HealthStatus = 'healthy';
       const featureEnabled = isCivicsEnabled();
-      const isCI = process.env.CI === 'true';
+      const isCI = env.CI === 'true';
       const isTestEnv = environment === 'test' || environment === 'development' || isCI;
 
       if (!featureEnabled) {
@@ -222,17 +222,17 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       }
 
       if (environment === 'development' || environment === 'test') {
-        if (!process.env.PRIVACY_PEPPER_DEV) {
+        if (!env.PRIVACY_PEPPER_DEV) {
           issues.push('PRIVACY_PEPPER_DEV is not set');
           status = 'warning';
         }
-      } else if (!process.env.PRIVACY_PEPPER_CURRENT) {
+      } else if (!env.PRIVACY_PEPPER_CURRENT) {
         issues.push('PRIVACY_PEPPER_CURRENT is not set');
         // In CI/test, treat missing pepper as warning, not error
         status = isTestEnv ? 'warning' : 'error';
       }
 
-      if (!process.env.GOOGLE_CIVIC_API_KEY) {
+      if (!env.GOOGLE_CIVIC_API_KEY) {
         issues.push('GOOGLE_CIVIC_API_KEY is not set');
         status = status === 'error' ? 'error' : 'warning';
       }
@@ -262,7 +262,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
       let privacyStatus: HealthStatus = 'healthy';
       let privacyDetails: Record<string, any> = {};
-      if (environment === 'production' && !process.env.PRIVACY_PEPPER_CURRENT) {
+      if (environment === 'production' && !env.PRIVACY_PEPPER_CURRENT) {
         // In CI, production mode with missing pepper should be warning, not error
         privacyStatus = isCI ? 'warning' : 'error';
         privacyDetails = { 
@@ -273,7 +273,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
       let externalApisStatus: HealthStatus = 'healthy';
       let externalApisDetails: Record<string, any> = {};
-      if (!process.env.GOOGLE_CIVIC_API_KEY) {
+      if (!env.GOOGLE_CIVIC_API_KEY) {
         externalApisStatus = 'warning';
         externalApisDetails = { warning: 'Google Civic API key not configured' };
       }
@@ -301,9 +301,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
         checks: {
           feature_flag: featureEnabled,
           environment_variables: {
-            PRIVACY_PEPPER_DEV: !!process.env.PRIVACY_PEPPER_DEV,
-            PRIVACY_PEPPER_CURRENT: !!process.env.PRIVACY_PEPPER_CURRENT,
-            GOOGLE_CIVIC_API_KEY: !!process.env.GOOGLE_CIVIC_API_KEY
+            PRIVACY_PEPPER_DEV: !!env.PRIVACY_PEPPER_DEV,
+            PRIVACY_PEPPER_CURRENT: !!env.PRIVACY_PEPPER_CURRENT,
+            GOOGLE_CIVIC_API_KEY: !!env.GOOGLE_CIVIC_API_KEY
           },
           database: {
             status: databaseStatus,
@@ -353,7 +353,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           status: 'ok',
           timestamp,
           environment,
-          maintenance: process.env.NEXT_PUBLIC_MAINTENANCE === '1',
+          maintenance: env.NEXT_PUBLIC_MAINTENANCE === '1',
           version: appVersion
         }),
         (async () => {

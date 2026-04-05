@@ -5,6 +5,7 @@
  * using NextResponse instead of next/headers (which doesn't work in API routes).
  */
 
+import { getValidatedEnv } from '@/lib/config/env'
 import { logger } from '@/lib/utils/logger'
 
 import type { Database } from '@/types/supabase'
@@ -15,34 +16,6 @@ import type { NextRequest, NextResponse } from 'next/server'
 const assertRunningOnServer = (fnName: string) => {
   if (typeof window !== 'undefined') {
     throw new Error(`${fnName} must be called on the server`)
-  }
-}
-
-// Environment validation
-const validateEnvironment = () => {
-  const requiredVars = {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  }
-
-  const missing = Object.entries(requiredVars)
-    .filter(([_, value]) => !value)
-    .map(([key]) => key)
-
-  if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
-  }
-
-  const url = requiredVars.NEXT_PUBLIC_SUPABASE_URL
-  const key = requiredVars.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  
-  if (!url || !key) {
-    throw new Error('Missing required Supabase environment variables')
-  }
-  
-  return {
-    NEXT_PUBLIC_SUPABASE_URL: url,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: key,
   }
 }
 
@@ -61,12 +34,12 @@ export async function getSupabaseApiRouteClient(
   response: NextResponse
 ): Promise<SupabaseClient<Database>> {
   assertRunningOnServer('getSupabaseApiRouteClient')
-  const env = validateEnvironment()
+  const cfg = getValidatedEnv()
 
   const { createServerClient } = await import('@supabase/ssr')
 
-  const url = env.NEXT_PUBLIC_SUPABASE_URL
-  const key = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const url = cfg.NEXT_PUBLIC_SUPABASE_URL
+  const key = cfg.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!url || !key) {
     throw new Error('Missing required Supabase environment variables')

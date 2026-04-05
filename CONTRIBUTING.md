@@ -2,17 +2,33 @@
 
 We welcome contributions! This project is licensed under MIT and uses the Developer Certificate of Origin (DCO) for inbound contributions.
 
-_Documentation last reviewed: April 4, 2026._
+_Documentation last reviewed: April 5, 2026._
 
 ## Quick Start (~15 minutes to first local run)
 
-1. **Read the docs**: Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) to set up your environment (clone → `cd web` → `npm install` → `.env.local` → `npm run dev`)
-2. **Find a task**: Look for issues labeled `good first issue` or `help wanted`
-3. **Create a branch**: `git checkout -b feature/your-feature-name`
-4. **Make changes**: Follow the patterns in [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
-5. **Test**: Run `npm run lint`, `npm run types:ci`, and `npm run test`
-6. **Sign commits**: Use `git commit -s` (DCO requirement)
-7. **Open a PR**: Fill out the PR template checklist
+1. **Read the docs**: Start with [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) to set up your environment (clone → `cd web` → `npm install` → `cp .env.local.example .env.local` → edit → `npm run dev`). For a full doc ↔ code audit checklist (counts, phases, automation), see [`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](docs/DOCUMENTATION_AUDIT_ROADMAP.md).
+2. **Read the norms**: [Code of Conduct](CODE_OF_CONDUCT.md) and [`docs/COMMUNITY_GUIDELINES.md`](docs/COMMUNITY_GUIDELINES.md)
+3. **Find a task**: Use this repo’s **Issues** tab; watch for **`good first issue`** or **`help wanted`** labels when maintainers add them
+4. **Create a branch**: `git checkout -b feature/your-feature-name`
+5. **Make changes**: Follow the patterns in [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
+6. **Test**: From `web/`, run `npm run lint`, `npm run types:ci`, and `npm run test`
+7. **Sign commits**: Use `git commit -s` (DCO requirement)
+8. **Open a PR**: Fill out the PR template checklist
+
+## Two directories, two `package.json` files
+
+| Where | Path | Typical commands |
+|-------|------|------------------|
+| **App** | `web/` | `npm run dev`, `npm run lint`, `npm run types:ci`, `npm run test`, `npm run build` |
+| **Repo root** | repository root (parent of `web/`) | `npm run verify:docs`, `npm run governance:check`, `npm run docs:api-inventory`, etc. |
+
+If a command is “not found”, check you are in the right directory. CI runs **both** `web/` checks and root **`verify:docs`**.
+
+## In-app feedback vs GitHub Issues
+
+- **End users and testers** (including you on a deployed build) should use the **in-app feedback widget** when it is enabled: submissions go to **`POST /api/feedback`** and are reviewed under **Admin → Feedback** (`/admin/feedback`), with page and device context attached.
+- **Contributors** working in this repository should use **GitHub Issues** (bug / feature / documentation templates) for **reproducible** bugs, design discussion, and anything that should close with **`Closes #…`** on a PR.
+- **How they fit together:** see [`docs/FEEDBACK_AND_ISSUES.md`](docs/FEEDBACK_AND_ISSUES.md). Issue templates point product feedback to the widget so the two paths stay cohesive.
 
 ## Development Workflow
 
@@ -44,6 +60,11 @@ git checkout -b fix/issue-description
 - **JSDoc (tiered):** prioritize `@param` / `@returns` on **exported** functions and privacy-sensitive modules (`web/utils/privacy/**`, public API helpers); full component commentary can follow incrementally
 - Keep functions small and focused
 
+**User-visible strings (i18n):**
+- Catalogues live under **`web/messages/`** (e.g. `en.json`, `es.json`).
+- From **`web/`**, run **`npm run i18n:extract`** when you add or change keys; CI compares the snapshot (see **`.github/workflows/ci.yml`**). Use **`npm run i18n:validate`** locally to catch missing translations.
+- Maintainers cutting a release: **[`docs/COPY_FREEZE.md`](docs/COPY_FREEZE.md)**.
+
 **Import Order:**
 1. External dependencies
 2. Internal modules (`@/lib`, `@/features`, `@/components`)
@@ -71,7 +92,7 @@ import { AdminLayout } from '../layout/AdminLayout';
 - Use harness pages at `/e2e/*` for store testing
 - Tag with `@smoke` for critical paths
 
-**Test Commands:**
+**Test Commands** (from **`web/`**):
 ```bash
 npm run test              # Unit tests
 npm run test:e2e         # E2E tests
@@ -82,15 +103,21 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing guidelines.
 
 ### 5. Run Quality Checks
 
-**Before committing:**
+**Before committing (from `web/`):**
 ```bash
 cd web
 npm run lint          # Check code style
 npm run types:ci       # Verify TypeScript
 npm run test           # Run unit tests
-npm run governance:check  # Verify roadmap/doc updates (if needed)
-npm run verify:docs    # Repo root — full doc parity (inventory, schema index, feature flags, SECURITY snapshots, links, Zustand cascade, App Router boundaries, banned paths in web/); see docs/README.md
 ```
+
+**When your change touches stores, API routes, migrations, feature flags, or canonical docs**, also from **repository root**:
+```bash
+cd ..   # parent of web/
+npm run governance:check  # companion docs for store/API changes (see check-governance.js)
+npm run verify:docs       # full parity: inventories, SECURITY snapshots, links, env example, MCP config, etc.
+```
+See [`docs/README.md`](docs/README.md) for everything `verify:docs` runs.
 
 **CI will run:**
 - Lint checks
@@ -203,6 +230,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ## Getting Help
 
+- **Product feedback vs GitHub Issues**: [`docs/FEEDBACK_AND_ISSUES.md`](docs/FEEDBACK_AND_ISSUES.md)
 - **Documentation**: See [`docs/README.md`](docs/README.md) for the full index
 - **Architecture**: See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for system design
 - **Development**: See [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) for setup and runbook
@@ -245,11 +273,11 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ## Governance Check
 
-When modifying stores or API routes, run:
+When modifying stores or API routes, run from **repository root**:
 
 ```bash
 npm run governance:check
-npm run verify:docs    # repository root — see docs/README.md for everything this runs
+npm run verify:docs    # see docs/README.md for everything this runs
 ```
 
 This verifies that:
@@ -258,9 +286,19 @@ This verifies that:
 - Documentation is updated
 - **`verify:docs`** catches drift between generated inventories, security snapshots, canonical Markdown links, store/cascade docs, and `ARCHITECTURE` boundary counts (CI runs it in the quality job)
 
-Full audit checklist (counts, schema lists, phases): [`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](docs/DOCUMENTATION_AUDIT_ROADMAP.md). If you change **`apiRateLimiter.checkLimit`** options in `web/app/api/`, update the **Upstash API rate limits** table in [`docs/SECURITY.md`](docs/SECURITY.md).
+Full audit checklist (counts, schema lists, phases): [`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](docs/DOCUMENTATION_AUDIT_ROADMAP.md). Cursor / MCP / skills / optional Vercel AI Gateway: [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md). If you change **`apiRateLimiter.checkLimit`** options in `web/app/api/`, update the **Upstash API rate limits** table in [`docs/SECURITY.md`](docs/SECURITY.md).
 
 Use `GOVERNANCE_BYPASS=1 npm run governance:check` only when explicitly approved by an owner.
+
+## Before you open the repo publicly (maintainers)
+
+A short checklist so collaborators have a smooth first hour:
+
+1. **Issues** enabled; optional **Discussions** if you want Q&A separate from bugs.
+2. **Labels:** create **`good first issue`** and **`help wanted`** (and match the spelling contributors see in this doc) so the backlog is discoverable.
+3. **Default branch** protected: require CI to pass before merge when you are ready.
+4. **Security:** confirm contact emails in [SECURITY.md](SECURITY.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) are monitored.
+5. **Templates:** this repo includes [issue templates](.github/ISSUE_TEMPLATE/) and a [PR template](.github/PULL_REQUEST_TEMPLATE.md); adjust labels or wording to match your workflow.
 
 ## Thank You!
 
@@ -268,4 +306,4 @@ Thank you for contributing to Choices! Your efforts help make participatory demo
 
 ---
 
-**Questions?** Open an issue or check the [documentation](docs/README.md).
+**Questions?** Open an issue (see [`.github/SUPPORT.md`](.github/SUPPORT.md)) or browse the [documentation index](docs/README.md).

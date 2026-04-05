@@ -1,5 +1,7 @@
 import React, { Suspense } from 'react';
 
+import { env } from '@/lib/config/env';
+
 import { AdminMonitoringShell } from './AdminMonitoringShell';
 import MonitoringLoading from './loading';
 import { MonitoringContentClient } from './MonitoringContentClient';
@@ -24,7 +26,7 @@ type MonitoringData = {
 };
 
 async function fetchMonitoring(): Promise<MonitoringData> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/security/monitoring`, {
+  const res = await fetch(`${env.NEXT_PUBLIC_BASE_URL ?? ''}/api/security/monitoring`, {
     cache: 'no-store'
   });
   if (!res.ok) {
@@ -35,7 +37,7 @@ async function fetchMonitoring(): Promise<MonitoringData> {
 
 async function fetchExtendedHealth() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/health/extended`, {
+    const res = await fetch(`${env.NEXT_PUBLIC_BASE_URL ?? ''}/api/health/extended`, {
       cache: 'no-store'
     });
     if (!res.ok) {

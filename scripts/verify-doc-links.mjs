@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
- * Verifies relative filesystem targets for Markdown links in canonical docs.
- * Skips docs/archive/**, external URLs, anchors-only targets, and code blocks.
+ * Verifies relative filesystem targets for Markdown links in canonical docs,
+ * root Markdown (README, CONTRIBUTING, …), and `.github` Markdown (templates,
+ * SUPPORT). Skips `docs/archive` and `.github/workflows`, external URLs,
+ * anchors-only targets, and code blocks.
  *
  * Run from repo root: node scripts/verify-doc-links.mjs
  */
@@ -23,6 +25,19 @@ function walkMdFiles(dir, acc = []) {
     if (ent.isDirectory()) {
       if (ent.name === 'archive' && dir === join(root, 'docs')) continue;
       walkMdFiles(p, acc);
+    } else if (ent.name.endsWith('.md')) acc.push(p);
+  }
+  return acc;
+}
+
+/** PR template, issue templates, SUPPORT — skip workflows (YAML-only). */
+function walkGithubMdFiles(dir, acc = []) {
+  if (!existsSync(dir)) return acc;
+  for (const ent of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, ent.name);
+    if (ent.isDirectory()) {
+      if (ent.name === 'workflows') continue;
+      walkGithubMdFiles(p, acc);
     } else if (ent.name.endsWith('.md')) acc.push(p);
   }
   return acc;
@@ -94,6 +109,7 @@ function main() {
     const p = join(root, name);
     if (existsSync(p)) files.push(p);
   }
+  walkGithubMdFiles(join(root, '.github'), files);
 
   const failures = [];
   for (const file of files) {
@@ -127,7 +143,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`verify-doc-links: OK (${files.length} Markdown files scanned, archive/ skipped)`);
+  console.log(
+    `verify-doc-links: OK (${files.length} Markdown files scanned; docs/archive/ skipped; .github/workflows/ skipped)`,
+  );
 }
 
 main();

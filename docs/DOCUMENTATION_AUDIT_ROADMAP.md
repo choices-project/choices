@@ -1,18 +1,34 @@
 # Documentation ↔ codebase audit roadmap
 
-_Last updated: April 4, 2026_  
+_Last updated: April 5, 2026_  
 _Audience: new developers and maintainers doing a truth-alignment pass_
 
 This document is the **master checklist** for making every piece of documentation, inline comment, governance rule, and onboarding step **match the actual application** (routes, schema, stores, env, feature flags, security boundaries). It is intentionally detailed so you can execute it in order without guessing what “done” means.
 
-**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/TRUST_LAYER.md`, `docs/TESTING.md`, `docs/DATABASE_SCHEMA.md`, `docs/STATE_MANAGEMENT.md`, `docs/DEPLOYMENT.md`, `docs/API/contracts.md`, `docs/API/README.md`, `docs/WEBAUTHN_DESIGN.md`, archived **`api-contract-plan.md`** banner, **`docs/SECURITY.md`** (RLS domains, **`apiRateLimiter`** inventory, **`getSupabaseAdminClient`** route patterns + `rg`), `docs/FEATURE_FLAGS.md`, root **`README.md`** (`verify:docs` pointer), `AGENTS.md`, `CONTRIBUTING.md`, `.github/PULL_REQUEST_TEMPLATE.md`, **`ci.yml`**. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`docs:feature-flags`**, **`docs:security-snapshots`**, plus focused **`verify:doc-links`**, **`verify:store-docs`**, **`verify:architecture-boundaries`**, **`verify:architecture-schema-counts`**, all rolled into **`verify:docs`**. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
+**Progress (April 2026):** `docs/ARCHITECTURE.md`, `docs/TRUST_LAYER.md`, `docs/TESTING.md`, `docs/DATABASE_SCHEMA.md`, `docs/STATE_MANAGEMENT.md`, `docs/DEPLOYMENT.md`, **`docs/ENVIRONMENT_VARIABLES.md`** (Zod vs ad-hoc vs **`next.config.js`**), `docs/API/contracts.md`, `docs/API/README.md`, **`docs/FEEDBACK_AND_ISSUES.md`** (widget vs GitHub Issues), **`docs/README.md`** (“New here?” contributor funnel + **`COPY_FREEZE`** in Operations), `docs/WEBAUTHN_DESIGN.md`, archived **`api-contract-plan.md`** banner, **`docs/SECURITY.md`** (RLS domains, **`apiRateLimiter`** inventory, **`getSupabaseAdminClient`** route patterns + `rg`), `docs/FEATURE_FLAGS.md`, root **`README.md`** (contributor funnel + Volta/Node note), **`web/.env.local.example`**, **`docs/AGENT_SETUP.md`** (MCP + skills + [Vercel coding agents](https://vercel.com/docs/agent-resources/coding-agents)), `AGENTS.md`, **`CONTRIBUTING.md`** (two-`package.json` table, debut checklist, fixed **`governance:check`** / **`verify:docs`** cwd), **`.github/ISSUE_TEMPLATE/*`** (bug / feature / documentation), **`.github/SUPPORT.md`**, consolidated **`.github/PULL_REQUEST_TEMPLATE.md`**, **`.github/README.md`**, **`ci.yml`**. **npm** (repo root): `docs:surface-counts`, `docs:api-inventory`, `docs:public-schema-index`, **`docs:feature-flags`**, **`docs:security-snapshots`**, plus **`verify:doc-links`** (now includes **`docs/`**, root `README`/`CONTRIBUTING`/`AGENTS`/`DEPLOYMENT`, and **`.github/**/*.md`** except workflows), **`verify:store-docs`**, **`verify:architecture-boundaries`**, **`verify:architecture-schema-counts`**, **`verify-env-example.mjs`**, **`verify-mcp-config.mjs`**, all rolled into **`verify:docs`**. §3 below mixes **historical audit notes** with **verification commands**—prefer the scripts over stale prose.
+
+### At a glance — phase status (April 2026)
+
+Use this table before deep-diving §4–§9. “✅” means the **default acceptance criteria** for that phase are met in this repo; **rolling** means ongoing human review, not a one-time checkbox.
+
+| Block | Status | Notes |
+|-------|--------|--------|
+| **P0** Governance & dead links | ✅ | `scripts/check-governance.js` targets `docs/ROADMAP.md`, `docs/STATE_MANAGEMENT.md`, `docs/API/contracts.md`, `docs/TESTING.md` / changelog (see file). **P0-5:** **`web/.env.local.example`** is committed (gitignore exception **`!.env.local.example`**); **`web/.env.test.local.example`** remains for E2E-only vars. |
+| **P1** Counts & inventories | ✅ | `ARCHITECTURE.md` / diagram use **~93 tables, 7 views, ~63 RPCs**; `DATABASE_SCHEMA.md` points at generated index + total RPC count; **P1-9** admin/civics/auth spot-checks are **rolling** on each feature PR. |
+| **P2** Security & product logic | ✅ | RLS, rate limits, trust layer, feature flags, WebAuthn docs aligned; **P2-1 stretch** (per-table RLS appendix) still optional. |
+| **P3** Testing & contracts | ✅ | Core links done; **P3-4** “massive route inventory uncovered by tests” is **by design**—expand tests when touching an area. |
+| **P4** Onboarding | ✅ | **`docs/README.md`** “New here?”; **P4-4** `AGENT_SETUP.md` + rules + `AGENTS.md`; **P4-5–P4-6** GitHub issue/PR templates, **SUPPORT.md**, **`CONTRIBUTING.md`** maintainer debut checklist; **P4-7** **`FEEDBACK_AND_ISSUES.md`** + cohesive issue templates. |
+| **P5** Automation | ✅ | `verify:docs` + CI; re-run locally before merge when listed paths change. |
+| **§11 A1–A6** Agents / MCP | ✅ doc | **A6** and **§3.8** env drift are **rolling** (quarterly or when tooling/env changes). |
+
+**Full topical index:** [`docs/README.md`](README.md) (operations, API, compliance, archive).
 
 ---
 
 ## 1. How to use this roadmap
 
 1. **Treat the codebase as ground truth** for behavior. Treat **generated artifacts** (`web/types/supabase.ts`) as ground truth for the remote schema **as last generated** (regenerate after migrations).
-2. **Work in phases** (§4–§8). Do not skip **Phase 0**—broken governance and dead links waste time on every PR.
+2. **Work in phases** §4–§9 (P0–P5). Do not skip **Phase 0**—broken governance and dead links waste time on every PR. Cross-cutting habits: **§10**; agent/MCP specifics: **§11**; commands: **§12**.
 3. When you fix a claim, **add or cite a durable source** (script output, link to generator command, or “verified in file X line Y”) so the next person can re-verify in one step.
 4. For **new-developer ergonomics**, prefer one **canonical doc per topic**; archive or clearly label historical docs so search does not surface contradictions.
 
@@ -23,12 +39,17 @@ This document is the **master checklist** for making every piece of documentatio
 | Dimension | Authoritative source | How to refresh / verify |
 |-----------|---------------------|-------------------------|
 | HTTP API surface | `web/app/api/**/route.ts` | `npm run docs:surface-counts` (`nextJsRouteHandlers`) + `npm run docs:api-inventory` → `docs/API/inventory.md` |
-| Client + server env vars | `web/` usage of `process.env` / `NEXT_PUBLIC_*` + Zod startup schema (if any) | Ripgrep `process.env`; align `docs/ENVIRONMENT_VARIABLES.md` |
+| Client + server env vars | **`web/lib/config/env.ts`** (Zod, `env` proxy) + ad-hoc `process.env` elsewhere | Inventory + semantics in **`docs/ENVIRONMENT_VARIABLES.md`**; extend **`env.ts`** when a variable should be startup-validated; `rg process.env web/` for drift |
 | Supabase tables / views / RPCs | `web/types/supabase.ts` (`Database['public']`) | `npm run types:generate` from `web/` (per `GETTING_STARTED`) + `npm run docs:public-schema-index` + `docs:surface-counts` |
 | Zustand stores | `web/lib/stores/*.ts` + `web/lib/stores/index.ts` | Count `*Store.ts`; distinguish **modules** vs **logout cascade** (see §5.2) |
 | Feature flags | `web/lib/core/feature-flags.ts` | `npm run docs:feature-flags` → `docs/FEATURE_FLAGS.md` (marked sections); compare narrative to `docs/ROADMAP.md` |
 | Auth/session behavior | `web/lib/stores/userStore.ts` (`cascadeDependentStoreReset`), `web/contexts/AuthContext.tsx` | Trace `signOut` / `setSessionAndDerived` |
 | RLS & DB constraints | `supabase/migrations/*.sql` (repo root `supabase/`) | Read migrations; do not assume `DATABASE_SCHEMA.md` is exhaustive |
+| Doc index & navigation | **`docs/README.md`** | Tables link to deployment, security, API, agent setup, audit roadmap |
+| Agent / Cursor / MCP | **`docs/AGENT_SETUP.md`**, **`.cursor/mcp.json`**, **`.cursor/rules/projectruleschoices.mdc`**, **`.agents/skills/`** | After MCP or skill path changes, update **`AGENT_SETUP.md`** and **§11** checklist |
+| CI documentation gates | **`.github/workflows/ci.yml`** (`verify:docs`) | Same checks as local `npm run verify:docs`; requires `ripgrep` in CI |
+| GitHub contributor UX | **`.github/ISSUE_TEMPLATE/`**, **`PULL_REQUEST_TEMPLATE.md`**, **`SUPPORT.md`**, **`CONTRIBUTING.md`** (workflow + labels) | Relative links in templates checked by **`verify:doc-links`** |
+| User feedback vs GitHub Issues | **`docs/FEEDBACK_AND_ISSUES.md`**, **`EnhancedFeedbackWidget`**, **`POST /api/feedback`**, **`.github/ISSUE_TEMPLATE/*`** | Widget success copy + templates stay aligned; **`docs/ARCHITECTURE.md`** “Where to change what” row |
 
 ---
 
@@ -58,12 +79,12 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 ### 3.4 API route inventory vs `docs/API/README.md`
 
-- **Cardinality moves with the tree**—verify with `npm run docs:surface-counts` (`nextJsRouteHandlers`) and **`docs/API/inventory.md`** (`npm run docs:api-inventory`). Example: **175** handlers on 2026-04-04 in this clone.
+- **Cardinality moves with the tree**—verify with `npm run docs:surface-counts` (`nextJsRouteHandlers`) and **`docs/API/inventory.md`** (`npm run docs:api-inventory`). Example: **175** handlers (`docs:surface-counts` **`generatedAt` 2026-04-05** in this clone—re-run after large route changes).
 - `docs/API/README.md` documents a **small subset**. High-value spot checks: admin routes, civics (`/api/v1/civics/...`), auth, webhooks—folder names must equal URL segments.
 
 ### 3.5 Environment template
 
-- **Remediated (Apr 2026):** Root **`README.md`** quick start tells contributors to create `web/.env.local` manually and points at **`docs/GETTING_STARTED.md`** (no `cp` from a non-existent `.env.local.example`). Optional tracked template remains **P0-5** if you want one checked in.
+- **Remediated (Apr 2026):** **`web/.env.local.example`** lists all **`env.ts`** keys (required block filled with placeholders; optional commented). Root **`README.md`** and **`docs/GETTING_STARTED.md`** use **`cp .env.local.example .env.local`**. **`.gitignore`** un-ignores **`!.env.local.example`** and **`!.env.test.local.example`** under the **`.env.*`** rule.
 
 ### 3.6 Supabase CLI working directory
 
@@ -72,6 +93,38 @@ These were verified in this worktree so you can prioritize fixes without redisco
 ### 3.7 Feature flag cross-reference
 
 - **Remediated in `web/` (Apr 2026):** `rg FEATURE_STATUS web/` returns no matches—live code points at **`docs/ROADMAP.md`** for quarantine / product notes. Archive-only docs may still mention `FEATURE_STATUS.md`; that is expected noise under `docs/archive/`.
+
+### 3.8 Zod env schema vs push / `process.env`
+
+- **Remediated (Apr 2026):** **`web/lib/config/env.ts`** names match **`/api/pwa/notifications/send`**: optional server keys **`WEB_PUSH_VAPID_PUBLIC_KEY`**, **`WEB_PUSH_VAPID_PRIVATE_KEY`**, **`WEB_PUSH_VAPID_SUBJECT`** (replacing a mistaken **`WEB_PUSH_PRIVATE_KEY`** entry). **`docs/ENVIRONMENT_VARIABLES.md`** § intro lists the full Zod set vs variables read only ad-hoc (Upstash, Sentry, cron, legacy `VAPID_*` fallbacks, etc.).
+- **Follow-up (Apr 2026):** **`getValidatedEnv()`** is the source for Supabase URL/anon/service keys in **`web/utils/supabase/server.ts`**, **`api-route.ts`**, and **`client.ts`** (CI/test placeholders unchanged in **`env.ts`**); **`middleware.ts`** reads **`NEXT_PUBLIC_SUPABASE_URL`** and **`NEXT_PUBLIC_ENABLE_E2E_HARNESS`** via **`env`**. **`NEXT_PUBLIC_ENABLE_E2E_HARNESS`** is read through **`env`** everywhere in app/lib/features code (stores, WebAuthn routes, admin auth, profile/dashboard/civics UI, E2E harness pages); **Playwright configs, `web/tests/e2e/**`, and archived specs** still use **`process.env`** so runners can toggle harness without importing the Next bundle.
+- **Also (Apr 2026):** **`ADMIN_MONITORING_KEY`**, Resend/Congress, service-role + public Supabase keys across shared civics/user API routes and civics services, hashtags, **`robots`** / **`sitemap`**, root layout JSON-LD, poll OG image, admin pages, login/diagnostics/representatives, **`/api/health/ingest`** (still allows raw **`SUPABASE_URL`**). Remaining **`process.env`** in app code: ad-hoc flags (**`PLAYWRIGHT_*`**, **`AUTH_RATE_LIMIT_ENABLED`**, **`DEBUG_MIDDLEWARE`**, **`DEBUG_DASHBOARD`**, **`NODE_ENV`**, etc.)—not **`NEXT_PUBLIC_ENABLE_E2E_HARNESS`** outside Playwright/test files.
+- **Ongoing drift check (Apr 2026):** `rg -l 'process\.env' web/` still hits **100+** files because **tests**, **Playwright configs**, **`next.config.js`**, **Sentry**, **scripts/**, **E2E harness routes**, and **archived specs** legitimately read the environment without going through **`env`**. For **product** code under `web/app`, `web/lib`, `web/features`, `web/contexts`, `web/hooks`, `web/utils`, plus **`middleware.ts`**, treat new **`process.env`** reads as **candidates** for **`env.ts`** when the value is a **typed, validated** app secret or public flag; otherwise document the exception in **`ENVIRONMENT_VARIABLES.md`**. Re-run **`rg process.env web/`** after env refactors and update this bullet’s narrative if patterns change.
+
+### 3.9 Backlog & rolling maintenance (prioritized)
+
+Work that is **not** fully automatable or is **optional**—pick items by impact.
+
+| Priority | Item | Owner / trigger |
+|----------|------|-------------------|
+| Env | Migrate remaining **product** `process.env` reads into **`env.ts`** where validation adds value; document exceptions in **`ENVIRONMENT_VARIABLES.md`** (includes **build-time / `next.config.js`** keys outside Zod) | Any PR touching config |
+| MCP | Keep **`.cursor/mcp.json`** free of **machine-specific absolute paths**; script-based servers use **`bash .cursor/...`** from repo root. **`govinfo`** requires a local venv under **`.cursor/govinfo-mcp/`** | New clone / MCP edits |
+| Agents | **§11 A6**: Re-read [Vercel coding agents](https://vercel.com/docs/agent-resources/coding-agents) when upgrading terminal agent tooling | Quarterly or on Vercel announcements |
+| Skills | Diff **`.agents/skills/*`** against upstream Vercel/Supabase skill repos when you want latest agent guidance | Ad hoc |
+| P2 stretch | Per-table RLS appendix in **`SECURITY.md`** | Security deep-dive |
+| P1-9 | Spot-check new/changed **admin**, **civics**, **auth** routes vs **`docs/API/README.md`** claims | Each relevant PR |
+| Product docs | Keep **`docs/ROADMAP.md`** and **`README.md`** marketing claims aligned with **`verify:docs`** counts when you change positioning | Release prep |
+| Template links | After editing **`.github/*.md`** or issue templates, run **`npm run verify:doc-links`** or full **`verify:docs`** | Any PR touching GitHub templates |
+| Feedback ↔ Issues narrative | Changing **`EnhancedFeedbackWidget`**, **`/api/feedback`**, admin feedback pages, or issue-template “Before you file” text → update **`docs/FEEDBACK_AND_ISSUES.md`** and spot-check **`CONTRIBUTING.md`** / **`SUPPORT.md`** | Any PR touching those surfaces |
+
+### 3.10 Collaborator & GitHub surfaces (Apr 2026 audit)
+
+- **Done:** Single **PR template** (removed duplicate merged template). **Issue templates:** bug, feature, documentation + **`config.yml`** (`blank_issues_enabled: true`). **`.github/SUPPORT.md`** routes questions vs security. **`CONTRIBUTING.md`** clarifies **`web/`** vs **repo root** for `governance:check` / `verify:docs`; **maintainer debut** checklist (labels, Issues, security inboxes). **`docs/GETTING_STARTED.md`** no longer implies **`governance:check`** runs from **`web/`**. **`docs/README.md`** adds **“New here?”** table. **`verify-doc-links.mjs`** extended to **`.github/**/*.md`** (skips **`workflows/`**) so template links stay valid in CI.
+- **Rolling:** When the repo is public, ensure GitHub **labels** exist (**`good first issue`**, **`help wanted`**) to match **`CONTRIBUTING.md`**.
+- **Cohesion (Apr 2026):** **`docs/FEEDBACK_AND_ISSUES.md`** explains **widget → `/api/feedback` → Admin Feedback** vs **GitHub Issues** for OSS work. **`.github/ISSUE_TEMPLATE/*`** and **`.github/SUPPORT.md`** route product users to the widget; **success UI** in **`EnhancedFeedbackWidget`** nudges code contributors toward Issues.
+- **Architecture map (Apr 2026):** **`docs/ARCHITECTURE.md`** § **Where to change what** links the widget, feedback API, admin feedback UI, and **`FEEDBACK_AND_ISSUES.md`** for discoverability.
+- **Feedback doc precision (Apr 2026):** **`FEEDBACK_AND_ISSUES.md`** §4 lists admin feedback routes including **generate-issue** / **bulk-generate-issues** (GitHub REST + **`GITHUB_ISSUES_*`** env); **`VISION.md`** i18n line matches **CI** + **`COPY_FREEZE.md`**.
+- **Onboarding mesh (Apr 2026):** **`GETTING_STARTED.md`** i18n commands + **`COPY_FREEZE`** / **`CONTRIBUTING`** pointers; **Getting Help** links **`FEEDBACK_AND_ISSUES`**; root **`README.md`** i18n feature line; **`ARCHITECTURE.md`** feedback row points at **`FEEDBACK_AND_ISSUES` §4**; **`AGENTS.md`** reminds agents to update that doc when touching feedback surfaces.
 
 ---
 
@@ -85,7 +138,7 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | P0-2 | Grep for **`ROADMAP_SINGLE_SOURCE`**, **`FEATURE_STATUS.md`**, **`docs/TESTING/api-contract-plan`** from non-archive code | Replace with `docs/ROADMAP.md`, canonical feature section, or `docs/TESTING.md` / archive pointer. |
 | P0-3 | Root **`README.md`** quick start | Remove or replace `cp .env.local.example`; align with `GETTING_STARTED.md` + `ENVIRONMENT_VARIABLES.md`. |
 | P0-4 | **`docs/GETTING_STARTED.md`** Supabase steps | `supabase link` / migrations / `types:generate` document correct **cwd** (repo root vs `web/`). |
-| P0-5 | Optional: add **`web/.env.local.example`** | Lists all keys **names-only** or safe placeholders; matches Zod/schema; linked from README. If you **do not** add the file, P0-3 must explicitly say “create file manually—no template committed.” |
+| P0-5 | **`web/.env.local.example`** | **Done:** matches **`web/lib/config/env.ts`**; linked from **`README.md`**, **`GETTING_STARTED.md`**, **`ENVIRONMENT_VARIABLES.md`**. |
 
 ---
 
@@ -97,10 +150,10 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P1-1 | **`docs/ARCHITECTURE.md`**: replace “70+ tables”, “19 RPC” | Use **generated counts** or say “see `web/types/supabase.ts` / run `scripts/…`”. Include **view** count if you mention analytics. |
-| P1-2 | **`docs/DATABASE_SCHEMA.md`**: RPC section title | Rename to **“Key RPC functions (documented subset)”** or **“RPC catalog”** with full list vs migration names; add **“Total RPCs in generated types: N”**. |
+| P1-1 | **`docs/ARCHITECTURE.md`**: replace “70+ tables”, “19 RPC” | **Done (Apr 2026):** diagram + narrative use **~93 tables, 7 views, ~63 RPCs** tied to generated types. |
+| P1-2 | **`docs/DATABASE_SCHEMA.md`**: RPC section + totals | **Done (Apr 2026):** **“RPC Functions”** links full list in **`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`**; narrative = **commonly referenced** RPCs only; **63** total stated explicitly. |
 | P1-3 | Reconcile **`calculate_trust_weighted_votes`** | **Done (doc policy):** RPC may remain on remote DB / types until dropped by migration; **`docs/DATABASE_SCHEMA.md`** + **`docs/TRUST_LAYER.md`** mark it **legacy / forbidden for product tallies**. Optional later: migration to drop function + regen types. |
-| P1-4 | Scripts at repo root | **`npm run docs:surface-counts`** (JSON counts). **`npm run docs:public-schema-index`** → generated index; **`verify:docs`** asserts index counts vs `web/types/supabase.ts`. |
+| P1-4 | Scripts at repo root | **Done:** **`npm run docs:surface-counts`** (JSON counts). **`npm run docs:public-schema-index`** → generated index; **`verify:docs`** asserts index counts vs `web/types/supabase.ts`. |
 
 ### 5.2 State management
 
@@ -155,6 +208,10 @@ These were verified in this worktree so you can prioritize fixes without redisco
 | P4-1 | **`docs/ARCHITECTURE.md`** | **Done:** diagram + tree include **`web/contexts/`**; **Where to change what** links **AuthContext** + WebAuthn doc. |
 | P4-2 | **`AGENTS.md` / `CONTRIBUTING.md`** | **Updated:** `AGENTS.md` + governance section in **`CONTRIBUTING.md`** link **`DOCUMENTATION_AUDIT_ROADMAP.md`**. |
 | P4-3 | **“Change X → file Y”** mini-index | **`docs/ARCHITECTURE.md`** — “Where to change what” table. |
+| P4-4 | **`docs/AGENT_SETUP.md`** | Canonical **Cursor + MCP + skills** entry; distinguishes **Vercel MCP** vs **Vercel AI Gateway**; links [Vercel coding agents](https://vercel.com/docs/agent-resources/coding-agents). Update when **`.cursor/mcp.json`** or skill paths change. |
+| P4-5 | **GitHub templates** | **Done:** **`.github/ISSUE_TEMPLATE/*`**, **`.github/PULL_REQUEST_TEMPLATE.md`**, **`.github/SUPPORT.md`**; links verified via **`verify:doc-links`**. |
+| P4-6 | **`docs/README.md` onboarding funnel** | **Done:** **“New here?”** table at top links GETTING_STARTED, CONTRIBUTING, ARCHITECTURE, audit roadmap, **`AGENT_SETUP`**. |
+| P4-7 | **`docs/FEEDBACK_AND_ISSUES.md`** | **Done:** Explains **widget → `/api/feedback` → `/admin/feedback`** vs **GitHub Issues**; linked from README, CONTRIBUTING, **`FEATURE_FLAGS`**, **`ARCHITECTURE`** (Where to change), **`TESTING`** (harness note), issue templates, **`SUPPORT.md`**; **IssueGenerationPanel** + **`POST .../generate-issue`** / **`bulk-generate-issues`** when **`GITHUB_ISSUES_*`** configured. |
 
 ---
 
@@ -162,9 +219,9 @@ These were verified in this worktree so you can prioritize fixes without redisco
 
 | ID | Task | Acceptance criteria |
 |----|------|---------------------|
-| P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** table/view/RPC counts vs `web/types/supabase.ts` (shared `scripts/lib/surface-counts.mjs` with `docs:surface-counts`); feature-flags `--check`; **`docs/SECURITY.md`** rg snapshots via **`sync-security-snapshots.mjs --check`**; **`scripts/verify-doc-links.mjs`**; **`scripts/verify-store-docs.mjs`** (`*Store.ts` + cascade order); **`scripts/verify-architecture-boundaries.mjs`** (`web/app` `error.tsx` / `loading.tsx` counts vs **`ARCHITECTURE.md`**); `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. |
+| P5-1 | `npm run verify:docs` | **Implemented:** `scripts/verify-docs.mjs` — `docs/API/inventory.md` total vs `route.ts` count; **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** table/view/RPC counts vs `web/types/supabase.ts` (shared `scripts/lib/surface-counts.mjs` with `docs:surface-counts`); feature-flags `--check`; **`docs/SECURITY.md`** rg snapshots via **`sync-security-snapshots.mjs --check`**; **`scripts/verify-doc-links.mjs`** (**`docs/`** except archive, root **`README`/`CONTRIBUTING`/`AGENTS`/`DEPLOYMENT`**, **`.github/**/*.md`** except **`workflows/`**); **`scripts/verify-store-docs.mjs`**; **`scripts/verify-architecture-boundaries.mjs`**; **`scripts/verify-architecture-schema-counts.mjs`**; **`scripts/verify-env-example.mjs`**; **`scripts/verify-mcp-config.mjs`**; `rg` guard in `web/` for `FEATURE_STATUS.md`, `ROADMAP_SINGLE_SOURCE`, `docs/TESTING/api-contract-plan`. |
 | P5-2 | CI job | **`verify:docs`** runs in **`.github/workflows/ci.yml`** (quality job) after installing `ripgrep`. |
-| P5-3 | PR template | **Updated:** checklist item for **`npm run verify:docs`** when API routes change. |
+| P5-3 | PR + issue templates | **Done:** consolidated **PR** checklist (testing, a11y/i18n, **`verify:docs`**, DCO); **issue** templates for bug / feature / docs; **`verify:doc-links`** covers **`.github`** Markdown. |
 
 ---
 
@@ -177,10 +234,30 @@ These are **process and quality** improvements beyond single files.
 3. **When archive docs contradict main docs**: add a banner at top of archive: **“Superseded by X—historical only.”**
 4. **Type generation**: After every migration PR, require **`web/types/supabase.ts`** update in the same PR—keeps DATABASE_SCHEMA honest.
 5. **Security**: Document **service role** usage—see **`docs/SECURITY.md`** § **Service role (`getSupabaseAdminClient`)**; run **`npm run docs:security-snapshots`** when admin-client routes change (keeps snapshot counts in sync).
+6. **Agents**: Prefer **Supabase MCP** for schema; **Vercel MCP** for deploy/logs/docs in-editor; **disable `deploy_to_vercel`** (see **`docs/AGENT_SETUP.md`**). Optional: route **CLI coding agents** through [Vercel AI Gateway](https://vercel.com/docs/agent-resources/coding-agents) for unified billing and model choice—team policy only; never commit gateway keys.
+7. **GitHub templates:** Editing **`.github/`** Markdown (PR body, issue templates, **SUPPORT**) requires valid **relative** links—**`npm run verify:doc-links`** catches drift before merge.
+8. **Feedback vs Issues:** Keep **`docs/FEEDBACK_AND_ISSUES.md`** the single narrative for widget + GitHub triage; cross-links in **ARCHITECTURE**, **FEATURE_FLAGS**, **TESTING** (harness), and **TROUBLESHOOTING** should stay in sync when behavior changes.
 
 ---
 
-## 11. Appendix: quick verification commands
+## 11. AI, MCP, and agent-tooling alignment
+
+**Goal**: Humans and agents use the same **documented** wiring for Cursor, MCP, and optional terminal agents—without conflating **platform MCP** with **LLM API routing**.
+
+| ID | Task | Acceptance criteria |
+|----|------|---------------------|
+| A1 | **Canonical agent doc** | **`docs/AGENT_SETUP.md`** exists at repo root `docs/`; **`.cursor/rules/projectruleschoices.mdc`** links it; **`AGENTS.md`** points new contributors there for MCP/skills. |
+| A2 | **Vercel MCP (in Cursor)** | **`https://mcp.vercel.com`** in **`.cursor/mcp.json`**; rules state **no `deploy_to_vercel`**; doc explains using MCP for **deployments context, logs, product docs**—not for pushing production from the agent. |
+| A3 | **Vercel AI Gateway (optional, terminal agents)** | Documented in **`AGENT_SETUP.md`**: [Coding agents](https://vercel.com/docs/agent-resources/coding-agents) — base URL **`https://ai-gateway.vercel.sh`**, single dashboard for spend/traces, compatible with Claude Code / Codex / OpenCode / etc. **Out of repo**: keys live in developer env only. |
+| A4 | **Skills SSOT** | Repo skills under **`.agents/skills/`** (`vercel-react-best-practices`, `supabase-postgres-best-practices`); **`.cursor/rules`** names those paths so every clone gets the same guidance. When Vercel or Supabase publish skill updates, sync folders or note divergence in **`AGENT_SETUP.md`**. |
+| A5 | **Local MCP bundle** | **`.cursor/mcp-servers/README.md`** documents install + env mapping (e.g. **`CONGRESS_GOV_API_KEY`** → **`CONGRESS_API_KEY`** for LegisMCP / us-gov-open-data per **`mcp.json`**). |
+| A6 | **Quarterly skim** | Re-read **`.cursor/mcp.json`** and [Vercel agent docs](https://vercel.com/docs/agent-resources/coding-agents) for new tools or env names; update **`AGENT_SETUP.md`** and this table if the recommended integration changes. |
+
+**Remaining work (rolling):** any new **`process.env`** in product paths (§3.8); **`verify-mcp-config`** rejects `/Users/…` paths in **`mcp.json`**—use repo-relative **`bash .cursor/...`** scripts; **govinfo** still needs a local venv under **`.cursor/govinfo-mcp/`**.
+
+---
+
+## 12. Appendix: quick verification commands
 
 ```bash
 # Repo root — canonical counts + full public schema lists
@@ -190,10 +267,12 @@ npm run docs:api-inventory
 npm run docs:feature-flags
 npm run docs:security-snapshots
 # Focused checks (also run inside verify:docs):
-npm run verify:doc-links
+npm run verify:doc-links   # docs/, root *.md, .github/**/*.md (not workflows/)
 npm run verify:store-docs
 npm run verify:architecture-boundaries
 npm run verify:architecture-schema-counts
+npm run verify:env-example
+npm run verify:mcp-config
 npm run verify:docs
 
 # Store modules (must equal cascade narrative in docs/STATE_MANAGEMENT.md)
@@ -204,20 +283,26 @@ rg -n "FEATURE_STATUS|ROADMAP_SINGLE_SOURCE|api-contract-plan" --glob '!docs/arc
 
 # API routes using Supabase service role (bypasses RLS)
 rg -l "getSupabaseAdminClient" web/app/api --glob '**/route.ts' | sort
+
+# process.env in product-ish paths (tune globs; excludes tests/playwright by default)
+rg -n 'process\.env' web/app web/lib web/features web/contexts web/hooks web/utils web/middleware.ts 2>/dev/null | head -80
 ```
 
 ---
 
-## 12. Completion definition
+## 13. Completion definition
 
 This audit is **complete** when:
 
-- **P0** items are ✅ (no broken governance targets; README/env/Supabase cwd accurate; no dead `FEATURE_STATUS` references in active code).
-- **P1** numeric and inventory claims match generated sources or are explicitly scoped.
+- **P0** items are ✅ (no broken governance targets; README/env/Supabase cwd accurate; no dead `FEATURE_STATUS` references in active code), including **P0-5** **`.env.local.example`**.
+- **P1** numeric and inventory claims match generated sources or are explicitly scoped (**§3.9** tracks rolling spot-checks).
 - **P2** security and voting/trust narratives match code paths new developers can trace.
-- **P3–P4** testing and onboarding docs reference the same contracts as production.
+- **P3–P4** testing and onboarding docs reference the same contracts as production (**P4-4** **`AGENT_SETUP`**, **P4-5–P4-7** GitHub templates, feedback vs Issues doc, docs index funnel).
 - **P5** (optional but recommended) automation catches the next drift before merge.
+- **§11 (A1–A6)** agent/MCP/skills alignment is **documented and kept current** when `.cursor/mcp.json` or Vercel’s coding-agent guidance changes materially.
+
+**Stretch / rolling** items (optional RLS appendix, upstream skill sync) do **not** block calling the audit “complete”; track them in **§3.9**.
 
 ---
 
-_Maintenance: update the “Snapshot” section when you complete phases or regenerate types; bump “Last updated” at the top._
+_Maintenance: update **§3** snapshots (including **§3.10** collaborator/GitHub + feedback cohesion), **§ “At a glance”**, and **P4-5–P4-7** when onboarding, templates, or **`FEEDBACK_AND_ISSUES`** change; bump **Last updated** at the top._

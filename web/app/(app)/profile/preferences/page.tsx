@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 
+import { env } from '@/lib/config/env';
 import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import {
@@ -269,7 +270,7 @@ export default function ProfilePreferencesPage() {
   // Check authentication - useEffect must be called unconditionally
   useEffect(() => {
     // In E2E harness mode, authentication is mocked - don't redirect
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
     // Only redirect if we're certain user is not authenticated

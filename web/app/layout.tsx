@@ -2,6 +2,7 @@
 import { cookies, headers } from 'next/headers';
 import React from 'react';
 
+import { env } from '@/lib/config/env';
 import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { ScrollRestoration } from '@/components/shared/ScrollRestoration';
@@ -21,13 +22,19 @@ import type { Metadata } from 'next';
 import type { AbstractIntlMessages } from 'next-intl';
 import './globals.css';
 
+/** Canonical public site origin for metadata (Zod-validated when set). */
+const siteOrigin =
+  env.NEXT_PUBLIC_BASE_URL ??
+  env.NEXT_PUBLIC_SITE_URL ??
+  'https://choices-app.com';
+
 export const metadata: Metadata = {
   title: {
     default: 'Choices - Democracy That Works For Everyone',
     template: '%s | Choices',
   },
   description: 'A privacy-first platform that levels the playing field for all candidates, exposes financial influence, and empowers citizens to engage directly with democracy.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices-app.com'),
+  metadataBase: new URL(siteOrigin),
   manifest: '/manifest.json',
   keywords: [
     'democracy',
@@ -53,7 +60,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Choices - Democracy That Works For Everyone',
     description: 'Level the playing field for all candidates. Expose financial influence. Engage directly with democracy.',
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices-app.com',
+    url: siteOrigin,
     siteName: 'Choices',
     locale: 'en_US',
     images: [
@@ -75,7 +82,7 @@ export const metadata: Metadata = {
     images: ['/og/choices-og.png'],
   },
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://choices-app.com',
+    canonical: siteOrigin,
     languages: {
       'en-US': '/',
       'es-ES': '/?lang=es',
@@ -188,7 +195,7 @@ export default async function RootLayout({
               '@type': 'Organization',
               name: 'Choices',
               description: 'Privacy-first participatory democracy platform',
-              url: process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://choices.app',
+              url: env.NEXT_PUBLIC_BASE_URL || env.NEXT_PUBLIC_SITE_URL || 'https://choices.app',
             }),
           }}
         />

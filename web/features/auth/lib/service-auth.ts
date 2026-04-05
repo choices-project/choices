@@ -11,6 +11,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 // Environment variables are automatically loaded by Next.js from .env.local
@@ -18,13 +19,13 @@ import { logger } from '@/lib/utils/logger';
 export async function requireServiceKey(): Promise<NextResponse | null> {
   try {
     // Check if we have the service key
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) {
       return NextResponse.json({ error: 'Service key not configured' }, { status: 500 });
     }
 
     // Verify the service key by creating a client and testing it
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) {
       return NextResponse.json({ error: 'Supabase URL not configured' }, { status: 500 });
     }
@@ -53,10 +54,10 @@ export async function requireServiceKey(): Promise<NextResponse | null> {
 
 export async function isServiceKeyValid(): Promise<boolean> {
   try {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return false;
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) return false;
     const supabase = createClient(
       supabaseUrl,

@@ -13,11 +13,13 @@
  * Status: Critical security enhancement
  */
 
+import { env } from '@/lib/config/env';
+
 // E2E Test Detection
 export const IS_E2E =
   process.env.NODE_ENV === 'test' ||
-  process.env.E2E === '1' ||
-  process.env.PLAYWRIGHT === '1';
+  env.E2E === '1' ||
+  env.PLAYWRIGHT === '1';
 
 export type SecurityConfig = {
   csp: CSPConfig

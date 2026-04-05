@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { TrendingPollsSkeleton } from '@/components/shared/Skeletons';
 
 import { get } from '@/lib/api/client';
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -22,7 +23,7 @@ const EnhancedFeedbackWidget = dynamic(
 );
 
 const isFeedbackWidgetEnabled =
-  process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET !== '1' &&
+  env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET !== '1' &&
   process.env.NODE_ENV === 'production';
 
 // Trending Polls Component - Lazy loaded to not block TTI

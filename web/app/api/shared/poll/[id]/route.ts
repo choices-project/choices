@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { env } from '@/lib/config/env';
 import { withErrorHandling, successResponse, notFoundError, toCamelCase } from '@/lib/api';
 
 import type { NextRequest } from 'next/server';
@@ -9,8 +10,8 @@ export const GET = withErrorHandling(async (
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Supabase environment variables are not configured');
     }

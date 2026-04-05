@@ -9,6 +9,7 @@ _Last updated: April 4, 2026_
 | **Registry & defaults** | [`web/lib/core/feature-flags.ts`](../web/lib/core/feature-flags.ts) — `FEATURE_FLAGS`, `ALWAYS_ENABLED_FLAGS`, helpers |
 | **Product / quarantine narrative** | [`docs/ROADMAP.md`](ROADMAP.md) |
 | **Runtime exposure to clients** | `GET /api/feature-flags` (implementation under `web/app/api/feature-flags/`) |
+| **In-app feedback vs GitHub Issues** | [`FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md) (relates to **`FEEDBACK_WIDGET`** + **`NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET`**) |
 
 There is **no** separate `FEATURE_STATUS.md` in active docs; archived copies may mention it under `docs/archive/`.
 

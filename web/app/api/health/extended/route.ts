@@ -12,6 +12,7 @@
  * Status: ✅ PRODUCTION
  */
 
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError } from '@/lib/api';
@@ -26,7 +27,7 @@ export const dynamic = 'force-dynamic';
 export const GET = withErrorHandling(async (_request: NextRequest) => {
     const authHeader = _request.headers.get('authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
-    const hasValidKey = bearerToken && bearerToken === process.env.ADMIN_MONITORING_KEY;
+    const hasValidKey = bearerToken && bearerToken === env.ADMIN_MONITORING_KEY;
 
     if (!hasValidKey) {
       const supabase = await getSupabaseServerClient();
@@ -62,7 +63,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
       status: 'healthy',
       timestamp,
       environment,
-      version: process.env.NEXT_PUBLIC_APP_VERSION ?? '1.0.0',
+      version: env.NEXT_PUBLIC_APP_VERSION ?? '1.0.0',
       uptime: process.uptime(),
       checks: {}
     };

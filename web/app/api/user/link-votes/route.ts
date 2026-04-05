@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
+import { env } from '@/lib/config/env';
 import {
   withErrorHandling,
   successResponse,
@@ -18,8 +19,8 @@ const linkVotesSchema = z.object({
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
     logger.error('Missing Supabase credentials for link votes handler', {

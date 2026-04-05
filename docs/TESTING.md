@@ -1,6 +1,6 @@
 # Testing Guide
 
-_Last updated: April 4, 2026 (E2E curated for CI and production)_
+_Last updated: April 5, 2026 (E2E curated for CI and production)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
 
@@ -176,7 +176,7 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
 - `global-navigation`
 - `feeds-store`
 - `feedback`
-  - Floating widget suppresses itself automatically when `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` or when visiting `/e2e/*` pages so axe audits remain deterministic.
+  - Floating widget suppresses itself automatically when `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` or when visiting `/e2e/*` pages so axe audits remain deterministic. Product vs GitHub reporting: [`FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md).
 - `notification-store`
   - Election countdown notifications now have dedicated unit coverage (`tests/unit/stores/notification.integration.test.tsx` + `tests/unit/features/civics/useElectionCountdown.test.ts`) to assert analytics hooks + dedupe behaviour before wiring Playwright.
 - `onboarding-store`

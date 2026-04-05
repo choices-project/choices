@@ -7,6 +7,7 @@ import { z } from 'zod';
 // Import the existing ServerActionContext type
 
 import { TypeGuardError } from '@/lib/core/types/guards';
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import { getSupabaseServerClient, getSupabaseAdminClient } from '../../utils/supabase/server';
@@ -45,7 +46,7 @@ export async function register(
     logger.info('Register function called with context', { context });
 
     // Always use real Supabase for registration
-    logger.info('NEXT_PUBLIC_SUPABASE_URL', { url: process.env.NEXT_PUBLIC_SUPABASE_URL });
+    logger.info('NEXT_PUBLIC_SUPABASE_URL', { url: env.NEXT_PUBLIC_SUPABASE_URL });
     logger.info('NODE_ENV', { env: process.env.NODE_ENV });
 
     const supabase = await getSupabaseServerClient();

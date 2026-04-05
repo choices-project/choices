@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation';
 
+import { env } from '@/lib/config/env';
+
 import PollRunHarnessClient from './PollRunHarnessClient';
 
 import type { Metadata } from 'next';
 
 const isProduction = process.env.NODE_ENV === 'production';
-const allowHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const allowHarness = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export const metadata: Metadata = {
   title: 'Poll Run E2E Harness - Choices',

@@ -7,6 +7,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
+import { env } from '@/lib/config/env';
+
 import type { 
   FeatureFlag, 
   FeatureFlagManager,
@@ -21,7 +23,7 @@ import {
   getAllFeatureFlags as _getAllFeatureFlags
 } from '@/lib/core/feature-flags';
 
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const IS_E2E_HARNESS = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export type UseFeatureFlagsReturn = {
   // Flag checking

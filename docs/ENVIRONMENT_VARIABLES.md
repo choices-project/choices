@@ -1,9 +1,28 @@
 # Environment Variables Documentation
 
-**Last Updated:** April 4, 2026  
+**Last Updated:** April 5, 2026  
 **Status:** ✅ **ALL CRITICAL VARIABLES CONFIGURED** (Production Ready — validated by Zod schema at startup)
 
-This document lists environment variables for the Choices application. **Startup validation** (required vs optional for server/client) is implemented in **`web/lib/config/env.ts`** (Zod)—extend that schema when adding new validated keys, then update this file.
+This document lists environment variables for the Choices application. **Startup validation** (required vs optional for server/client) is implemented in **`web/lib/config/env.ts`** (Zod). When you add or rename a variable that should be validated, update **`env.ts`** first, then update this file.
+
+**Local template:** copy **`web/.env.local.example`** to **`web/.env.local`** and fill in values (`cp web/.env.local.example web/.env.local`). The example file lists every Zod key (required block uncommented; optional keys commented). Never commit **`.env.local`**.
+
+**Zod schema (source of truth: `web/lib/config/env.ts`):**
+
+- **Server — required:** `SUPABASE_SERVICE_ROLE_KEY`
+- **Server — optional:** `ADMIN_MONITORING_KEY`, `CONGRESS_GOV_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `RESEND_WEBHOOK_SECRET`, `EMAIL_FROM`, `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT`, legacy `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CONTACT_EMAIL`, `DATABASE_URL`, `DEBUG_MIDDLEWARE`, `PRIVACY_PEPPER_DEV`, `PRIVACY_PEPPER_CURRENT`, `PRIVACY_PEPPER_PREVIOUS`, `SESSION_SECRET`, `JWT_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB`, `REDIS_PASSWORD`, `GOVINFO_API_KEY`, `GPO_API_KEY`, `GOVINFO_APIKEY`, `GOVINFO_KEY`, `GOOGLE_CIVIC_API_KEY`, `AUTH_RATE_LIMIT_ENABLED`, `ENABLE_PERFORMANCE_TRACKING`, `CRON_SECRET`, `FEATURE_FLAGS_OVERRIDE`, `CI`, `VERCEL`, `VERCEL_URL`, `VERCEL_ENV`, `PLAYWRIGHT_USE_MOCKS`, `E2E`, `PLAYWRIGHT`, `GITHUB_ISSUES_TOKEN`, `GITHUB_ISSUES_REPOSITORY`
+- **Client — required:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- **Client — optional:** `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_MAINTENANCE`, `NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET`, `NEXT_PUBLIC_PWA_DEV`, `NEXT_PUBLIC_PWA_DEBUG`, `NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_ENABLE_E2E_HARNESS`, `NEXT_PUBLIC_SENTRY_DSN`
+
+**Application code:** use **`import { env } from '@/lib/config/env'`** or **`getValidatedEnv()`** for any key listed above. On the **client**, only the **Client** keys are parsed; server-only keys are absent by design.
+
+**CI / `NODE_ENV=test`:** `getValidatedEnv()` supplies Supabase placeholders and passes through `CI`, `NEXT_PUBLIC_ENABLE_E2E_HARNESS`, and the Playwright/E2E flags (`PLAYWRIGHT_USE_MOCKS`, `E2E`, `PLAYWRIGHT`) when present—see the `isCI` branch in **`env.ts`**.
+
+**Keep raw `process.env` for:** **`web/scripts/*`**, Playwright configs and spec files, and Jest setup (runners should not depend on importing the Next bundle). Also **`NODE_ENV`** (framework convention). In **client components**, keep **`DEBUG_DASHBOARD`** on **`process.env`** (it is not `NEXT_PUBLIC_*`; routing it through **`env`** can diverge between SSR and the browser). In **client-only** modules that must mirror Playwright’s process env, **`process.env.PLAYWRIGHT_USE_MOCKS`** may still be used (for example **`pwaStore`** persist options and some **`/e2e/*`** pages) because that variable is not part of the client Zod schema.
+
+**Ad hoc until added to Zod:** Playwright credentials (`E2E_USER_EMAIL`, `E2E_ADMIN_EMAIL`, …), `BASE_URL` in the Playwright process, and any other key not listed above.
+
+**Build-time / `next.config.js` (not validated by `env.ts`):** Next reads several toggles at config evaluation—**`ANALYZE`**, **`ALLOWED_DEV_ORIGINS`**, **`NEXT_DISABLE_STRICT_MODE`**, **`SOCIAL_SHARING_ENABLED`**, **`CSP_REPORT_ONLY`**—plus the usual **`NODE_ENV`** / Vercel **`VERCEL_*`** checks. See **`web/next.config.js`** for exact behavior. These are intentionally outside the Zod schema; add them to **`.env.local`** or the host UI when you need them. They are not required in **`web/.env.local.example`** (that file tracks **Zod** keys only; see **`npm run verify:env-example`**).
 
 > **Current Status:** All 6 critical (P0) environment variables are configured in Vercel.  
 > See [`docs/DEPLOYMENT.md`](./DEPLOYMENT.md) for deployment checklist.
@@ -87,9 +106,18 @@ const url = env.NEXT_PUBLIC_SUPABASE_URL; // typed and validated
 | `ADMIN_MONITORING_KEY` | Server-only | Protects health ingest and admin endpoints |
 | `RESEND_API_KEY` | Server-only | Email service authentication |
 | `RESEND_WEBHOOK_SECRET` | Server-only | Webhook signature verification; endpoint returns 403 if unset |
-| `WEB_PUSH_PRIVATE_KEY` | Server-only | VAPID signing key for push notifications |
+| `WEB_PUSH_VAPID_PRIVATE_KEY` | Server-only | VAPID signing key for push notifications (alias `VAPID_PRIVATE_KEY` in send route) |
 | `UPSTASH_REDIS_REST_TOKEN` | Server-only | Rate limiting backend |
 | `CRON_SECRET` | Server-only | Cron job authentication |
+| `GITHUB_ISSUES_TOKEN` | Server-only | Fine-grained PAT with **Issues: write** on the target repo; used by **`POST /api/admin/feedback/.../generate-issue`** — never commit or expose |
+| `GITHUB_ISSUES_REPOSITORY` | Server-only (naming only) | Target repo as **`owner/repo`** (e.g. `myorg/choices`); paired with `GITHUB_ISSUES_TOKEN` |
+
+### GitHub Issues (admin feedback triage)
+
+- **`GITHUB_ISSUES_TOKEN`** (optional) — Creates issues via [GitHub REST API](https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue) from **Admin → Feedback**. Without it (and **`GITHUB_ISSUES_REPOSITORY`**), those routes return **503** and maintainers file issues manually.
+- **`GITHUB_ISSUES_REPOSITORY`** (optional) — Must match `^owner/repo$` (alphanumeric, `.`, `-`). Same org as the token’s access.
+
+See **[`FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md)** and **`web/lib/integrations/github/feedback-github-issue.ts`**.
 
 ### Error Monitoring (Sentry)
 - `NEXT_PUBLIC_SENTRY_DSN` (optional)

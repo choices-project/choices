@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -32,7 +33,7 @@ export function getAuthToken(request: NextRequest): string | null {
 
 export function verifyAuthToken(token: string): JWTPayload | null {
   try {
-    const jwtSecret = process.env.JWT_SECRET
+    const jwtSecret = env.JWT_SECRET
     if (!jwtSecret) {
       logger.error('JWT_SECRET not configured')
       return null

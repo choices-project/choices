@@ -32,6 +32,7 @@ import {
   useTrendingHashtags,
   useNotificationActions,
 } from '@/lib/stores';
+import { env } from '@/lib/config/env';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
 import type { FeedItem } from '@/lib/stores/types/feeds';
 // withOptional removed
@@ -41,7 +42,7 @@ import { useI18n } from '@/hooks/useI18n';
 
 import type React from 'react';
 
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const IS_E2E_HARNESS = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 function HarnessFeedDataProvider({
   userId,

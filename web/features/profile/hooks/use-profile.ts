@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { env } from '@/lib/config/env';
 import { useUserProfileEditData, useUserActions } from '@/lib/stores';
 import {
   useProfileActions,
@@ -51,7 +52,7 @@ export function useProfile(): UseProfileReturn {
   const [shouldBypassProfileLoad, setShouldBypassProfileLoad] = useState(false);
   
   useEffect(() => {
-    const bypass = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
+    const bypass = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' &&
       typeof window !== 'undefined' &&
       window.localStorage.getItem('e2e-dashboard-bypass') === '1';
     setShouldBypassProfileLoad(bypass);

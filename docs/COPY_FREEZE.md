@@ -1,6 +1,6 @@
 # Copy Freeze Process
 
-_Last updated: March 2026_
+_Last updated: April 5, 2026_
 
 Before each release, we run a **copy freeze** so translators can complete pending strings and no new keys slip in after translation sign-off.
 

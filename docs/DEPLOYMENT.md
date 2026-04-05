@@ -1,6 +1,6 @@
 # Deployment Guide
 
-_Last updated: April 4, 2026_
+_Last updated: April 5, 2026_
 
 ## Purpose
 Use this guide as the single source of truth for shipping the Choices web application. It covers the required checks, how to move a release from local verification to production, and where to look if something goes wrong.
@@ -56,6 +56,7 @@ npm run type-check              # Confirm type safety with regenerated types
 ## 3. Production Deployment
 
 1. Freeze the staging commit that passed the checks above.
+   - Releases that ship **locale or user-visible copy** changes should follow **[`docs/COPY_FREEZE.md`](COPY_FREEZE.md)** so translators stay in sync.
 2. Promote the build (Vercel example: `vercel deploy --prebuilt --prod`).
 3. Monitor deployment logs for migration output and Supabase connectivity errors.
 4. Rotate any feature flags needed for rollout using the admin dashboard or `featureFlagManager` helpers.

@@ -1,5 +1,7 @@
 import { ImageResponse } from 'next/og';
 
+import { env } from '@/lib/config/env';
+
 // Use Node.js runtime to avoid sharing Edge bundle with middleware.
 // Middleware + OG Edge would pull resvg/yoga WASM into middleware, causing Vercel deploy failure.
 export const runtime = 'nodejs';
@@ -23,54 +25,54 @@ export default async function OGImage({ params }: Props) {
 
   if (pollId && UUID_REGEX.test(pollId)) {
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey =
+        env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (supabaseUrl && supabaseKey) {
-      // Fetch poll with poll_options embedded (PostgREST nested select)
-      const res = await fetch(
-        `${supabaseUrl}/rest/v1/polls?id=eq.${pollId}&select=title,total_votes,poll_options(text,option_text,vote_count,order_index)`,
-        {
-          headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-          },
-        }
-      );
+      if (supabaseUrl && supabaseKey) {
+        // Fetch poll with poll_options embedded (PostgREST nested select)
+        const res = await fetch(
+          `${supabaseUrl}/rest/v1/polls?id=eq.${pollId}&select=title,total_votes,poll_options(text,option_text,vote_count,order_index)`,
+          {
+            headers: {
+              apikey: supabaseKey,
+              Authorization: `Bearer ${supabaseKey}`,
+            },
+          }
+        );
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.[0]) {
-          const poll = data[0];
-          title = poll.title || title;
-          totalVotes = poll.total_votes ?? 0;
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.[0]) {
+            const poll = data[0];
+            title = poll.title || title;
+            totalVotes = poll.total_votes ?? 0;
 
-          // poll_options is the embedded table; fallback to legacy options JSON
-          const rawOptions = poll.poll_options;
-          if (Array.isArray(rawOptions) && rawOptions.length > 0) {
-            const sorted = [...rawOptions].sort(
-              (a: { order_index?: number }, b: { order_index?: number }) =>
-                (a.order_index ?? 0) - (b.order_index ?? 0)
-            );
-            options = sorted.map((opt: { text?: string; option_text?: string; vote_count?: number }) => ({
-              text: opt.text ?? opt.option_text ?? 'Option',
-              percentage:
-                totalVotes > 0 ? Math.round(((opt.vote_count ?? 0) / totalVotes) * 100) : 0,
-            }));
-          } else if (Array.isArray(poll.options)) {
-            // Legacy options JSON: { text, votes } or { label, vote_count }
-            options = poll.options.map((opt: { text?: string; label?: string; votes?: number; vote_count?: number }) => ({
-              text: opt.text ?? opt.label ?? 'Option',
-              percentage:
-                totalVotes > 0
-                  ? Math.round(((opt.votes ?? opt.vote_count ?? 0) / totalVotes) * 100)
-                  : 0,
-            }));
+            // poll_options is the embedded table; fallback to legacy options JSON
+            const rawOptions = poll.poll_options;
+            if (Array.isArray(rawOptions) && rawOptions.length > 0) {
+              const sorted = [...rawOptions].sort(
+                (a: { order_index?: number }, b: { order_index?: number }) =>
+                  (a.order_index ?? 0) - (b.order_index ?? 0)
+              );
+              options = sorted.map((opt: { text?: string; option_text?: string; vote_count?: number }) => ({
+                text: opt.text ?? opt.option_text ?? 'Option',
+                percentage:
+                  totalVotes > 0 ? Math.round(((opt.vote_count ?? 0) / totalVotes) * 100) : 0,
+              }));
+            } else if (Array.isArray(poll.options)) {
+              // Legacy options JSON: { text, votes } or { label, vote_count }
+              options = poll.options.map((opt: { text?: string; label?: string; votes?: number; vote_count?: number }) => ({
+                text: opt.text ?? opt.label ?? 'Option',
+                percentage:
+                  totalVotes > 0
+                    ? Math.round(((opt.votes ?? opt.vote_count ?? 0) / totalVotes) * 100)
+                    : 0,
+              }));
+            }
           }
         }
-    }
-  }
+      }
     } catch {
       // Use fallback values
     }

@@ -7,10 +7,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+import { env } from '@/lib/config/env';
 import { featureFlagManager } from '@/lib/core/feature-flags';
 import { useAppActions, useAppFeatureFlags } from '@/lib/stores/appStore';
 
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const IS_E2E_HARNESS = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export function useFeatureFlags() {
   const features = useAppFeatureFlags();

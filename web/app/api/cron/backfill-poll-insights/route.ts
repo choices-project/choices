@@ -12,6 +12,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse, forbiddenError } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { devLog } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -22,7 +23,7 @@ export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const providedSecret = request.headers.get('x-cron-secret') ?? request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
-  const expectedSecret = process.env.CRON_SECRET ?? '';
+  const expectedSecret = env.CRON_SECRET ?? '';
   if (!expectedSecret || providedSecret !== expectedSecret) {
     return forbiddenError('Invalid cron secret');
   }

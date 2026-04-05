@@ -1,6 +1,6 @@
 # Architecture Overview
 
-_Last updated: April 4, 2026_
+_Last updated: April 5, 2026_
 
 The Choices platform is a TypeScript/React application built with the Next.js App Router and backed by Supabase. The application uses a feature-module architecture with Zustand for state management, shadcn/ui design tokens for theming, and Framer Motion for animations.
 
@@ -211,6 +211,7 @@ Do not use deprecated paths: `@/lib/utils/http`, `@/lib/utils/cors`, `@/lib/util
 | API response shape | `@/lib/api`, [`docs/API/contracts.md`](API/contracts.md), `web/tests/contracts/` |
 | DB schema / types | `supabase/migrations/`, then `npm run types:generate` in `web/`; generated lists: `npm run docs:public-schema-index` (repo root) |
 | Service role / RLS bypass | [`docs/SECURITY.md`](SECURITY.md) § Service role; `rg -l getSupabaseAdminClient web/app/api --glob '**/route.ts'` |
+| In-app feedback vs GitHub Issues | `web/components/EnhancedFeedbackWidget.tsx`, `web/app/api/feedback/route.ts`, admin triage `web/app/(app)/admin/feedback/` — canonical routes vs gaps: [`docs/FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md) §4 |
 
 ---
 

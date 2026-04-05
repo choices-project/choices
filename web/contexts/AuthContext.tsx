@@ -14,6 +14,7 @@ import React, {
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders'
+import { env } from '@/lib/config/env'
 import {
   useSession,
   useUser,
@@ -33,7 +34,7 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
+const IS_E2E_HARNESS = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
 
 export { AuthContext }
 

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { env } from '@/lib/config/env'
 import {
   getSecurityConfig,
   buildCSPHeader as buildCSPHeaderFromConfig,
@@ -44,7 +45,7 @@ function shouldBypassForE2E(req: NextRequest): boolean {
 
   // Environment-based bypass - NEVER in production
   const isDev = process.env.NODE_ENV !== 'production';
-  const bypass = isDev && (process.env.NODE_ENV === 'test' || process.env.E2E === '1');
+  const bypass = isDev && (process.env.NODE_ENV === 'test' || env.E2E === '1');
 
   // Multiple bypass methods for browser compatibility - ONLY in non-production
   const byHeader = isDev && req.headers.get(E2E_HEADER) === '1';
@@ -224,11 +225,11 @@ function checkAuthInMiddleware(
     parsedCookiesHasSb: false,
   }
 
-  const enableDiagnostics = process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production'
+  const enableDiagnostics = env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production'
 
   // Helper to extract project ref from Supabase URL for exact cookie name matching
   const getProjectRef = (): string | null => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL
     if (!supabaseUrl) return null
     try {
       const match = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
@@ -490,7 +491,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // MAINTENANCE MODE CHECK - This must be first!
-  if (process.env.NEXT_PUBLIC_MAINTENANCE === "1") {
+  if (env.NEXT_PUBLIC_MAINTENANCE === "1") {
     return new NextResponse(
       `<!doctype html><meta charset="utf-8">
        <title>Maintenance</title>
@@ -585,7 +586,7 @@ export async function middleware(request: NextRequest) {
     // NEVER allow bypass in production - no env var override.
     const allowE2EBypass = process.env.NODE_ENV !== 'production';
     // Check for PLAYWRIGHT_USE_MOCKS env var (even if 0, presence indicates test scenario)
-    const isPlaywrightTest = allowE2EBypass && typeof process.env.PLAYWRIGHT_USE_MOCKS !== 'undefined';
+    const isPlaywrightTest = allowE2EBypass && typeof env.PLAYWRIGHT_USE_MOCKS !== 'undefined';
     // Check for E2E bypass cookie - if present, allow bypass (cookie is only set by tests)
     const bypassCookie1 = request.cookies.get('e2e-dashboard-bypass');
     const bypassCookie2 = request.cookies.get('E2E');
@@ -593,14 +594,14 @@ export async function middleware(request: NextRequest) {
 
     // DIAGNOSTIC: Log bypass cookie check for debugging
     // Always log when PLAYWRIGHT_USE_MOCKS is set (production tests) or in debug mode
-    if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || isPlaywrightTest || hasE2EBypassCookie) {
+    if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || isPlaywrightTest || hasE2EBypassCookie) {
       console.warn('[middleware] Bypass cookie check:', {
         pathname,
         hasE2EBypassCookie,
         bypassCookie1Value: bypassCookie1?.value,
         bypassCookie2Value: bypassCookie2?.value,
         isPlaywrightTest,
-        PLAYWRIGHT_USE_MOCKS: process.env.PLAYWRIGHT_USE_MOCKS,
+        PLAYWRIGHT_USE_MOCKS: env.PLAYWRIGHT_USE_MOCKS,
         allCookies: Array.from(request.cookies.getAll()).map(c => ({
           name: c.name,
           value: c.value.length > 20 ? c.value.substring(0, 20) + '...' : c.value,
@@ -615,9 +616,9 @@ export async function middleware(request: NextRequest) {
     const isE2EHarness = allowE2EBypass && (hasE2EBypassCookie || (
       // Only allow in non-production environments OR when Playwright test env vars are present
       (process.env.NODE_ENV !== 'production' || isPlaywrightTest) && (
-        process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' ||
-        process.env.PLAYWRIGHT_USE_MOCKS === '1' ||
-        process.env.E2E === '1' ||
+        env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' ||
+        env.PLAYWRIGHT_USE_MOCKS === '1' ||
+        env.E2E === '1' ||
         // E2E bypass headers are checked in test environments OR when Playwright env vars are present
         ((process.env.NODE_ENV === 'test' || isPlaywrightTest) && (
           request.headers.get('x-e2e-bypass') === '1'
@@ -627,14 +628,14 @@ export async function middleware(request: NextRequest) {
 
     // CRITICAL: If E2E harness is enabled, skip all authentication checks and allow access
     if (isE2EHarness) {
-      if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || hasE2EBypassCookie) {
+      if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || hasE2EBypassCookie) {
         console.warn('[middleware] E2E harness enabled - bypassing authentication', {
           pathname,
           hasE2EBypassCookie,
           bypassCookie1Value: bypassCookie1?.value,
           bypassCookie2Value: bypassCookie2?.value,
           isPlaywrightTest,
-          envHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
+          envHarness: env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
           timestamp: new Date().toISOString(),
         });
       }
@@ -649,7 +650,7 @@ export async function middleware(request: NextRequest) {
       const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
 
       // DIAGNOSTIC: Log protected route check (only in debug/test mode)
-      if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || hasE2EBypassCookie) {
+      if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || hasE2EBypassCookie) {
         console.warn('[middleware] Protected route check:', {
           pathname,
           isAuthenticated,
@@ -676,7 +677,7 @@ export async function middleware(request: NextRequest) {
         // Preserve the original destination for redirect after login
         authUrl.searchParams.set('redirectTo', pathname)
 
-        if (process.env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production') {
+        if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production') {
           console.warn('[middleware] Redirecting unauthenticated user from protected route:', {
             pathname,
             redirectTo: authUrl.toString(),
@@ -771,10 +772,10 @@ export async function middleware(request: NextRequest) {
   const hostname = request.nextUrl.hostname
   const isVercelPreviewDomain = hostname.includes('.vercel.app') || hostname.includes('.vercel.live')
   const isVercelPreview =
-    process.env.VERCEL_ENV === 'preview' ||
-    process.env.VERCEL_ENV === 'development' ||
+    env.VERCEL_ENV === 'preview' ||
+    env.VERCEL_ENV === 'development' ||
     isVercelPreviewDomain ||
-    (process.env.VERCEL_URL && process.env.NODE_ENV !== 'production')
+    (!!env.VERCEL_URL && process.env.NODE_ENV !== 'production')
 
   // If we're on a Vercel preview domain, ensure vercel.live is in CSP
   let cspConfig = SECURITY_CONFIG.csp

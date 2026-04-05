@@ -33,7 +33,7 @@ npm run docs:public-schema-index
 npm run docs:surface-counts   # optional: prints JSON counts + Next.js route tally
 ```
 
-**Counts** (as of last regeneration; verify with the commands above): **93** public tables, **7** public views, **63** RPC names under `Database['public']['Functions']`.
+**Counts** (as of last regeneration; **`npm run verify:docs`** asserts **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** matches **`web/types/supabase.ts`**; **`npm run docs:surface-counts`** prints JSON): **93** public tables, **7** public views, **63** RPC names under `Database['public']['Functions']`.
 
 For **`calculate_trust_weighted_votes`**: product policy forbids calling it—see [RPC Functions § `calculate_trust_weighted_votes`](#calculate_trust_weighted_votes-legacy--forbidden-for-product-use).
 

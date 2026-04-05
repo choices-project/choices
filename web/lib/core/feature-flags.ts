@@ -4,6 +4,7 @@
  * treated as immutable capabilities (they no longer count as feature flags).
  */
 
+import { env } from '@/lib/config/env';
 import logger from '@/lib/utils/logger';
 
 if (typeof window !== 'undefined') {
@@ -176,9 +177,9 @@ const mutableFlags: Record<MutableFlag, boolean> = { ...FEATURE_FLAGS };
 
 // Apply env overrides for production persistence (survives server restart)
 // Format: FEATURE_FLAGS_OVERRIDE='{"CONTACT_INFORMATION_SYSTEM":true}'
-if (typeof process !== 'undefined' && process.env?.FEATURE_FLAGS_OVERRIDE) {
+if (typeof process !== 'undefined' && env.FEATURE_FLAGS_OVERRIDE) {
   try {
-    const overrides = JSON.parse(process.env.FEATURE_FLAGS_OVERRIDE) as Record<string, boolean>;
+    const overrides = JSON.parse(env.FEATURE_FLAGS_OVERRIDE) as Record<string, boolean>;
     for (const [key, value] of Object.entries(overrides)) {
       const resolved = normalize(key);
       if (resolved && isMutableFlag(resolved) && typeof value === 'boolean') {

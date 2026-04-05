@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { env } from '@/lib/config/env'
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route'
 import { getSupabaseAdminClient } from '@/utils/supabase/server'
 
@@ -44,9 +45,9 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     // To avoid blocking real users while we refine the UX, this is gated behind
     // AUTH_RATE_LIMIT_ENABLED=1 and always disabled in E2E harness mode.
     const isE2E =
-      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' ||
-      process.env.PLAYWRIGHT_USE_MOCKS === '0';
-    const isRateLimitEnabled = process.env.AUTH_RATE_LIMIT_ENABLED === '1';
+      env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' ||
+      env.PLAYWRIGHT_USE_MOCKS === '0';
+    const isRateLimitEnabled = env.AUTH_RATE_LIMIT_ENABLED === '1';
 
     if (!isE2E && isRateLimitEnabled) {
       const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
@@ -243,7 +244,7 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     const allCookies = response.cookies.getAll()
 
     // Extract project ref for cookie name (needed for manual setting and logging)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL || ''
     const projectRefMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/)
     const projectRef = projectRefMatch ? projectRefMatch[1] : 'unknown'
     const authTokenCookieName = `sb-${projectRef}-auth-token`

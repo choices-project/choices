@@ -20,6 +20,7 @@ import {
   errorResponse,
   forbiddenError,
 } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -28,7 +29,7 @@ import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const RESEND_WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
+const RESEND_WEBHOOK_SECRET = env.RESEND_WEBHOOK_SECRET;
 
 /**
  * Verify Resend webhook signature

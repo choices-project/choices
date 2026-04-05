@@ -27,6 +27,8 @@
     "verify:store-docs": "node scripts/verify-store-docs.mjs",
     "verify:architecture-boundaries": "node scripts/verify-architecture-boundaries.mjs",
     "verify:architecture-schema-counts": "node scripts/verify-architecture-schema-counts.mjs",
+    "verify:env-example": "node scripts/verify-env-example.mjs",
+    "verify:mcp-config": "node scripts/verify-mcp-config.mjs",
     "docs:feature-flags": "node scripts/generate-feature-flags-doc.mjs",
     "docs:security-snapshots": "node scripts/sync-security-snapshots.mjs",
     "docs:api-inventory": "node scripts/generate-api-inventory.mjs",

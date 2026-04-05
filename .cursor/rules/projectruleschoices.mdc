@@ -24,4 +24,5 @@ When working in this codebase, use the following guidance so agents apply consis
 
 - Use **Vercel MCP** (when configured) for deployment context, project/deployment info, logs, and Vercel docs during Next.js/Vercel best-practices audit
 - **Do not use `deploy_to_vercel`.** Deployments are triggered by pushes to `main` (CI/CD). Keep the `deploy_to_vercel` tool disabled in Cursor Settings → Tools & MCP → Vercel.
-- See [AGENT_SETUP](docs/AGENT_SETUP.md) for Supabase + Vercel MCP config
+- **Vercel AI Gateway** (optional, for **terminal** agents such as Claude Code or Codex—not Cursor’s built-in chat) routes model traffic through `https://ai-gateway.vercel.sh` for unified spend and model choice; see [Vercel: Coding agents](https://vercel.com/docs/agent-resources/coding-agents). Do not commit API keys; this is separate from **Vercel MCP**.
+- See [AGENT_SETUP](docs/AGENT_SETUP.md) for MCP servers, skills paths, and operational habits

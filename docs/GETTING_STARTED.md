@@ -1,6 +1,6 @@
 # Getting Started with Choices
 
-_Last updated: April 4, 2026_
+_Last updated: April 5, 2026_
 
 Welcome to the Choices platform! This guide targets **about 15 minutes** from clone to a running dev server (longer if you are new to Supabase).
 
@@ -40,19 +40,15 @@ npm install
 
 ### 3. Set Up Environment Variables
 
-Create `web/.env.local` with the minimum required variables:
+From `web/`, start from the tracked template (every key from `web/lib/config/env.ts`; optional entries are commented):
 
 ```bash
-# Supabase (required)
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-
-# Base URL (required)
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+cp .env.local.example .env.local
 ```
 
-For a complete list of environment variables, see [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md).
+Edit **`.env.local`** and set at least the **required** values (Supabase URL, anon key, service role key). For local browsing, set **`NEXT_PUBLIC_BASE_URL=http://localhost:3000`**.
+
+For semantics and optional integrations, see [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md).
 
 ### 4. Link to Supabase Project
 
@@ -168,10 +164,18 @@ npm run types:generate   # Regenerate Supabase types
 supabase db push         # Apply migrations
 
 # Internationalization
-npm run i18n:extract     # Extract i18n strings
+npm run i18n:extract     # Extract i18n strings (updates snapshot; CI compares)
+npm run i18n:validate    # Ensure every en key exists in other locales
+```
 
-# Governance
-npm run governance:check # Verify roadmap/doc updates
+Releases that ship new copy: maintainers follow **[`COPY_FREEZE.md`](COPY_FREEZE.md)**. Contributor-facing detail: [`CONTRIBUTING.md`](../CONTRIBUTING.md) (user-visible strings).
+
+**Repository root** (parent of `web/`) — scripts that are not in `web/package.json`:
+
+```bash
+cd ..   # from web/ → repo root
+npm run governance:check   # after store / API changes (companion doc updates)
+npm run verify:docs        # full doc + inventory parity (CI runs this)
 ```
 
 ## Project Structure
@@ -200,7 +204,14 @@ cd web
 npm run types:generate   # After migrations change
 npm run check            # Lint + type-check (matches CI)
 npm run i18n:extract     # Before committing i18n changes
-npm run governance:check # Before PR (store/API changes require doc updates)
+npm run i18n:validate    # Catch missing translations before push
+```
+
+From **repository root** (after `cd ..` from `web/`):
+
+```bash
+npm run governance:check  # Before PR if you changed stores or API routes
+npm run verify:docs       # Before PR when docs, routes, schema, or flags changed
 ```
 
 ## Getting Help
@@ -208,6 +219,7 @@ npm run governance:check # Before PR (store/API changes require doc updates)
 - **Documentation**: See [`docs/README.md`](README.md) for the full index
 - **Architecture**: See [`ARCHITECTURE.md`](ARCHITECTURE.md) for system design
 - **Testing**: See [`TESTING.md`](TESTING.md) for testing strategies
+- **In-app feedback vs GitHub**: See [`FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md)
 - **Issues**: Check existing issues or create a new one
 
 ## Next Steps
@@ -224,5 +236,5 @@ Welcome to the Choices platform! 🎉
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
+- **Last verified:** 2026-04-05 (documentation accuracy and codebase-reference review)
 

@@ -9,10 +9,13 @@ import { logger } from '@/lib/utils/logger';
 
 import { useDebounce } from '@/hooks/useDebounce';
 
+import type { IssueGenerationClientPayload } from '@/lib/integrations/github/feedback-github-issue';
+
 import { FeedbackDetailModal } from './FeedbackDetailModal';
 import { FeedbackFilters } from './FeedbackFilters';
 import { FeedbackList } from './FeedbackList';
 import { FeedbackStats } from './FeedbackStats';
+import { IssueGenerationPanel } from './IssueGenerationPanel';
 
 type RawFeedbackApiItem = {
   id: string;
@@ -348,6 +351,41 @@ export default function AdminFeedbackPage() {
     fetchFeedback({ current: true });
   }, [fetchFeedback]);
 
+  const handleIssueGenerated = useCallback(
+    (feedbackId: string, data: IssueGenerationClientPayload) => {
+      const githubIssue = {
+        number: data.issueNumber,
+        url: data.issueUrl,
+        analysis: {
+          intent: data.analysis.intent,
+          category: data.analysis.category,
+          sentiment: data.analysis.sentiment,
+          urgency: data.analysis.urgency,
+          complexity: data.analysis.complexity,
+          keywords: data.analysis.keywords,
+          suggestedActions: data.analysis.suggestedActions,
+        },
+        createdAt: new Date().toISOString(),
+      };
+      const patch = (item: Feedback): Feedback =>
+        item.id === feedbackId
+          ? {
+              ...item,
+              metadata: { ...item.metadata, githubIssue },
+              updatedat: new Date().toISOString(),
+            }
+          : item;
+
+      setFeedback((prev) => prev.map(patch));
+      setSelectedFeedback((prev) => (prev && prev.id === feedbackId ? patch(prev) : prev));
+    },
+    [],
+  );
+
+  const handleBulkGenerate = useCallback(() => {
+    void fetchFeedback({ current: true });
+  }, [fetchFeedback]);
+
   const hasActiveFilters = !!(
     filters.type ||
     filters.sentiment ||
@@ -393,6 +431,21 @@ export default function AdminFeedbackPage() {
       <div data-testid="feedback-stats">
         <FeedbackStats feedback={feedback} />
       </div>
+
+      <IssueGenerationPanel
+        feedback={feedback.map((f) => ({
+          id: f.id,
+          title: f.title,
+          description: f.description,
+          type: f.type,
+          sentiment: f.sentiment,
+          priority: f.priority,
+          status: f.status,
+          metadata: f.metadata,
+        }))}
+        onIssueGenerated={handleIssueGenerated}
+        onBulkGenerate={handleBulkGenerate}
+      />
 
       {/* Filters */}
       <div data-testid="feedback-filters">

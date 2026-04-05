@@ -299,12 +299,12 @@ See [`docs/archive/reference/push-notifications/push-notifications-testing-2025.
 - Supabase logs
 - Upstash Redis metrics
 
-### Create an Issue
+### Create an Issue (or use in-app feedback)
 
 If you can't resolve the issue:
 
-1. Search existing issues
-2. Create a new issue with:
+1. **Using the deployed app?** Prefer the **in-app feedback widget** (when enabled) so maintainers get **page and device context**—see [`FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md).
+2. **Working in this repo?** Search **GitHub Issues**, then open one with:
    - Clear description
    - Steps to reproduce
    - Expected vs actual behavior
@@ -317,7 +317,7 @@ If you can't resolve the issue:
 
 ---
 
-**Still stuck?** Check the [documentation index](README.md) or create an issue on GitHub.
+**Still stuck?** Check the [documentation index](README.md), [`FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md), or GitHub Issues for contributor-facing bugs.
 
 ## Ownership & Update Cadence
 

@@ -24,6 +24,7 @@
  * }
  */
 
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -53,7 +54,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     request.headers.get('x-admin-key') ??
     request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
     '';
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? '';
+  const adminKey = env.ADMIN_MONITORING_KEY ?? '';
   if (!adminKey || adminHeader !== adminKey) {
     logger.warn('Admin stats endpoint: Invalid admin key', {
       hasHeader: !!request.headers.get('x-admin-key'),

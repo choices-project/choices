@@ -7,6 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+import { env } from '@/lib/config/env';
 import logger from '@/lib/utils/logger';
 
 import type { DataSource } from './types';
@@ -123,8 +124,8 @@ export class ProvenanceService {
 
   private get supabase() {
     if (!this._supabase) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
       if (!supabaseUrl || !supabaseKey) {
         throw new Error('Missing Supabase environment variables');

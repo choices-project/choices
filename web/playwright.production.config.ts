@@ -45,6 +45,7 @@ export default defineConfig({
       '**/voting-store.spec.ts',
       '**/dashboard-journey.spec.ts',
       '**/poll-production.spec.ts', // Uses /e2e/poll-create harness page
+      '**/feedback-admin-github-cycle.spec.ts', // Dev harness at /e2e/feedback only
     ],
     fullyParallel: true,
     forbidOnly: !!process.env.CI,

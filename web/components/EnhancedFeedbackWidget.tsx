@@ -24,10 +24,11 @@ import { getFeedbackTracker, resetFeedbackTracker } from '@/features/admin/lib/f
 import type { FeedbackTrackerOptions } from '@/features/admin/lib/feedback-tracker'
 import type { FeedbackContext, UserJourney } from '@/features/admin/types'
 
-import { motion, AnimatePresence } from '@/components/motion/Motion'
+import { motion, AnimatePresence, useReducedMotion } from '@/components/motion/Motion'
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
+import { env } from '@/lib/config/env'
 import {
   useAnalyticsActions,
   useAnalyticsLoading,
@@ -158,6 +159,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const dialogTitleId = useId()
   const dialogDescriptionId = useId()
   const dialogRef = useRef<HTMLDivElement | null>(null)
+  /** Ignore backdrop pointer events right after open (avoids open→immediate-close with stacked modals / automation). */
+  const suppressBackdropCloseRef = useRef(false)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const typeButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
   const titleInputRef = useRef<HTMLInputElement | null>(null)
@@ -166,9 +169,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const titleFieldId = useId()
   const descriptionFieldId = useId()
 
-  // Check for reduced motion preference (must be defined early)
-  const prefersReducedMotion = typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  // SSR-safe: manual window.matchMedia differed from server (always false), breaking hydration when
+  // clients (or Playwright) report prefers-reduced-motion: reduce.
+  const reducedMotionHook = useReducedMotion()
+  const prefersReducedMotion = reducedMotionHook === true
 
   // Get analytics store state and actions with proper memoization
   const { trackEvent, trackUserAction, setLoading: setAnalyticsLoading, setError: setAnalyticsError } = useAnalyticsActions()
@@ -181,7 +185,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
   // Guard pathname usage to prevent hydration mismatch
   // pathname is empty string during initial render, so check after mount
   const isHarnessMode =
-    process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname && pathname.startsWith('/e2e/'))
+    env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || (pathname && pathname.startsWith('/e2e/'))
 
   const trackerOptions = useMemo<FeedbackTrackerOptions | undefined>(() => {
     if (typeof navigator === 'undefined' || isHarnessMode) {
@@ -369,6 +373,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
   }
 
   const handleOpen = () => {
+    suppressBackdropCloseRef.current = true
+    window.setTimeout(() => {
+      suppressBackdropCloseRef.current = false
+    }, 150)
     setIsOpen(true)
     setStep('type')
 
@@ -623,24 +631,20 @@ const EnhancedFeedbackWidget: React.FC = () => {
   return (
     <>
       {/* Floating Feedback Button */}
-      <motion.button
+      <button
         ref={triggerRef}
         type="button"
         onClick={handleOpen}
-        className="fixed bottom-6 right-6 z-40 p-4 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+        className="fixed bottom-6 right-6 z-40 p-4 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         data-testid="feedback-widget-button"
+        data-state={isOpen ? 'open' : 'closed'}
         aria-label="Open feedback"
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={isOpen ? dialogId : undefined}
-        whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
-        whileTap={prefersReducedMotion ? {} : { scale: 0.9 }}
-        initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
-        animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0 }}
       >
-        <MessageCircle className="w-6 h-6" />
-      </motion.button>
+        <MessageCircle className="w-6 h-6" aria-hidden="true" />
+      </button>
 
       {/* Feedback Modal */}
       <AnimatePresence>
@@ -651,7 +655,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
             transition={prefersReducedMotion ? { duration: 0 } : {}}
-            onClick={handleClose}
+            onClick={(e) => {
+              if (suppressBackdropCloseRef.current) return
+              if (e.target !== e.currentTarget) return
+              handleClose()
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Escape' && step !== 'success') {
                 handleClose()
@@ -925,6 +933,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       </h4>
                       <p className="text-muted-foreground mb-4">
                         Your detailed feedback has been captured with full context. We&apos;ll analyze it and get back to you soon!
+                      </p>
+                      <p className="text-xs text-muted-foreground mb-4 max-w-sm mx-auto leading-relaxed">
+                        Contributing code? Use this project&apos;s{' '}
+                        <span className="font-medium text-foreground">GitHub Issues</span> for reproducible bugs and features so work can be tracked with PRs—this widget is for in-app triage.
                       </p>
 
                       <div className="flex items-center justify-center gap-1 text-yellow-500 dark:text-yellow-400" aria-hidden="true">

@@ -12,6 +12,7 @@
 import * as jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
 
+import { env } from '@/lib/config/env'
 import { logger } from '@/lib/utils/logger'
 
 export type SessionPayload = {
@@ -38,7 +39,7 @@ const DEFAULT_SESSION_OPTIONS: Required<SessionOptions> = {
  * Generate a new JWT token for session
  */
 export function generateSessionToken(payload: Omit<SessionPayload, 'iat' | 'exp'>): string {
-  const secret = process.env.JWT_SECRET
+  const secret = env.JWT_SECRET
   if (!secret) {
     logger.error('JWT_SECRET environment variable is not set')
     throw new Error('Server configuration error: JWT_SECRET missing')
@@ -60,7 +61,7 @@ export function generateSessionToken(payload: Omit<SessionPayload, 'iat' | 'exp'
  */
 export function verifySessionToken(token: string): SessionPayload | null {
   try {
-    const secret = process.env.JWT_SECRET
+    const secret = env.JWT_SECRET
     if (!secret) {
       logger.error('JWT_SECRET environment variable is not set')
       return null

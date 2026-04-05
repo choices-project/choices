@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+import { env } from '@/lib/config/env';
+
 import { useI18n } from '@/hooks/useI18n'
 
 import type { ProfileSetupStepProps, ProfileVisibility } from '../types';
@@ -52,7 +54,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
   }
 
   // E2E bypass: If we're in test environment, render a simple version
-  if (process.env.NODE_ENV === 'test' || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co') {
+  if (process.env.NODE_ENV === 'test' || env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co') {
     return (
       <div className="max-w-2xl mx-auto text-center">
         <h2 className="text-2xl font-bold mb-4">{t('onboarding.profile.test.title')}</h2>

@@ -11,6 +11,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useShallow } from 'zustand/react/shallow';
 
+import { env } from '@/lib/config/env';
 import { createPollRequest, type PollCreateRequestResult } from '@/lib/polls/api';
 import {
   createInitialPollWizardData,
@@ -522,7 +523,7 @@ export const pollWizardStoreCreator: PollWizardStoreCreator = (set, get) =>
 
 const withImmer = immer(pollWizardStoreCreator);
 
-const isHarnessEnv = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const isHarnessEnv = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 const createNoopStorage = () => ({
   getItem: () => null,

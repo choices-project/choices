@@ -14,6 +14,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, validationError, corsPreflightResponse, errorResponse } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
@@ -95,7 +96,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
     
     // If Sentry is configured, send to Sentry
-    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+    if (env.NEXT_PUBLIC_SENTRY_DSN) {
       // Sentry integration - would be implemented when Sentry is added to project
       logger.debug('CSP violation would be sent to Sentry if configured', {
         severity: getSeverity(violation),

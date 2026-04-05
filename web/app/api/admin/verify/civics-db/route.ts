@@ -11,6 +11,7 @@
  * to validate database wiring and recently regenerated types.
  */
 
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse, forbiddenError, methodNotAllowed } from '@/lib/api';
@@ -22,7 +23,7 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const adminHeader = request.headers.get('x-admin-key') ?? request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? '';
+  const adminKey = env.ADMIN_MONITORING_KEY ?? '';
   if (!adminKey || adminHeader !== adminKey) {
     return forbiddenError('Invalid admin key');
   }

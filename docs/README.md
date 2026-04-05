@@ -1,12 +1,23 @@
 # Documentation
 
-_Last updated: April 4, 2026_
+_Last updated: April 5, 2026_
+
+## New here?
+
+| Goal | Start with |
+|------|------------|
+| Run the app locally | [GETTING_STARTED.md](GETTING_STARTED.md) |
+| Submit a PR or report a bug | [../CONTRIBUTING.md](../CONTRIBUTING.md), [../CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md), [../SECURITY.md](../SECURITY.md) |
+| Understand the codebase | [ARCHITECTURE.md](ARCHITECTURE.md) → [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) |
+| Keep docs accurate with code | [DOCUMENTATION_AUDIT_ROADMAP.md](DOCUMENTATION_AUDIT_ROADMAP.md), then `npm run verify:docs` (repo root) |
+| Cursor / MCP / AI assistants | [AGENT_SETUP.md](AGENT_SETUP.md) |
+| Product feedback vs GitHub Issues | [FEEDBACK_AND_ISSUES.md](FEEDBACK_AND_ISSUES.md) |
 
 ## Getting Started
 
 | Need | Read |
 |------|------|
-| **New contributor?** | [GETTING_STARTED.md](GETTING_STARTED.md) |
+| **New contributor?** | [GETTING_STARTED.md](GETTING_STARTED.md) · [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Project vision | [VISION.md](VISION.md) |
 | Trust layer (verification, equal votes) | [TRUST_LAYER.md](TRUST_LAYER.md) |
 | Community guidelines | [COMMUNITY_GUIDELINES.md](COMMUNITY_GUIDELINES.md) |
@@ -26,18 +37,42 @@ _Last updated: April 4, 2026_
 | API documentation | [API/README.md](API/README.md) |
 | Feature flags | [FEATURE_FLAGS.md](FEATURE_FLAGS.md) |
 | Troubleshooting | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
+| In-app feedback vs Issues | [FEEDBACK_AND_ISSUES.md](FEEDBACK_AND_ISSUES.md) |
 
-From repository root, **`npm run verify:docs`** checks that `docs/API/inventory.md` matches the `web/app/api/**/route.ts` tree, that **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** counts (tables / views / RPCs) match **`web/types/supabase.ts`**, that **`docs/FEATURE_FLAGS.md`** matches `web/lib/core/feature-flags.ts`, that auto-generated numeric snapshots in **`docs/SECURITY.md`** (`getSupabaseAdminClient` / `apiRateLimiter.checkLimit` file counts) match **`rg`**, that **relative links** in canonical docs (`docs/**` except `archive/`, plus root `README` / `CONTRIBUTING` / `AGENTS` / `DEPLOYMENT`) resolve to files in the repo, that **Zustand** `*Store.ts` counts and **logout cascade** order (17 stores, documented labels) in **`ARCHITECTURE.md`** / **`STATE_MANAGEMENT.md`** match **`userStore.ts`**, and that **`ARCHITECTURE.md`** **error** / **loading** boundary counts match **`web/app/`**, and that its **Postgres** table / view / RPC **~counts** match **`web/types/supabase.ts`**, and that `web/` does not reference removed doc paths. Run **`npm run verify:doc-links`**, **`npm run verify:store-docs`**, **`npm run verify:architecture-boundaries`**, or **`npm run verify:architecture-schema-counts`** alone for faster checks. After schema, flag, or relevant security-route changes, run **`npm run docs:public-schema-index`**, **`npm run docs:feature-flags`**, and/or **`npm run docs:security-snapshots`** before `verify:docs`.
+From repository root, **`npm run verify:docs`** runs the inline checks below (API inventory vs `route.ts`, generated public index vs **`web/types/supabase.ts`**, **`rg`** guard for removed doc paths in **`web/`**), then the focused scripts in order: feature-flags `--check`, SECURITY snapshots `--check`, links, Zustand cascade, App Router boundaries, ARCHITECTURE Postgres counts, **`web/.env.local.example`** vs **`web/lib/config/env.ts`**, **`.cursor/mcp.json`** (no machine absolute paths).
+
+| Focused script | What it validates |
+|----------------|-------------------|
+| `verify:doc-links` | Relative links in `docs/**` (skips `archive/`), root `README` / `CONTRIBUTING` / `AGENTS` / `DEPLOYMENT`, and `.github/**/*.md` (skips `workflows/`) |
+| `verify:store-docs` | `*Store.ts` count + `cascadeDependentStoreReset` order vs **`ARCHITECTURE.md`** / **`STATE_MANAGEMENT.md`** |
+| `verify:architecture-boundaries` | `web/app/global-error.tsx` + counts of `error.tsx` / `loading.tsx` vs **`ARCHITECTURE.md`** |
+| `verify:architecture-schema-counts` | Diagram + Database § in **`ARCHITECTURE.md`** vs **`web/types/supabase.ts`** |
+| `verify:env-example` | Every Zod key in **`web/lib/config/env.ts`** appears in **`web/.env.local.example`** (active or `# KEY=`) |
+| `verify:mcp-config` | **`.cursor/mcp.json`** contains no `/Users/…` or `/home/…` absolute paths |
+
+**Regenerate** (then re-run `verify:docs`) when sources change:
+
+| Generator | Writes / updates |
+|-----------|------------------|
+| `docs:api-inventory` | `docs/API/inventory.md` |
+| `docs:public-schema-index` | `docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md` |
+| `docs:feature-flags` | Marked sections in `docs/FEATURE_FLAGS.md` |
+| `docs:security-snapshots` | Marked snapshots in `docs/SECURITY.md` |
+| `docs:surface-counts` | *(stdout only)* JSON counts for hand-edited prose |
+
+Requires **ripgrep** (`rg`) on `PATH` (CI installs it before `verify:docs`).
 
 ## Operations
 
 | Topic | Doc |
 |-------|-----|
 | Deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| Release copy freeze (i18n) | [COPY_FREEZE.md](COPY_FREEZE.md) |
 | Security model | [SECURITY.md](SECURITY.md) |
 | WebAuthn / passkeys | [WEBAUTHN_DESIGN.md](WEBAUTHN_DESIGN.md) |
 | Roadmap & remaining work | [ROADMAP.md](ROADMAP.md) |
 | **Documentation ↔ code audit checklist** | [DOCUMENTATION_AUDIT_ROADMAP.md](DOCUMENTATION_AUDIT_ROADMAP.md) |
+| Cursor / MCP / agent skills | [AGENT_SETUP.md](AGENT_SETUP.md) |
 
 ## Compliance
 

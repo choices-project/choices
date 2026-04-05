@@ -16,6 +16,7 @@ import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -291,7 +292,7 @@ export default function AuthPageClient() {
       // Periodic DOM sync for E2E tests only
       let interval: ReturnType<typeof setInterval> | undefined;
       let timeout: ReturnType<typeof setTimeout> | undefined;
-      if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
         interval = setInterval(() => {
           syncEmail();
           syncPassword();
@@ -589,7 +590,7 @@ export default function AuthPageClient() {
             data-testid="login-form"
           >
           {/* CSRF Token - only in E2E/dev mode */}
-          {process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
+          {env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
             <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
           )}
               {safeUserError && (

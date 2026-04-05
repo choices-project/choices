@@ -15,7 +15,7 @@ These items must be completed before or immediately after the first production d
 - [ ] **DMARC DNS records** — Configure DMARC DNS records for the production email domain (code implementation complete via Resend)
 - [ ] **OAuth providers** — Enable Google/GitHub in Supabase Dashboard → Auth → Providers; add redirect URLs; set `NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS` in Vercel
 - [ ] **Passkey environment** — Set `RP_ID`, `ALLOWED_ORIGINS`, `NEXT_PUBLIC_ENABLE_PASSKEYS=1` in Vercel production env
-- [ ] **VAPID keys** — Confirm `WEB_PUSH_PRIVATE_KEY` and `NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY` are set in production
+- [ ] **VAPID keys** — Confirm `WEB_PUSH_VAPID_PRIVATE_KEY` and `NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY` are set in production
 - [ ] **Clean test data** — Remove "test test" site message and E2E test polls from production database
 
 ### 1.2 Production Verification (Manual)

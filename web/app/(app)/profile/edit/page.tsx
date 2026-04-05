@@ -11,6 +11,7 @@ import ProfileSubNav from '@/components/shared/ProfileSubNav';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
+import { env } from '@/lib/config/env';
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 
@@ -62,7 +63,7 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     // In E2E harness mode, authentication is mocked - don't redirect
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
     // Only redirect if we're certain user is not authenticated

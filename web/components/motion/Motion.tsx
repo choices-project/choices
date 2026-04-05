@@ -1,5 +1,5 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 
-export { motion, AnimatePresence }
+export { motion, AnimatePresence, useReducedMotion }

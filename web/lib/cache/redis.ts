@@ -8,6 +8,7 @@
  * Status: ✅ Production-ready
  */
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 // Upstash Redis client type
@@ -35,7 +36,7 @@ async function getRedisInstance(): Promise<UpstashRedis | null> {
   }
 
   // Check if Upstash Redis is configured
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) {
     logger.warn('Upstash Redis not configured - caching disabled');
     return null;
   }
@@ -46,7 +47,7 @@ async function getRedisInstance(): Promise<UpstashRedis | null> {
     redisInstance = Redis.fromEnv() as unknown as UpstashRedis;
     
     logger.info('Redis client initialized', {
-      url: process.env.UPSTASH_REDIS_REST_URL?.substring(0, 20) + '...'
+      url: env.UPSTASH_REDIS_REST_URL?.substring(0, 20) + '...'
     });
     
     return redisInstance;

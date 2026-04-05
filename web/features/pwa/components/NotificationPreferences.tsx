@@ -13,6 +13,7 @@
 import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
+import { env } from '@/lib/config/env';
 import { useUser } from '@/lib/stores';
 import { usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
 import { logger } from '@/lib/utils/logger';
@@ -155,7 +156,7 @@ export default function NotificationPreferences({ className = '' }: Notification
       }
 
       // Get VAPID public key (support both NEXT_PUBLIC_ prefix and direct name)
-      const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? 
+      const vapidKey = env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ??
                        process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
       if (!vapidKey) {
         setError('Push notifications are not configured. Please contact support.');

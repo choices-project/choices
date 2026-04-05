@@ -185,7 +185,7 @@ rg -l "getSupabaseAdminClient" web/app/api --glob '**/route.ts' | sort
 
 <!-- AUTO-GENERATED:ADMIN_CLIENT_ROUTE_SNAPSHOT -->
 
-_(Snapshot: **29** distinct `route.ts` files under `web/app/api` import `getSupabaseAdminClient`—re-run the `rg` command above after adding routes.)_
+_(Snapshot: **31** distinct `route.ts` files under `web/app/api` import `getSupabaseAdminClient`—re-run the `rg` command above after adding routes.)_
 
 <!-- END AUTO-GENERATED:ADMIN_CLIENT_ROUTE_SNAPSHOT -->
 

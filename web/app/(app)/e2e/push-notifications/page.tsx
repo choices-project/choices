@@ -5,6 +5,7 @@ import { create } from 'zustand';
 
 import NotificationPreferences from '@/features/pwa/components/NotificationPreferences';
 
+import { env } from '@/lib/config/env';
 import { usePWAStore } from '@/lib/stores/pwaStore';
 import { useUserStore } from '@/lib/stores/userStore';
 import { logger } from '@/lib/utils/logger';
@@ -213,7 +214,7 @@ export default function PushNotificationsHarnessPage() {
 
         getSubscriptionStatus: async () => {
           // In E2E harness mode, use store state instead of checking service worker
-          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+          if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
             return usePushNotificationsHarnessStore.getState().isSubscribed;
           }
 
@@ -240,7 +241,7 @@ export default function PushNotificationsHarnessPage() {
 
         subscribe: async () => {
           // In E2E tests, always simulate subscription success
-          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+          if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
             // Update Zustand store directly - this triggers immediate re-render
             // Zustand updates are synchronous, so the store is updated immediately
             const store = usePushNotificationsHarnessStore.getState();
@@ -291,11 +292,11 @@ export default function PushNotificationsHarnessPage() {
               timeoutPromise,
             ]);
 
-            const vapidKey = process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ??
+            const vapidKey = env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ??
                              process.env.WEB_PUSH_VAPID_PUBLIC_KEY ?? '';
             if (!vapidKey) {
               // In E2E tests, simulate subscription if VAPID key not configured
-              if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+              if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
                 isSubscribedRef.current = true;
                 const store = usePushNotificationsHarnessStore.getState();
                 store.setIsSubscribed(true);
@@ -329,7 +330,7 @@ export default function PushNotificationsHarnessPage() {
             return true;
           } catch (error) {
             // In E2E tests, simulate subscription success on error
-            if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+            if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
               isSubscribedRef.current = true;
               const store = usePushNotificationsHarnessStore.getState();
               store.setIsSubscribed(true);
@@ -344,7 +345,7 @@ export default function PushNotificationsHarnessPage() {
 
         unsubscribe: async () => {
           // In E2E harness mode, just update store state
-          if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
+          if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '1') {
             const store = usePushNotificationsHarnessStore.getState();
             store.setIsSubscribed(false);
             store.setSubscriptionEndpoint(null);

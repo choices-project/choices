@@ -1,7 +1,8 @@
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
-const EMAIL_FROM = process.env.EMAIL_FROM ?? 'no-reply@choices.app';
+const RESEND_API_KEY = env.RESEND_API_KEY ?? '';
+const EMAIL_FROM = env.EMAIL_FROM ?? 'no-reply@choices.app';
 
 type EmailPayload = {
   to: string;

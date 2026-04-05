@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { cookies } from 'next/headers';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { env as appEnv } from '@/lib/config/env';
 
 import { assertPepperConfig } from './env-guard';
 
@@ -22,20 +23,20 @@ function decodePepper(v: string): Buffer {
 }
 
 function loadPeppers(): EncodedPepper[] {
-  const env = process.env.NODE_ENV;
-  const isDev = env === 'development' || env === 'test';
+  const nodeEnv = process.env.NODE_ENV;
+  const isDev = nodeEnv === 'development' || nodeEnv === 'test';
 
   if (isDev) {
-    const dv = process.env.PRIVACY_PEPPER_DEV;
+    const dv = appEnv.PRIVACY_PEPPER_DEV;
     if (!dv) throw new Error('PRIVACY_PEPPER_DEV required in development/test');
     return [{ raw: decodePepper(dv), source: 'DEV' }];
   }
-  if (!process.env.PRIVACY_PEPPER_CURRENT) throw new Error('PRIVACY_PEPPER_CURRENT required');
+  if (!appEnv.PRIVACY_PEPPER_CURRENT) throw new Error('PRIVACY_PEPPER_CURRENT required');
   const peppers: EncodedPepper[] = [
-    { raw: decodePepper(process.env.PRIVACY_PEPPER_CURRENT), source: 'CURRENT' },
+    { raw: decodePepper(appEnv.PRIVACY_PEPPER_CURRENT), source: 'CURRENT' },
   ];
-  if (process.env.PRIVACY_PEPPER_PREVIOUS) {
-    peppers.push({ raw: decodePepper(process.env.PRIVACY_PEPPER_PREVIOUS), source: 'PREVIOUS' });
+  if (appEnv.PRIVACY_PEPPER_PREVIOUS) {
+    peppers.push({ raw: decodePepper(appEnv.PRIVACY_PEPPER_PREVIOUS), source: 'PREVIOUS' });
   }
   peppers.forEach(p => {
     if (p.source !== 'DEV' && p.raw.length < 32) {
@@ -166,7 +167,7 @@ const COOKIE_NAME = 'cx_jurisdictions';
 
 export async function setJurisdictionCookie(payload: { state?: string; district?: string; county?: string }) {
   // Minimal sealed cookie using a signed value. Replace with iron-session/jose if you prefer AEAD.
-  const secret = process.env.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
+  const secret = appEnv.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
   const body = JSON.stringify(Object.assign({}, payload, { v: 1, iat: Date.now() }));
   const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
   const value = Buffer.from(JSON.stringify({ body, sig })).toString('base64url');
@@ -183,7 +184,7 @@ export async function setJurisdictionCookie(payload: { state?: string; district?
 }
 
 export async function readJurisdictionCookie(): Promise<{ state?: string; district?: string; county?: string } | null> {
-  const secret = process.env.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
+  const secret = appEnv.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
   const raw = (await cookies()).get(COOKIE_NAME)?.value;
   if (!raw) return null;
   try {

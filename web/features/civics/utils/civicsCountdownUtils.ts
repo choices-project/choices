@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 
+import { env } from '@/lib/config/env';
 import {
   useAnalyticsActions,
   useClearElections,
@@ -243,7 +244,7 @@ export const useElectionCountdown = (
 
   useEffect(() => {
     // Skip network requests in E2E harness mode - data is already set up
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { env } from '@/lib/config/env';
 import { devLog } from '@/lib/utils/logger';
 
 import type { NextRequest} from 'next/server';
@@ -22,8 +23,8 @@ export async function serviceRoleAdminAuth(request: NextRequest) {
 
     // Create service role client using dynamic import
     const { createClient } = await import('@supabase/supabase-js');
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) {
       return { success: false, error: 'Supabase environment not configured' };
     }

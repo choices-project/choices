@@ -12,11 +12,12 @@
 
 import React from 'react';
 
+import { env } from '@/lib/config/env';
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/features/pwa/hooks/useFeatureFlags';
 
 import type { ReactNode } from 'react';
 
-const isE2EHarness = (): boolean => process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const isE2EHarness = (): boolean => env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 const renderContainer = (
   content: React.ReactNode,

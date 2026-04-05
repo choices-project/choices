@@ -7,6 +7,7 @@
  * GET /api/health/ingest
  * Requires: Authorization: Bearer <ADMIN_MONITORING_KEY>
  */
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse, authError } from '@/lib/api';
@@ -16,14 +17,13 @@ import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const SUPABASE_URL =
-  process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authHeader = request.headers.get('authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  const hasValidKey = bearerToken && bearerToken === process.env.ADMIN_MONITORING_KEY;
+  const hasValidKey = bearerToken && bearerToken === env.ADMIN_MONITORING_KEY;
 
   if (!hasValidKey) {
     const supabase = await getSupabaseServerClient();
@@ -48,7 +48,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const issues: string[] = [];
 
   if (!SUPABASE_URL || SUPABASE_URL.includes('replace') || SUPABASE_URL.includes('your-')) {
-    issues.push('SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL missing or placeholder');
+    issues.push('NEXT_PUBLIC_SUPABASE_URL missing or placeholder');
   }
   if (!SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_ROLE_KEY.includes('replace') || SUPABASE_SERVICE_ROLE_KEY.includes('your-')) {
     issues.push('SUPABASE_SERVICE_ROLE_KEY missing or placeholder');

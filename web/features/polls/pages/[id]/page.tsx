@@ -2,6 +2,7 @@ import dynamicImport from 'next/dynamic';
 import { cookies, headers } from 'next/headers';
 import React, { Suspense } from 'react';
 
+import { env } from '@/lib/config/env';
 import logger from '@/lib/utils/logger';
 
 import type { Metadata } from 'next';
@@ -39,7 +40,11 @@ const PollClient = dynamicImport(() => import('./PollClient'), {
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = params;
   // Use NEXT_PUBLIC_SITE_URL if available (standard Next.js pattern), fallback to other options
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL ?? 'https://choices-app.com';
+  const baseUrl =
+    env.NEXT_PUBLIC_SITE_URL ??
+    env.NEXT_PUBLIC_BASE_URL ??
+    (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : undefined) ??
+    'https://choices-app.com';
   const siteUrl = baseUrl.replace(/\/$/, '');
   const pollUrl = `${siteUrl}/polls/${id}`;
 

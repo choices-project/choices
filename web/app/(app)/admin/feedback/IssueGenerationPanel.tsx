@@ -347,7 +347,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
                   <div className="flex items-center space-x-2">
                     <a
                       href={result.issueUrl}
-                      target="blank"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-primary hover:text-primary/80"
                     >

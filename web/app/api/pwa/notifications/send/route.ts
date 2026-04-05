@@ -19,6 +19,7 @@ import {
   notFoundError,
   errorResponse
 } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
@@ -31,19 +32,20 @@ import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+/** Canonical `WEB_PUSH_VAPID_*` in `env` (Zod); legacy `VAPID_*` / `VAPID_CONTACT_EMAIL` optional in schema. */
 const VAPID_PUBLIC_KEY =
-  process.env.WEB_PUSH_VAPID_PUBLIC_KEY ??
-  process.env.VAPID_PUBLIC_KEY ??
+  env.WEB_PUSH_VAPID_PUBLIC_KEY ??
+  env.VAPID_PUBLIC_KEY ??
   '';
 
 const VAPID_PRIVATE_KEY =
-  process.env.WEB_PUSH_VAPID_PRIVATE_KEY ??
-  process.env.VAPID_PRIVATE_KEY ??
+  env.WEB_PUSH_VAPID_PRIVATE_KEY ??
+  env.VAPID_PRIVATE_KEY ??
   '';
 
 const VAPID_SUBJECT =
-  process.env.WEB_PUSH_VAPID_SUBJECT ??
-  process.env.VAPID_CONTACT_EMAIL ??
+  env.WEB_PUSH_VAPID_SUBJECT ??
+  env.VAPID_CONTACT_EMAIL ??
   'mailto:support@choices.dev';
 
 // Normalize subject to mailto: format if it's just an email address

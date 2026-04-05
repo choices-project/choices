@@ -5,10 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { AnalyticsTestBridge } from '@/app/(app)/e2e/_components/AnalyticsTestBridge';
 
+import { env } from '@/lib/config/env';
+
 import type { PWAQueueHarness } from '@/types/pwa';
 
 const isProduction = process.env.NODE_ENV === 'production';
-const allowHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const allowHarness = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 type HarnessState = {
   queueSize: number;

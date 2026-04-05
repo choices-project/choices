@@ -8,6 +8,7 @@
  * Agent D - Database Specialist
  */
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger'
 
 // Redis client types
@@ -134,7 +135,7 @@ export class RedisClient {
   async connect(): Promise<void> {
     try {
       // Check if we're using Upstash REST API
-      if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
         // Use Upstash REST API
         const { Redis } = await import('@upstash/redis')
 
@@ -142,7 +143,7 @@ export class RedisClient {
         this.isConnected = true
 
         logger.info('Upstash Redis client connected via REST API', {
-          url: process.env.UPSTASH_REDIS_REST_URL
+          url: env.UPSTASH_REDIS_REST_URL
         })
         return
       }
@@ -726,12 +727,12 @@ export class RedisClient {
 
 // Default Redis configuration
 const defaultRedisConfig: RedisConfig = {
-  host: process.env.REDIS_HOST ?? 'localhost',
-  port: parseInt(process.env.REDIS_PORT ?? '6379'),
-  db: parseInt(process.env.REDIS_DB ?? '0'),
+  host: env.REDIS_HOST ?? 'localhost',
+  port: parseInt(env.REDIS_PORT ?? '6379', 10),
+  db: parseInt(env.REDIS_DB ?? '0', 10),
   maxMemoryPolicy: 'allkeys-lru',
   maxMemory: '256mb',
-  ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {})
+  ...(env.REDIS_PASSWORD ? { password: env.REDIS_PASSWORD } : {})
 }
 
 // Global Redis client instance

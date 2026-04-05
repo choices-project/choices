@@ -14,6 +14,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 
+import { env } from '@/lib/config/env';
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse, rateLimitError } from '@/lib/api';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
@@ -26,7 +27,7 @@ const WEBAUTHN_RATE_LIMIT = { maxRequests: 30, windowMs: 15 * 60 * 1000 };
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+  if (process.env.NODE_ENV === 'production' && !env.VERCEL) {
     return errorResponse('WebAuthn routes disabled during build', 503);
   }
 
@@ -35,7 +36,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return forbiddenError('Passkeys disabled on preview');
   }
 
-  const isE2E = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.PLAYWRIGHT_USE_MOCKS === '0';
+  const isE2E = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || env.PLAYWRIGHT_USE_MOCKS === '0';
   if (!isE2E) {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
     const result = await apiRateLimiter.checkLimit(ip, '/api/v1/auth/webauthn', WEBAUTHN_RATE_LIMIT);

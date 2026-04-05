@@ -19,6 +19,7 @@ import { ElectionCountdownCard } from '@/features/civics/components/countdown/El
 import { useElectionCountdown } from '@/features/civics/utils/civicsCountdownUtils';
 
 import ScreenReaderSupport from '@/lib/accessibility/screen-reader';
+import { env } from '@/lib/config/env';
 import {
   useUserCurrentAddress,
   useUserRepresentatives,
@@ -143,7 +144,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
 
   useEffect(() => {
     // Skip network requests in E2E harness mode - data is already set up
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
     

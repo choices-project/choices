@@ -8,6 +8,7 @@
  * @date 2025-01-15
  */
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 // Types for Congress.gov API responses
@@ -401,7 +402,7 @@ export class CongressGovClient {
  * Create a Congress.gov API client with default configuration
  */
 export function createCongressGovClient(): CongressGovClient {
-  const apiKey = process.env.CONGRESS_GOV_API_KEY;
+  const apiKey = env.CONGRESS_GOV_API_KEY;
 
   if (!apiKey) {
     throw new CongressGovApiError('CONGRESS_GOV_API_KEY environment variable is required', 500);

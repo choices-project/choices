@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog';
+import { env } from '@/lib/config/env';
 import { useIsAuthenticated } from '@/lib/stores';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -366,7 +367,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
           </p>
           <div data-testid="webauthn-qr" className="qr-placeholder mt-4 h-32 w-32 bg-gray-200" />
           <div className="mt-4 space-x-2">
-            {process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
+            {env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
               <Button data-testid="simulate-qr-scan" variant="outline">
                 Simulate QR scan
               </Button>
@@ -383,7 +384,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
               {t('auth.passkey.cancel')}
             </Button>
           </div>
-          {process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
+          {env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' && (
             <div data-testid="cross-device-prompt" className="mt-4 rounded bg-blue-50 p-2">
               Cross-device authentication prompt
             </div>
@@ -567,7 +568,7 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
       )}
 
       {/* Simulation buttons - only show in development */}
-      {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') && (
+      {(process.env.NODE_ENV === 'development' || env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') && (
         <div className="mt-4 space-x-2">
           <Button variant="outline" size="sm" onClick={handleNetworkError}>
             Simulate Network Error

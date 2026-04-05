@@ -2,15 +2,17 @@
 
 import React from 'react'
 
+import { env } from '@/lib/config/env'
+
 async function fetchVerification(): Promise<{
   success: boolean
   data?: any
   error?: string
   metadata?: Record<string, unknown>
 }> {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? ''
+  const adminKey = env.ADMIN_MONITORING_KEY ?? ''
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/verify/civics-db`, {
+    const res = await fetch(`${env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/verify/civics-db`, {
       method: 'GET',
       headers: {
         'x-admin-key': adminKey,
@@ -26,8 +28,8 @@ async function fetchVerification(): Promise<{
 }
 
 async function fetchStats(): Promise<any> {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? ''
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/civics/stats`, {
+  const adminKey = env.ADMIN_MONITORING_KEY ?? ''
+  const res = await fetch(`${env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/civics/stats`, {
     method: 'GET',
     headers: { 'x-admin-key': adminKey },
     cache: 'no-store'
@@ -36,8 +38,8 @@ async function fetchStats(): Promise<any> {
 }
 
 async function fetchQa(): Promise<any> {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? ''
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/civics/qa`, {
+  const adminKey = env.ADMIN_MONITORING_KEY ?? ''
+  const res = await fetch(`${env.NEXT_PUBLIC_BASE_URL ?? ''}/api/admin/civics/qa`, {
     method: 'GET',
     headers: { 'x-admin-key': adminKey },
     cache: 'no-store'
@@ -46,10 +48,10 @@ async function fetchQa(): Promise<any> {
 }
 
 async function runBackfill(): Promise<any> {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? ''
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/cron/backfill-poll-insights`, {
+  const adminKey = env.ADMIN_MONITORING_KEY ?? ''
+  const res = await fetch(`${env.NEXT_PUBLIC_BASE_URL ?? ''}/api/cron/backfill-poll-insights`, {
     method: 'POST',
-    headers: { 'x-cron-secret': process.env.CRON_SECRET ?? '', 'x-admin-key': adminKey },
+    headers: { 'x-cron-secret': env.CRON_SECRET ?? '', 'x-admin-key': adminKey },
     cache: 'no-store'
   })
   return res.json()

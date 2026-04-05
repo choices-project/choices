@@ -1,4 +1,4 @@
-
+import { env } from '@/lib/config/env';
 import { withErrorHandling, successResponse, authError, validationError } from '@/lib/api';
 import { upstashRateLimiter } from '@/lib/rate-limiting/upstash-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -6,7 +6,7 @@ import { logger } from '@/lib/utils/logger';
 import type { NextRequest } from 'next/server';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? '';
+  const adminKey = env.ADMIN_MONITORING_KEY ?? '';
   if (!adminKey) {
     return authError('Admin monitoring key not configured');
   }

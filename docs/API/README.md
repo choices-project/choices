@@ -1,6 +1,6 @@
 # API Documentation
 
-_Last updated: April 4, 2026_
+_Last updated: April 5, 2026_
 
 This directory contains API documentation for the Choices platform.
 

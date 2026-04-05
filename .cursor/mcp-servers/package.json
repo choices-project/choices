@@ -1,0 +1,10 @@
+{
+  "name": "choices-mcp-servers",
+  "private": true,
+  "description": "Pre-installed MCP servers for Choices - avoids npx resolution issues",
+  "dependencies": {
+    "legismcp": "latest",
+    "@playwright/mcp": "latest",
+    "us-gov-open-data-mcp": "latest"
+  }
+}

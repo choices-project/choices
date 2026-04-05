@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 
+import { env } from '@/lib/config/env';
 import { useUserActions, useUserError, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
@@ -73,7 +74,7 @@ export default function AuthSetupStep({
   const isBypass =
     !forceInteractive &&
     (process.env.NODE_ENV === 'test' ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co');
+      env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co');
   const [authMethod, setAuthMethod] = useState<AuthMethod>(data?.authMethod || 'email')
   const [email, setEmail] = useState(data?.email || '')
   const [success, setSuccess] = useState(false)

@@ -34,6 +34,7 @@
 
 import { z } from 'zod';
 
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -70,7 +71,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     request.headers.get('x-admin-key') ??
     request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
     '';
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? '';
+  const adminKey = env.ADMIN_MONITORING_KEY ?? '';
   if (!adminKey || adminHeader !== adminKey) {
     logger.warn('Field revert endpoint: Invalid admin key');
     return forbiddenError('Invalid admin key');

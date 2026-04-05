@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamicImport from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 import React, { Suspense, useState } from 'react';
 
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -13,6 +14,7 @@ import { AppShell } from '@/components/shared/AppShell';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import FontProvider from '@/components/shared/FontProvider';
 
+import { env } from '@/lib/config/env';
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 import { markReactHydrationStarted } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
@@ -44,15 +46,20 @@ const SiteMessages = dynamicImport(() => import('@/components/SiteMessages'), {
 });
 
 const DISABLE_FEEDBACK_WIDGET =
-  process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1' ||
+  env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET === '1' ||
   process.env.NODE_ENV !== 'production';
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  /** Pathname fallback: NEXT_PUBLIC_ENABLE_E2E_HARNESS is not always inlined on the client in dev/Playwright. */
+  const isE2eHarnessLayout =
+    env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' ||
+    (typeof pathname === 'string' && pathname.startsWith('/e2e/'));
+
   const { direction, currentLanguage } = useI18n();
   
   // CRITICAL: Track if this is the initial hydration to prevent attribute changes during hydration
@@ -387,14 +394,14 @@ export default function AppLayout({
   React.useEffect(() => {
     if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
       logger.warn('AppLayout: Rendering AppShell', {
-        IS_E2E_HARNESS,
+        isE2eHarnessLayout,
         bypassFlag: typeof window !== 'undefined' ? window.localStorage.getItem('e2e-dashboard-bypass') : 'SSR',
         currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
       });
     }
   }, []);
 
-  if (IS_E2E_HARNESS) {
+  if (isE2eHarnessLayout) {
     return (
       <FontProvider>
         <QueryClientProvider client={queryClient}>

@@ -8,6 +8,7 @@
  * Status: ✅ Production diagnostic tool
  */
 
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
@@ -123,11 +124,11 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
   // 3. Check Environment Variables
   diagnostics.checks.environment = {
-    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    hasSupabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    hasSupabaseUrl: !!env.NEXT_PUBLIC_SUPABASE_URL,
+    hasSupabaseAnonKey: !!env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    hasServiceRoleKey: !!env.SUPABASE_SERVICE_ROLE_KEY,
     nodeEnv: process.env.NODE_ENV,
-    isE2EHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
+    isE2EHarness: env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
   };
 
   // 4. Check Auth Cookies

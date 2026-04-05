@@ -13,11 +13,31 @@ Citizens engage with polls, representatives, and civic actions on transparent, o
 ```bash
 git clone <repository-url> && cd Choices/web
 npm install
-# Create web/.env.local with Supabase + base URL — see docs/GETTING_STARTED.md
+cp .env.local.example .env.local   # then edit — see docs/GETTING_STARTED.md
 npm run dev                         # http://localhost:3000
 ```
 
 See [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) for the full setup guide.
+
+**Tooling:** Node **24.11.x** and npm **11.6.x** are pinned via Volta in `web/package.json` (also `engines` for broader ranges). [Volta](https://volta.sh/) or [nvm](https://github.com/nvm-sh/nvm) help avoid “works on my machine” drift.
+
+---
+
+## For contributors
+
+We want this repo to be approachable whether you are new to open source or a seasoned maintainer.
+
+| Start here | Why |
+|------------|-----|
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Workflow, DCO sign-off, branch names, when to run `verify:docs` vs `web/` scripts |
+| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | Expected behavior in issues and PRs |
+| [SECURITY.md](./SECURITY.md) | **Private** vulnerability reporting (do not use public issues) |
+| [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) | Clone → env → Supabase link → first `npm run dev` |
+| [docs/README.md](./docs/README.md) | Full documentation index |
+| [docs/AGENT_SETUP.md](./docs/AGENT_SETUP.md) | Cursor / MCP / optional AI tooling for people coding with agents |
+| [docs/FEEDBACK_AND_ISSUES.md](./docs/FEEDBACK_AND_ISSUES.md) | In-app **feedback widget** vs **GitHub Issues** (which channel when) |
+
+Use **GitHub Issues** with our templates (bug, feature, documentation—they point app users at the **feedback widget** when appropriate) or open a **PR** with the checklist filled in. Small doc fixes and test improvements are always welcome.
 
 ---
 
@@ -39,7 +59,7 @@ See [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) for the full setup guid
 - **PWA** — Offline-first, push notifications, installable
 - **Candidate Verification** — Official email fast-track with admin audit trail
 - **Contact System** — Submit representative contact info with admin approval workflow
-- **i18n** — Internationalization-ready (en/es)
+- **i18n** — en/es catalogues; CI runs extract/validate (see `CONTRIBUTING.md`); release copy freeze: [`docs/COPY_FREEZE.md`](./docs/COPY_FREEZE.md)
 
 ---
 
@@ -89,6 +109,10 @@ CI runs this in the quality job (requires `ripgrep`).
 | Getting started | [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) |
 | Architecture | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
 | Contributing | [CONTRIBUTING.md](./CONTRIBUTING.md) |
+| Code of Conduct | [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) |
+| Cursor / agents | [docs/AGENT_SETUP.md](./docs/AGENT_SETUP.md) |
+| Doc ↔ code audit | [docs/DOCUMENTATION_AUDIT_ROADMAP.md](./docs/DOCUMENTATION_AUDIT_ROADMAP.md) |
+| Feedback widget vs GitHub Issues | [docs/FEEDBACK_AND_ISSUES.md](./docs/FEEDBACK_AND_ISSUES.md) |
 | Testing | [docs/TESTING.md](./docs/TESTING.md) |
 | State management | [docs/STATE_MANAGEMENT.md](./docs/STATE_MANAGEMENT.md) |
 | API reference | [docs/API/README.md](./docs/API/README.md) |
@@ -106,12 +130,13 @@ CI runs this in the quality job (requires `ripgrep`).
 
 ## Contributing
 
-We welcome contributions. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide.
+We welcome contributions. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide (including **repository root** vs **`web/`** commands).
 
 ```bash
 cd web
-npm run lint && npm run types:ci && npm run test   # Pre-commit checks
-git commit -s -m "feat: your change"                # DCO-signed commit
+npm run lint && npm run types:ci && npm run test   # from web/
+cd .. && npm run verify:docs                         # from repo root when docs/routes/schema change
+git commit -s -m "feat: your change"                 # DCO-signed commit
 ```
 
 **Principles:** Privacy first. Equal voting. Open source. Accessible. Performant.

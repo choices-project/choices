@@ -1,3 +1,5 @@
+import { env } from '@/lib/config/env';
+
 /**
  * @fileoverview Service Worker Configuration
  *
@@ -139,7 +141,7 @@ export const PUSH_CONFIG = {
    * This should be generated and stored in environment variables
    * For now, using placeholder - MUST BE REPLACED in production
    */
-  vapidPublicKey: process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? '',
+  vapidPublicKey: env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? '',
 
   /**
    * Default notification options
@@ -233,11 +235,11 @@ export const DEV_CONFIG = {
    * @default false
    */
   enableInDev: process.env.NODE_ENV === 'development' &&
-                process.env.NEXT_PUBLIC_PWA_DEV === 'true',
+                env.NEXT_PUBLIC_PWA_DEV === 'true',
 
   /**
    * Log all service worker events
    */
-  verboseLogging: process.env.NEXT_PUBLIC_PWA_DEBUG === 'true',
+  verboseLogging: env.NEXT_PUBLIC_PWA_DEBUG === 'true',
 } as const;
 

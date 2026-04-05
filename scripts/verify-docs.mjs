@@ -6,7 +6,9 @@
  * order in ARCHITECTURE / STATE_MANAGEMENT drift from userStore.ts, when
  * ARCHITECTURE App Router boundary counts drift from web/app, when ARCHITECTURE
  * Postgres table / view / RPC counts drift from web/types/supabase.ts, or when
- * banned doc path strings appear under web/ (historical broken pointers).
+ * banned doc path strings appear under web/ (historical broken pointers),
+ * or when web/.env.local.example drifts from web/lib/config/env.ts,
+ * or when .cursor/mcp.json embeds machine-specific absolute paths.
  *
  * Run from repo root: node scripts/verify-docs.mjs
  */
@@ -22,6 +24,19 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
+
+/** Run `node <script>` from repo root; inherit stdio; propagate exit code. */
+function runNodeScript(scriptRelative, extraArgs = '') {
+  const cmd = extraArgs
+    ? `node ${scriptRelative} ${extraArgs}`
+    : `node ${scriptRelative}`;
+  try {
+    execSync(cmd, { cwd: root, stdio: 'inherit' });
+  } catch (e) {
+    const status = e && typeof e === 'object' ? e.status : undefined;
+    process.exit(typeof status === 'number' ? status : 1);
+  }
+}
 
 const apiRoot = join(root, 'web/app/api');
 const routeCount = walkRouteFiles(apiRoot).length;
@@ -118,66 +133,15 @@ try {
   }
 }
 
-try {
-  execSync('node scripts/generate-feature-flags-doc.mjs --check', {
-    cwd: root,
-    stdio: 'inherit',
-  });
-} catch (e) {
-  const status = e && typeof e === 'object' ? e.status : undefined;
-  process.exit(typeof status === 'number' ? status : 1);
-}
-
-try {
-  execSync('node scripts/sync-security-snapshots.mjs --check', {
-    cwd: root,
-    stdio: 'inherit',
-  });
-} catch (e) {
-  const status = e && typeof e === 'object' ? e.status : undefined;
-  process.exit(typeof status === 'number' ? status : 1);
-}
-
-try {
-  execSync('node scripts/verify-doc-links.mjs', {
-    cwd: root,
-    stdio: 'inherit',
-  });
-} catch (e) {
-  const status = e && typeof e === 'object' ? e.status : undefined;
-  process.exit(typeof status === 'number' ? status : 1);
-}
-
-try {
-  execSync('node scripts/verify-store-docs.mjs', {
-    cwd: root,
-    stdio: 'inherit',
-  });
-} catch (e) {
-  const status = e && typeof e === 'object' ? e.status : undefined;
-  process.exit(typeof status === 'number' ? status : 1);
-}
-
-try {
-  execSync('node scripts/verify-architecture-boundaries.mjs', {
-    cwd: root,
-    stdio: 'inherit',
-  });
-} catch (e) {
-  const status = e && typeof e === 'object' ? e.status : undefined;
-  process.exit(typeof status === 'number' ? status : 1);
-}
-
-try {
-  execSync('node scripts/verify-architecture-schema-counts.mjs', {
-    cwd: root,
-    stdio: 'inherit',
-  });
-} catch (e) {
-  const status = e && typeof e === 'object' ? e.status : undefined;
-  process.exit(typeof status === 'number' ? status : 1);
-}
+runNodeScript('scripts/generate-feature-flags-doc.mjs', '--check');
+runNodeScript('scripts/sync-security-snapshots.mjs', '--check');
+runNodeScript('scripts/verify-doc-links.mjs');
+runNodeScript('scripts/verify-store-docs.mjs');
+runNodeScript('scripts/verify-architecture-boundaries.mjs');
+runNodeScript('scripts/verify-architecture-schema-counts.mjs');
+runNodeScript('scripts/verify-env-example.mjs');
+runNodeScript('scripts/verify-mcp-config.mjs');
 
 console.log(
-  `verify-docs: OK (${routeCount} API route modules; inventory + schema index + feature flags + SECURITY snapshots + doc links + store counts + app boundaries + ARCHITECTURE schema counts; no banned patterns in web/)`,
+  `verify-docs: OK (${routeCount} API route modules; inventory + schema index + feature flags + SECURITY snapshots + doc links + store counts + app boundaries + ARCHITECTURE schema counts + env example + MCP paths; no banned patterns in web/)`,
 );

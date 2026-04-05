@@ -3,10 +3,11 @@
 import { notFound } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { env } from '@/lib/config/env';
 import { usePWAStore, type PWAStore, type PWANotification } from '@/lib/stores/pwaStore';
 
 const isProduction = process.env.NODE_ENV === 'production';
-const allowHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const allowHarness = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 export type PWAStoreHarness = {
   getSnapshot: () => PWAStore;

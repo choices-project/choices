@@ -1,6 +1,6 @@
 # Choices Platform Vision
 
-_Last updated: April 4, 2026_
+_Last updated: April 5, 2026_
 
 ## Mission
 
@@ -64,7 +64,7 @@ While the MVP is complete, the platform continues to evolve. Future work is trac
 
 **In Progress / Quarantined:**
 - 🔄 Device Flow Auth - Implementation complete; E2E and OAuth provider config on hold (see [ROADMAP.md](ROADMAP.md) §5 Quarantined)
-- 🔄 Internationalization - en/es coverage; extraction and copy freeze not yet wired
+- 🔄 Internationalization — en/es catalogue coverage still expanding; **CI** runs **`i18n:extract`** / **`i18n:validate`** (see **`.github/workflows/ci.yml`**); release **copy freeze** in [`docs/COPY_FREEZE.md`](COPY_FREEZE.md)
 - 📋 Social Sharing - API + poll UI shipped; civics/OG pipelines on hold
 - 📋 Advanced Privacy - Concept only (ZK/DP); quarantined
 - 📋 Performance Optimization - Partially adopted; audit consumers for defaults

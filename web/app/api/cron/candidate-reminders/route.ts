@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import {
   shouldSendReminder,
   type JourneyStage,
@@ -18,7 +19,7 @@ export const revalidate = 0;
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET ?? ''
+  const cronSecret = env.CRON_SECRET ?? ''
   const hasSecret = cronSecret.length > 0
   if (!hasSecret && process.env.NODE_ENV === 'production') {
     return authError('Cron secret not configured')
@@ -170,7 +171,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           office: platform.office,
           level: platform.level as 'federal' | 'state' | 'local',
           state: platform.state,
-          dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/candidate/dashboard`,
+          dashboardUrl: `${env.NEXT_PUBLIC_BASE_URL ?? env.NEXT_PUBLIC_SITE_URL ?? env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/candidate/dashboard`,
           platformId: platform.id
         };
 

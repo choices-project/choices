@@ -12,6 +12,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 import { HASHTAGS_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import {
@@ -24,8 +25,8 @@ import type {
   Hashtag
 } from '../types';
 
-const suggestionsSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const suggestionsSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const suggestionsSupabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+const suggestionsSupabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!suggestionsSupabaseUrl || !suggestionsSupabaseAnonKey) {
   throw new Error('Supabase environment variables are not configured for hashtag suggestions.');

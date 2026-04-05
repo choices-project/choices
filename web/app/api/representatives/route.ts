@@ -10,6 +10,7 @@
 
 import { NextResponse } from 'next/server';
 
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
@@ -74,8 +75,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     logger.error('Failed to initialize Supabase client for representatives endpoint', {
       error: error instanceof Error ? error.message : 'Unknown error',
       environment: process.env.NODE_ENV,
-      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      hasUrl: !!env.NEXT_PUBLIC_SUPABASE_URL,
+      hasAnonKey: !!env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     });
     // Calculate response time even for errors (server-side only - Date.now() is fine in API routes)
     const errorResponseTime = Date.now() - requestStartTime;
@@ -707,7 +708,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Track performance metrics for admin monitoring (optional, only in non-production or with feature flag)
   // This helps identify slow queries and performance bottlenecks
   // Using dynamic import to avoid dependency if tracking is disabled
-  if (process.env.ENABLE_PERFORMANCE_TRACKING === 'true' || process.env.NODE_ENV !== 'production') {
+  if (env.ENABLE_PERFORMANCE_TRACKING === 'true' || process.env.NODE_ENV !== 'production') {
     try {
       // Dynamic import with proper typing
       const perfModule = await import('@/features/admin/lib/performance-monitor') as { performanceMonitor?: { trackOperation: (operation: string, duration: number, success: boolean, error?: string, metadata?: Record<string, any>) => void } };

@@ -6,6 +6,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest} from 'next/server';
@@ -95,8 +96,8 @@ async function validateDPoPBinding(
 ): Promise<boolean> {
   try {
     const supabase = createClient(
-      (process.env.NEXT_PUBLIC_SUPABASE_URL as string),
-      (process.env.SUPABASE_SERVICE_ROLE_KEY as string)
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY
     );
 
     const { data, error } = await supabase.rpc('validate_dpop_binding', {

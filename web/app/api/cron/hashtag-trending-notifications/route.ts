@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET ?? '';
+  const cronSecret = env.CRON_SECRET ?? '';
   const hasSecret = cronSecret.length > 0;
 
   if (!hasSecret && process.env.NODE_ENV === 'production') {

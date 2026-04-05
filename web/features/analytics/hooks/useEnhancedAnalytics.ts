@@ -11,6 +11,7 @@ import {
   SITE_MESSAGE_SELECT_COLUMNS,
   SYSTEM_HEALTH_SELECT_COLUMNS,
 } from '@/lib/api/response-builders';
+import { env } from '@/lib/config/env';
 import { useAnalyticsStore } from '@/lib/stores/analyticsStore';
 import { logger } from '@/lib/utils/logger';
 
@@ -19,7 +20,7 @@ import { EnhancedAnalyticsService, toJsonValue } from '../lib/enhanced-analytics
 import type { Database, Json } from '@/types/database';
 
 
-const IS_E2E_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+const IS_E2E_HARNESS = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 
 // Supabase client type is inferred from createClient usage
@@ -495,8 +496,8 @@ export function useEnhancedAnalytics(options: UseEnhancedAnalyticsOptions = {}) 
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Initialize Supabase client and enhanced analytics service with stable references
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
     logger.error('Supabase environment variables are not configured');
   }

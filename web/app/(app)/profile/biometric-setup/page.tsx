@@ -21,6 +21,8 @@ import { useProfileData } from '@/features/profile/hooks/use-profile';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardDescription, CardContent } from '@/components/ui/card';
 
+import { env } from '@/lib/config/env';
+
 import { useI18n } from '@/hooks/useI18n';
 
 export default function BiometricSetupPage() {
@@ -43,7 +45,7 @@ export default function BiometricSetupPage() {
 
   useEffect(() => {
     // In E2E harness mode, authentication is mocked - don't redirect
-    if (process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
       return;
     }
     if (!isUserLoading && !isAuthenticated) {
@@ -70,7 +72,7 @@ export default function BiometricSetupPage() {
     // Error state already stored; no-op placeholder for future analytics.
   }, []);
 
-  const isHarness = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+  const isHarness = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
   const effectiveProfileLoading = isHarness ? false : profileLoading;
   const effectiveUserLoading = isHarness ? false : isUserLoading;
 

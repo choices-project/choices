@@ -21,6 +21,7 @@
  * Authentication: Requires x-admin-key header matching ADMIN_MONITORING_KEY
  */
 
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, forbiddenError, methodNotAllowed } from '@/lib/api';
@@ -61,7 +62,7 @@ function generateDiff(oldValue: unknown, newValue: unknown): {
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
   const adminHeader = request.headers.get('x-admin-key') ?? request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
-  const adminKey = process.env.ADMIN_MONITORING_KEY ?? '';
+  const adminKey = env.ADMIN_MONITORING_KEY ?? '';
   if (!adminKey || adminHeader !== adminKey) {
     return forbiddenError('Invalid admin key');
   }

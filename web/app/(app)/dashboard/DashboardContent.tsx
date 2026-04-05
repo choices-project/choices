@@ -19,6 +19,7 @@ import DashboardNavigation, { MobileDashboardNav } from '@/components/shared/Das
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 
+import { env } from '@/lib/config/env';
 import { useIsAuthenticated, useUserLoading, useUserStore } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import {
@@ -40,9 +41,9 @@ function checkBypassFlag(): boolean {
   }
   try {
     return window.localStorage.getItem('e2e-dashboard-bypass') === '1' ||
-           process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+           env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
   } catch {
-    return process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+    return env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
   }
 }
 
@@ -83,7 +84,7 @@ async function checkSessionCookies(
 
     // Method 2: Check for Supabase project-specific auth token cookie
     // Extract project ref from NEXT_PUBLIC_SUPABASE_URL if available
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
     if (supabaseUrl) {
       try {
         const urlMatch = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
@@ -469,7 +470,7 @@ export default function DashboardContent() {
         logger.debug('🚨 Dashboard: Bypass flag set - skipping all auth checks and redirects', {
           shouldBypassAuth,
           currentBypassFlag: checkBypassFlag(),
-          envHarness: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
+          envHarness: env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1',
         });
       }
       return () => {

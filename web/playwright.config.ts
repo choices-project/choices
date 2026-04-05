@@ -92,6 +92,11 @@ export default defineConfig({
     env: {
       ...process.env,
       NEXT_DISABLE_REACT_DEV_OVERLAY: '1',
+      // Ensure Supabase public vars exist for Next client inlining (Playwright often runs with CI=true).
+      NEXT_PUBLIC_SUPABASE_URL:
+        process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY:
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'e2e-placeholder-anon-key',
       NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET:
         process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET ?? '0',
       // CRITICAL: NEXT_PUBLIC_ vars must be set at process start for Next.js to include them in build

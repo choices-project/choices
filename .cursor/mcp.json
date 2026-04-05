@@ -7,14 +7,36 @@
       "url": "https://mcp.vercel.com"
     },
     "govinfo": {
-      "command": "/Users/alaughingkitsune/src/Choices/.cursor/govinfo-mcp/.venv/bin/python3",
+      "command": "bash",
       "args": [
-        "-m",
-        "app.server"
+        ".cursor/run-govinfo-mcp.sh"
       ],
-      "cwd": "/Users/alaughingkitsune/src/Choices/.cursor/govinfo-mcp",
       "env": {
         "GOVINFO_API_KEY": "${GOVINFO_API_KEY}"
+      }
+    },
+    "legismcp": {
+      "command": "bash",
+      "args": [
+        ".cursor/mcp-servers/run-legismcp.sh"
+      ],
+      "env": {
+        "CONGRESS_API_KEY": "${CONGRESS_GOV_API_KEY}"
+      }
+    },
+    "playwright": {
+      "command": "bash",
+      "args": [
+        ".cursor/mcp-servers/run-playwright-mcp.sh"
+      ]
+    },
+    "us-gov-open-data": {
+      "command": "bash",
+      "args": [
+        ".cursor/mcp-servers/run-us-gov-open-data.sh"
+      ],
+      "env": {
+        "CONGRESS_API_KEY": "${CONGRESS_GOV_API_KEY}"
       }
     }
   }

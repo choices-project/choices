@@ -1,3 +1,4 @@
+import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError } from '@/lib/api';
@@ -44,7 +45,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   }
 
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!token || token !== process.env.ADMIN_MONITORING_KEY) {
+  if (!token || token !== env.ADMIN_MONITORING_KEY) {
     return authError('Invalid admin authorization token');
   }
 

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { env } from '@/lib/config/env';
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 
 import type { NextRequest } from 'next/server';
@@ -8,8 +9,8 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return errorResponse('Supabase configuration missing', 500);
