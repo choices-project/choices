@@ -4,8 +4,9 @@
  * public schema index counts drift from web/types/supabase.ts, when relative
  * links in canonical docs break, when Zustand store counts / logout-cascade
  * order in ARCHITECTURE / STATE_MANAGEMENT drift from userStore.ts, when
- * ARCHITECTURE App Router boundary counts drift from web/app, or when banned
- * doc path strings appear under web/ (historical broken pointers).
+ * ARCHITECTURE App Router boundary counts drift from web/app, when ARCHITECTURE
+ * Postgres table / view / RPC counts drift from web/types/supabase.ts, or when
+ * banned doc path strings appear under web/ (historical broken pointers).
  *
  * Run from repo root: node scripts/verify-docs.mjs
  */
@@ -167,6 +168,16 @@ try {
   process.exit(typeof status === 'number' ? status : 1);
 }
 
+try {
+  execSync('node scripts/verify-architecture-schema-counts.mjs', {
+    cwd: root,
+    stdio: 'inherit',
+  });
+} catch (e) {
+  const status = e && typeof e === 'object' ? e.status : undefined;
+  process.exit(typeof status === 'number' ? status : 1);
+}
+
 console.log(
-  `verify-docs: OK (${routeCount} API route modules; inventory + schema index + feature flags + SECURITY snapshots + doc links + store counts + app boundaries; no banned patterns in web/)`,
+  `verify-docs: OK (${routeCount} API route modules; inventory + schema index + feature flags + SECURITY snapshots + doc links + store counts + app boundaries + ARCHITECTURE schema counts; no banned patterns in web/)`,
 );

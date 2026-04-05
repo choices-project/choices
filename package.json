@@ -26,6 +26,7 @@
     "verify:doc-links": "node scripts/verify-doc-links.mjs",
     "verify:store-docs": "node scripts/verify-store-docs.mjs",
     "verify:architecture-boundaries": "node scripts/verify-architecture-boundaries.mjs",
+    "verify:architecture-schema-counts": "node scripts/verify-architecture-schema-counts.mjs",
     "docs:feature-flags": "node scripts/generate-feature-flags-doc.mjs",
     "docs:security-snapshots": "node scripts/sync-security-snapshots.mjs",
     "docs:api-inventory": "node scripts/generate-api-inventory.mjs",
