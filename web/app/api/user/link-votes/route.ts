@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-import { env } from '@/lib/config/env';
 import {
   withErrorHandling,
   successResponse,
   validationError,
   errorResponse,
 } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';

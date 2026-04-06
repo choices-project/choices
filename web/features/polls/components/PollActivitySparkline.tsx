@@ -35,7 +35,7 @@ export function PollActivitySparkline({
         if (cancelled || !json?.data) return;
         setData(Array.isArray(json.data) ? json.data : []);
       })
-      .catch(() => {})
+      .catch(() => undefined)
       .finally(() => {
         if (!cancelled) setLoading(false);
       });

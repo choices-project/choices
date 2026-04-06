@@ -24,7 +24,6 @@
  * }
  */
 
-import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -35,6 +34,7 @@ import {
   methodNotAllowed,
   rateLimitError,
 } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 

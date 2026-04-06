@@ -1,12 +1,12 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
-import { env } from '@/lib/config/env';
 import {
   shouldSendReminder,
   type JourneyStage,
   type JourneyMilestone
 } from '@/lib/candidate/journey-tracker'
+import { env } from '@/lib/config/env';
 import { sendCandidateJourneyEmail } from '@/lib/services/email/candidate-journey-emails'
 import { logger } from '@/lib/utils/logger'
 

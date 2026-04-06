@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
 
-import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -9,6 +8,7 @@ import {
   authError,
   errorResponse,
 } from '@/lib/api';
+import { env } from '@/lib/config/env';
 
 export const dynamic = 'force-dynamic';
 

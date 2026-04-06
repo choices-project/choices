@@ -10,10 +10,10 @@
  * - representatives missing division mapping (if representative_divisions exists)
  */
 
-import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, forbiddenError, errorResponse, methodNotAllowed } from '@/lib/api';
+import { env } from '@/lib/config/env';
 
 import type { NextRequest } from 'next/server';
 

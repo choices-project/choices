@@ -12,8 +12,9 @@
 
 import React from 'react';
 
-import { env } from '@/lib/config/env';
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/features/pwa/hooks/useFeatureFlags';
+
+import { env } from '@/lib/config/env';
 
 import type { ReactNode } from 'react';
 

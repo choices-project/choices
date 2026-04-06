@@ -5,10 +5,10 @@
  * Only the service role (you) can grant admin access.
  */
 
-import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import logger from '@/lib/utils/logger';
 
 import type { NextResponse } from 'next/server';

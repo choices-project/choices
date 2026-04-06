@@ -27,8 +27,8 @@ import type { FeedbackContext, UserJourney } from '@/features/admin/types'
 import { motion, AnimatePresence, useReducedMotion } from '@/components/motion/Motion'
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog'
-import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { env } from '@/lib/config/env'
+import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import {
   useAnalyticsActions,
   useAnalyticsLoading,

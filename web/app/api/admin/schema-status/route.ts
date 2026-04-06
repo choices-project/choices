@@ -1,7 +1,7 @@
-import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { TypeGuardError, assertIsRecord } from '@/lib/core/types/guards';
 import { logger } from '@/lib/utils/logger';
 

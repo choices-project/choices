@@ -22,7 +22,10 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center p-8 max-w-md">
+        <div
+          className="text-center p-8 max-w-md"
+          data-testid="global-error-root"
+        >
           <h1 className="text-2xl font-bold text-foreground mb-4">Something went wrong</h1>
           <p className="text-muted-foreground mb-6">
             An unexpected error occurred. Please try again.

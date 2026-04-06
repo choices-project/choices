@@ -14,8 +14,8 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 
-import { env } from '@/lib/config/env';
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse, rateLimitError } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';

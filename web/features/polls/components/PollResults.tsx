@@ -12,9 +12,9 @@ import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
+import { PollOptionComparison } from './PollOptionComparison';
 import { usePollResults } from '../hooks/usePollResults';
 import { optimizedPollService } from '../lib/poll-service';
-import { PollOptionComparison } from './PollOptionComparison';
 
 
 type OptimizedPollResultsProps = {

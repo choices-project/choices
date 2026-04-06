@@ -8,12 +8,12 @@
  * Status: ✅ Production diagnostic tool
  */
 
-import { env } from '@/lib/config/env';
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 
 import { withErrorHandling, successResponse } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';

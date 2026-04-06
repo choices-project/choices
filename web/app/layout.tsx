@@ -2,12 +2,12 @@
 import { cookies, headers } from 'next/headers';
 import React from 'react';
 
-import { env } from '@/lib/config/env';
 import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { ScrollRestoration } from '@/components/shared/ScrollRestoration';
 import { ThemeScript } from '@/components/shared/ThemeScript';
 
+import { env } from '@/lib/config/env';
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE_NAME,

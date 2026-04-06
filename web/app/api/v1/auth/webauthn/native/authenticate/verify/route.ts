@@ -16,9 +16,9 @@ import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, normalizeRequestOrigin } from '@/features/auth/lib/webauthn/config';
 
-import { env } from '@/lib/config/env';
 import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse, rateLimitError } from '@/lib/api';
 import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS, WEBAUTHN_CREDENTIAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { env } from '@/lib/config/env';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
 

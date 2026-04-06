@@ -8,10 +8,10 @@
 import { Users } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { UserEditModal } from '@/features/admin/components/UserEditModal';
 import type { AdminUser } from '@/features/admin/types';
 
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
-import { UserEditModal } from '@/features/admin/components/UserEditModal';
 import {
   AlertDialog,
   AlertDialogAction,

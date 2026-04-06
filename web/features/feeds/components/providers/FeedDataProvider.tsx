@@ -22,6 +22,7 @@ import { FeedProvider } from '@/features/feeds/context/FeedContext';
 import { useFeedAnalytics } from '@/features/feeds/hooks/useFeedAnalytics';
 import FeedShareDialog from '@/features/share/components/FeedShareDialog';
 
+import { env } from '@/lib/config/env';
 import {
   useUser,
   useFilteredFeeds,
@@ -32,7 +33,6 @@ import {
   useTrendingHashtags,
   useNotificationActions,
 } from '@/lib/stores';
-import { env } from '@/lib/config/env';
 import { useFeedsStore } from '@/lib/stores/feedsStore';
 import type { FeedItem } from '@/lib/stores/types/feeds';
 // withOptional removed

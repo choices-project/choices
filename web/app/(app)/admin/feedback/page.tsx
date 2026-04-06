@@ -4,12 +4,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
+import type { IssueGenerationClientPayload } from '@/lib/integrations/github/feedback-github-issue';
 import { useAppActions } from '@/lib/stores/appStore';
 import { logger } from '@/lib/utils/logger';
 
 import { useDebounce } from '@/hooks/useDebounce';
 
-import type { IssueGenerationClientPayload } from '@/lib/integrations/github/feedback-github-issue';
 
 import { FeedbackDetailModal } from './FeedbackDetailModal';
 import { FeedbackFilters } from './FeedbackFilters';

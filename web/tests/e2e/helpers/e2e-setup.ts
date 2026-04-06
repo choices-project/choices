@@ -369,11 +369,72 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       const body = await res.text().catch(() => '');
       throw new Error(`loginTestUser (production API): HTTP ${res.status()} — ${body.slice(0, 400)}`);
     }
+
+    const loginJson = (await res.json()) as {
+      data?: {
+        session?: {
+          access_token: string;
+          refresh_token: string;
+          expires_in?: number;
+          expires_at?: number;
+          token_type?: string;
+          user?: { id?: string };
+        } | null;
+      };
+    };
+    const session = loginJson.data?.session;
+    if (
+      !session?.access_token ||
+      !session.refresh_token ||
+      session.expires_at == null ||
+      !session.user?.id
+    ) {
+      throw new Error(
+        `loginTestUser (production API): login JSON missing session fields (access_token, refresh_token, expires_at, user) — ${JSON.stringify(loginJson).slice(0, 400)}`,
+      );
+    }
+
+    const supabaseUrlForKey = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const refMatch = supabaseUrlForKey.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
+    const projectRef = refMatch?.[1];
+    if (!projectRef) {
+      throw new Error(
+        'loginTestUser (production): set NEXT_PUBLIC_SUPABASE_URL (used to build sb-<ref>-auth-token for browser localStorage)',
+      );
+    }
+    const storageKey = `sb-${projectRef}-auth-token`;
+    const sessionJson = JSON.stringify(session);
+
     await page.waitForTimeout(500);
-    // Prime the document on the app origin so HttpOnly session cookies attach before loading the (app) shell + RSC tree.
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await page.waitForTimeout(400);
-    await page.goto('/feed', { waitUntil: 'load', timeout: 90_000 });
+
+    const pageUrl = page.url();
+    const originBase =
+      pageUrl && !pageUrl.startsWith('about:')
+        ? new URL(pageUrl).origin
+        : process.env.BASE_URL || process.env.PLAYWRIGHT_BASE_URL || '';
+    if (!originBase) {
+      throw new Error(
+        'loginTestUser (production): page URL has no origin; set BASE_URL or PLAYWRIGHT_BASE_URL',
+      );
+    }
+
+    // HttpOnly cookies from POST do not populate supabase-js localStorage. Without this, getSession() is null and
+    // client bootstrap / RSC can hit global-error. Load a minimal same-origin document (JSON), write the session
+    // shape the browser client expects, then open the app shell.
+    await page.goto(new URL('/api/auth/csrf', originBase).toString(), {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    await page.evaluate(
+      ([key, value]) => {
+        window.localStorage.setItem(key, value);
+      },
+      [storageKey, sessionJson] as [string, string],
+    );
+    await page.goto(new URL('/feed', originBase).toString(), {
+      waitUntil: 'load',
+      timeout: 90_000,
+    });
     await page.waitForTimeout(1_000);
     // Client auth bootstrap can briefly redirect to /auth if getSession is slow; cookies are still valid.
     if (page.url().includes('/auth')) {

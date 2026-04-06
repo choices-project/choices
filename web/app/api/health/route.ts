@@ -19,8 +19,8 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
 
-import { env } from '@/lib/config/env';
 import { withErrorHandling, rateLimitError, successResponse, errorResponse, validationError, methodNotAllowed } from '@/lib/api';
+import { env } from '@/lib/config/env';
 import { getQueryOptimizer } from '@/lib/core/database/optimizer';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';

@@ -11,12 +11,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-import { env } from '@/lib/config/env';
 import {
   HASHTAG_ENGAGEMENT_SELECT_COLUMNS,
   HASHTAGS_SELECT_COLUMNS,
   HASHTAG_USAGE_SELECT_COLUMNS,
 } from '@/lib/api/response-builders';
+import { env } from '@/lib/config/env';
 
 import { logger } from '../../../lib/utils/logger';
 import {

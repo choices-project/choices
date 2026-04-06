@@ -21,10 +21,10 @@
  * Authentication: Requires x-admin-key header matching ADMIN_MONITORING_KEY
  */
 
-import { env } from '@/lib/config/env';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, forbiddenError, methodNotAllowed } from '@/lib/api';
+import { env } from '@/lib/config/env';
 
 import type { NextRequest } from 'next/server';
 

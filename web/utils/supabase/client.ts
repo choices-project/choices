@@ -1,6 +1,7 @@
 'use client'
 
 import { env } from '@/lib/config/env'
+
 import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 

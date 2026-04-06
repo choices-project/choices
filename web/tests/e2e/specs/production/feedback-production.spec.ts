@@ -40,18 +40,26 @@ test.describe('Production feedback (user + admin)', () => {
     await loginTestUser(page, user!);
     // loginTestUser (production) already navigates / → /feed with load; avoid a second bare /feed goto that can miss cookie priming.
     await waitForPageReady(page);
-    // Match root global-error.tsx only (h1), not ErrorBoundary (h2) inside the app shell — the widget can still be usable with the latter.
-    const globalErrorH1 = page.getByRole('heading', { level: 1, name: /^Something went wrong$/i });
-    const globalErrorBody = page.getByText('An unexpected error occurred. Please try again.', {
-      exact: true,
-    });
-    if (
-      (await globalErrorH1.isVisible({ timeout: 4_000 }).catch(() => false)) &&
-      (await globalErrorBody.isVisible({ timeout: 1_000 }).catch(() => false))
-    ) {
+    // Next.js global-error replaces the root layout (no app shell). Prefer data-testid once deployed; fall back for older HTML.
+    const hasAppShell = (await page.locator('[data-testid="app-shell"]').count()) > 0;
+    const hasGlobalErrorTestId = await page
+      .getByTestId('global-error-root')
+      .isVisible({ timeout: 2_000 })
+      .catch(() => false);
+    const legacyGlobalErrorUi =
+      !hasAppShell &&
+      (await page
+        .getByRole('heading', { level: 1, name: /^Something went wrong$/i })
+        .isVisible({ timeout: 2_000 })
+        .catch(() => false)) &&
+      (await page
+        .getByText('An unexpected error occurred. Please try again.', { exact: true })
+        .isVisible()
+        .catch(() => false));
+    if (hasGlobalErrorTestId || legacyGlobalErrorUi) {
       test.skip(
         true,
-        `Production hit Next.js global-error (root). pageerror: ${pageErrors.slice(0, 5).join(' | ') || 'none'}`,
+        `Production hit Next.js global-error (root). pageerror: ${pageErrors.slice(0, 5).join(' | ') || 'none'} | url=${page.url()}`,
       );
     }
     await page.evaluate(

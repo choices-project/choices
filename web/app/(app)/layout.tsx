@@ -399,7 +399,7 @@ export default function AppLayout({
         currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
       });
     }
-  }, []);
+  }, [isE2eHarnessLayout]);
 
   if (isE2eHarnessLayout) {
     return (

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { env } from '@/lib/config/env'
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route'
 import { getSupabaseAdminClient } from '@/utils/supabase/server'
 
@@ -13,6 +12,7 @@ import {
   authError,
   parseBody,
 } from '@/lib/api';
+import { env } from '@/lib/config/env'
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
 
