@@ -80,6 +80,32 @@ export type EnvConfig = z.infer<typeof envSchema>;
 
 let _validatedEnv: EnvConfig | null = null;
 
+/**
+ * Snapshot of `NEXT_PUBLIC_*` for client-side validation.
+ *
+ * **Important (Next.js):** `NEXT_PUBLIC_*` values are inlined at build time only when the bundler
+ * sees a static `process.env.NEXT_PUBLIC_*` access. Passing `process.env` into `safeParse()` does not
+ * get those replacements, so production can incorrectly see Supabase URL/key as undefined even when
+ * they are set in Vercel.
+ */
+function getClientPublicEnvSnapshot(): Record<string, string | undefined> {
+  return {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+    NEXT_PUBLIC_MAINTENANCE: process.env.NEXT_PUBLIC_MAINTENANCE,
+    NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET: process.env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET,
+    NEXT_PUBLIC_PWA_DEV: process.env.NEXT_PUBLIC_PWA_DEV,
+    NEXT_PUBLIC_PWA_DEBUG: process.env.NEXT_PUBLIC_PWA_DEBUG,
+    NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY,
+    NEXT_PUBLIC_ENABLE_E2E_HARNESS: process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  };
+}
+
 export function getValidatedEnv(): EnvConfig {
   if (_validatedEnv) return _validatedEnv;
 
@@ -91,17 +117,18 @@ export function getValidatedEnv(): EnvConfig {
     // Playwright + dev server: NEXT_PUBLIC_* can be missing from the client bundle during hydration
     // even when .env.local exists on the host; the server-side `isCI` branch below never runs here.
     // Only NEXT_PUBLIC_* is visible in the browser bundle; do not gate on CI / PLAYWRIGHT_* here.
-    const clientE2eRelaxed = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
+    const snapshot = getClientPublicEnvSnapshot();
+    const clientE2eRelaxed = snapshot.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
     const clientEnv = clientE2eRelaxed
       ? {
-          ...process.env,
+          ...snapshot,
           NEXT_PUBLIC_SUPABASE_URL:
-            process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co',
+            snapshot.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co',
           NEXT_PUBLIC_SUPABASE_ANON_KEY:
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'e2e-placeholder-anon-key',
+            snapshot.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'e2e-placeholder-anon-key',
         }
-      : process.env;
+      : snapshot;
 
     const result = clientSchema.safeParse(clientEnv);
     if (!result.success) {
