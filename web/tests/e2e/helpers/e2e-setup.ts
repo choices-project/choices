@@ -114,8 +114,11 @@ export type ExternalMockOptions = {
 export type LoginOptions = {
   path?: string;
   timeoutMs?: number;
-  expectRedirect?: string | RegExp;
+  /** Prefer a URL predicate for /feed so query strings like `redirectTo=/feed` do not satisfy a loose RegExp on /auth. Use `false` to skip (caller waits for navigation). */
+  expectRedirect?: string | RegExp | ((url: URL) => boolean) | false;
   expectSessionCookie?: boolean;
+  /** When true, skip the initial `page.goto(path)` (caller already navigated, e.g. production /auth after auth-hydrated). */
+  skipInitialNavigation?: boolean;
 };
 
 const DEFAULT_USER: TestUser = {
@@ -217,9 +220,17 @@ export async function waitForPageReady(page: Page, timeoutMs = DEFAULT_TIMEOUTS.
 }
 
 export async function loginWithPassword(page: Page, credentials: TestUser, options: LoginOptions = {}): Promise<void> {
-  const { path = '/auth', timeoutMs = 15_000, expectRedirect, expectSessionCookie } = options;
-  await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
-  await waitForPageReady(page, timeoutMs);
+  const {
+    path = '/auth',
+    timeoutMs = 15_000,
+    expectRedirect,
+    expectSessionCookie,
+    skipInitialNavigation = false,
+  } = options;
+  if (!skipInitialNavigation) {
+    await page.goto(path, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    await waitForPageReady(page, timeoutMs);
+  }
 
   const form = page.locator(AUTH_SELECTORS.form);
   if (await form.count()) {
@@ -261,7 +272,7 @@ export async function loginWithPassword(page: Page, credentials: TestUser, optio
   await expect(submitButton).toBeEnabled({ timeout: Math.min(timeoutMs, 15_000) });
   await submitButton.click();
 
-  if (expectRedirect) {
+  if (expectRedirect !== undefined && expectRedirect !== false) {
     await page.waitForURL(expectRedirect, { timeout: timeoutMs });
   }
 
@@ -329,7 +340,7 @@ async function assertSupabaseSessionCookies(page: Page): Promise<void> {
  * @throws Error if login API request fails
  * @throws Error if navigation to /feed or /onboarding doesn't occur after login
  *
- * When `E2E_PRODUCTION=1`, logs in via `POST /api/auth/login` (same host cookies) instead of the `/auth` UI.
+ * When `E2E_PRODUCTION=1`, uses the `/auth` UI (not `POST /api/auth/login`) so session cookies attach like a real browser sign-in.
  *
  * @example
  * ```typescript
@@ -347,66 +358,6 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
   }
 
   if (process.env.E2E_PRODUCTION === '1') {
-    const csrfRes = await page.request.get('/api/auth/csrf');
-    if (!csrfRes.ok()) {
-      const t = await csrfRes.text().catch(() => '');
-      throw new Error(`loginTestUser: CSRF prefetch failed ${csrfRes.status()} — ${t.slice(0, 200)}`);
-    }
-    const csrfJson = (await csrfRes.json()) as { data?: { csrfToken?: string } };
-    const csrfToken = csrfJson.data?.csrfToken;
-    if (!csrfToken) {
-      throw new Error('loginTestUser: missing data.csrfToken from GET /api/auth/csrf');
-    }
-
-    const res = await page.request.post('/api/auth/login', {
-      data: { email, password },
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken,
-      },
-    });
-    if (res.status() !== 200) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`loginTestUser (production API): HTTP ${res.status()} — ${body.slice(0, 400)}`);
-    }
-
-    const loginJson = (await res.json()) as {
-      data?: {
-        session?: {
-          access_token: string;
-          refresh_token: string;
-          expires_in?: number;
-          expires_at?: number;
-          token_type?: string;
-          user?: { id?: string };
-        } | null;
-      };
-    };
-    const session = loginJson.data?.session;
-    if (
-      !session?.access_token ||
-      !session.refresh_token ||
-      session.expires_at == null ||
-      !session.user?.id
-    ) {
-      throw new Error(
-        `loginTestUser (production API): login JSON missing session fields (access_token, refresh_token, expires_at, user) — ${JSON.stringify(loginJson).slice(0, 400)}`,
-      );
-    }
-
-    const supabaseUrlForKey = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const refMatch = supabaseUrlForKey.match(/https?:\/\/([^.]+)\.supabase\.(co|io)/);
-    const projectRef = refMatch?.[1];
-    if (!projectRef) {
-      throw new Error(
-        'loginTestUser (production): set NEXT_PUBLIC_SUPABASE_URL (used to build sb-<ref>-auth-token for browser localStorage)',
-      );
-    }
-    const storageKey = `sb-${projectRef}-auth-token`;
-    const sessionJson = JSON.stringify(session);
-
-    await page.waitForTimeout(500);
-
     const pageUrl = page.url();
     const originBase =
       pageUrl && !pageUrl.startsWith('about:')
@@ -418,29 +369,34 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
       );
     }
 
-    // HttpOnly cookies from POST do not populate supabase-js localStorage. Without this, getSession() is null and
-    // client bootstrap / RSC can hit global-error. Load a minimal same-origin document (JSON), write the session
-    // shape the browser client expects, then open the app shell.
-    await page.goto(new URL('/api/auth/csrf', originBase).toString(), {
+    // API `page.request.post(/api/auth/login)` + `page.goto(/feed)` is unreliable on production: SameSite=Lax
+    // HttpOnly cookies are often not sent on those programmatic navigations (middleware comment), so middleware
+    // redirects to /auth while Playwright’s cookie jar still looks logged-in. Use the real sign-in form like users do.
+    await page.goto(new URL('/auth', originBase).toString(), {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
-    await page.evaluate(
-      ([key, value]) => {
-        window.localStorage.setItem(key, value);
-      },
-      [storageKey, sessionJson] as [string, string],
-    );
-    await page.goto(new URL('/feed', originBase).toString(), {
-      waitUntil: 'load',
-      timeout: 90_000,
+    await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 60_000 });
+    await waitForPageReady(page, 60_000);
+    await loginWithPassword(page, { email, password, username: user.username }, {
+      path: '/auth',
+      timeoutMs: 120_000,
+      skipInitialNavigation: true,
+      expectRedirect: false,
+      expectSessionCookie: false,
     });
-    await page.waitForTimeout(1_000);
-    // Client auth bootstrap can briefly redirect to /auth if getSession is slow; cookies are still valid.
-    if (page.url().includes('/auth')) {
-      await page.goto('/feed', { waitUntil: 'load', timeout: 90_000 });
-      await page.waitForTimeout(1_500);
+
+    await page.waitForURL((u) => !u.pathname.startsWith('/auth'), { timeout: 120_000 });
+
+    const afterAuthPath = new URL(page.url()).pathname;
+    if (afterAuthPath !== '/feed' && !afterAuthPath.startsWith('/feed/')) {
+      await page.goto(new URL('/feed', originBase).toString(), {
+        waitUntil: 'load',
+        timeout: 90_000,
+      });
     }
+
+    await page.locator('[data-testid="app-shell"]').waitFor({ state: 'visible', timeout: 60_000 });
     await assertSupabaseSessionCookies(page);
     return;
   }
