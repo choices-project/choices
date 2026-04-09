@@ -38,7 +38,13 @@ export default function ResetPasswordPage() {
       });
 
       if (resetError) {
-        setError(resetError.message || t('auth.reset.error'));
+        const base = resetError.message || t('auth.reset.error');
+        const rateLimited = base.toLowerCase().includes('rate limit');
+        setError(
+          rateLimited
+            ? `${base} Wait before trying again, or in Supabase Dashboard → Authentication → Rate Limits review email quotas for this project.`
+            : base,
+        );
         setIsSuccess(false); // Explicitly clear success state on error
         setIsSubmitting(false);
         return;

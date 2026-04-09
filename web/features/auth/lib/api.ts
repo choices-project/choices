@@ -44,10 +44,25 @@ async function getCsrfToken(): Promise<string | null> {
   }
 }
 
+function readApiErrorMessage(errorBody: Record<string, unknown>, fallback: string): string {
+  const fromApi = errorBody.error ?? errorBody.message;
+  return typeof fromApi === 'string' && fromApi.length > 0 ? fromApi : fallback;
+}
+
 export async function loginWithPassword(payload: LoginPayload) {
+  const csrfToken = await getCsrfToken();
+  if (!csrfToken) {
+    const error = new Error('Unable to obtain CSRF token. Please refresh and try again.');
+    (error as Error & { status?: number }).status = 403;
+    throw error;
+  }
+
   const response = await fetch('/api/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken,
+    },
     credentials: 'include', // CRITICAL: Include cookies in request/response for authentication
     body: JSON.stringify({
       email: payload.email,
@@ -55,10 +70,10 @@ export async function loginWithPassword(payload: LoginPayload) {
     }),
   });
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    const error = new Error(errorBody?.message ?? 'Login failed');
+    const errorBody = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    const error = new Error(readApiErrorMessage(errorBody, 'Login failed'));
     // Attach status code for rate limit detection
-    (error as any).status = response.status;
+    (error as Error & { status?: number }).status = response.status;
     throw error;
   }
   return response.json();
@@ -86,10 +101,10 @@ export async function registerUser(payload: RegisterPayload) {
     }),
   });
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    const error = new Error(errorBody?.message ?? 'Registration failed');
+    const errorBody = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    const error = new Error(readApiErrorMessage(errorBody, 'Registration failed'));
     // Attach status code for rate limit detection
-    (error as any).status = response.status;
+    (error as Error & { status?: number }).status = response.status;
     throw error;
   }
   return response.json();
