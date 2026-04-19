@@ -32,6 +32,9 @@ const API_POLLS_COLLECTION_RE = /https?:\/\/[^/]+\/api\/polls(?:\?|$)/;
 const API_REPRESENTATIVES_LIST_RE = /https?:\/\/[^/]+\/api\/representatives(?:\?|$)/;
 const API_DASHBOARD_RE = /https?:\/\/[^/]+\/api\/dashboard(?:\?|$)/;
 const API_PROFILE_RE = /https?:\/\/[^/]+\/api\/profile(?:\?|$)/;
+const API_ADMIN_USERS_RE = /https?:\/\/[^/]+\/api\/admin\/users(?:\?|$)/;
+const API_ADMIN_FEEDBACK_RE = /https?:\/\/[^/]+\/api\/admin\/feedback(?:\?|$)/;
+const API_ADMIN_HEALTH_RE = /https?:\/\/[^/]+\/api\/admin\/health(?:\?|$)/;
 
 type SeedRecord = {
   user: TestUser;
@@ -930,6 +933,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     auth: overrides.auth ?? true,
     feeds: overrides.feeds ?? true,
     api: overrides.api ?? true,
+    admin: overrides.admin ?? true,
   };
 
   const routes: Array<{ url: RoutePattern; handler: RouteHandler }> = [];
@@ -1414,6 +1418,133 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       });
     };
 
+    const mockAdminUsers = [
+      {
+        user_id: 'e2e-mock-admin-1',
+        username: 'mock_admin',
+        email: 'mock-admin@example.com',
+        is_admin: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+
+    const adminUsersHandler: RouteHandler = async (route) => {
+      if (!shouldBypassHarnessAuth(route) && !hasAuthHeader(route)) {
+        await respondJson(route, unauthorizedResponse(), 401);
+        return;
+      }
+      const method = route.request().method().toUpperCase();
+      if (method === 'PUT') {
+        await respondJson(route, {
+          success: true,
+          data: { updated: true },
+        });
+        return;
+      }
+      if (method !== 'GET') {
+        await route.continue();
+        return;
+      }
+      const url = new URL(route.request().url());
+      const limitRaw = Number.parseInt(url.searchParams.get('limit') ?? '50', 10);
+      const pageRaw = Number.parseInt(url.searchParams.get('page') ?? '1', 10);
+      const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 50;
+      const pageNum = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+      const offset = (pageNum - 1) * limit;
+      const total = mockAdminUsers.length;
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      await respondJson(route, {
+        success: true,
+        data: mockAdminUsers,
+        metadata: {
+          pagination: {
+            total,
+            limit,
+            offset,
+            hasMore: offset + limit < total,
+            page: pageNum,
+            totalPages,
+          },
+        },
+      });
+    };
+
+    const adminFeedbackHandler: RouteHandler = async (route) => {
+      if (!shouldBypassHarnessAuth(route) && !hasAuthHeader(route)) {
+        await respondJson(route, unauthorizedResponse(), 401);
+        return;
+      }
+      if (route.request().method().toUpperCase() !== 'GET') {
+        await route.continue();
+        return;
+      }
+      await respondJson(route, {
+        success: true,
+        data: {
+          feedback: [],
+          total: 0,
+          admin: { id: 'e2e-mock-admin', email: 'mock-admin@example.com' },
+          filters: {},
+        },
+      });
+    };
+
+    const adminHealthHandler: RouteHandler = async (route) => {
+      if (!shouldBypassHarnessAuth(route) && !hasAuthHeader(route)) {
+        await respondJson(route, unauthorizedResponse(), 401);
+        return;
+      }
+      if (route.request().method().toUpperCase() !== 'GET') {
+        await route.continue();
+        return;
+      }
+      const url = new URL(route.request().url());
+      const type = url.searchParams.get('type') ?? 'metrics';
+      const lastUpdated = new Date().toISOString();
+      const metrics = {
+        total_topics: 0,
+        total_polls: 2,
+        active_polls: 1,
+        system_health: 'healthy',
+        last_updated: lastUpdated,
+        system_uptime: 99.9,
+        performance_metrics: {
+          response_time_avg: 42,
+          error_rate: 0.1,
+          throughput: 120,
+        },
+      };
+      if (type === 'metrics') {
+        await respondJson(route, { success: true, data: { metrics } });
+        return;
+      }
+      if (type === 'status') {
+        await respondJson(route, {
+          success: true,
+          data: {
+            status: {
+              ok: true,
+              checks: [],
+              meta: { generatedAt: lastUpdated, region: 'e2e' },
+            },
+          },
+        });
+        return;
+      }
+      await respondJson(route, {
+        success: true,
+        data: {
+          metrics,
+          status: {
+            ok: true,
+            checks: [],
+            meta: { generatedAt: lastUpdated, region: 'e2e' },
+          },
+        },
+      });
+    };
+
     const sharedVoteHandler: RouteHandler = async (route) => {
       const payload = parseJsonBody(route);
       await respondJson(route, {
@@ -1442,6 +1573,15 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/shared/poll/*', sharedPollHandler);
     await page.route('**/api/shared/vote', sharedVoteHandler);
     await page.route('**/api/site-messages', siteMessagesHandler);
+
+    if (options.admin) {
+      await page.route(API_ADMIN_USERS_RE, adminUsersHandler);
+      await page.route(API_ADMIN_FEEDBACK_RE, adminFeedbackHandler);
+      await page.route(API_ADMIN_HEALTH_RE, adminHealthHandler);
+      routes.push({ url: API_ADMIN_USERS_RE, handler: adminUsersHandler });
+      routes.push({ url: API_ADMIN_FEEDBACK_RE, handler: adminFeedbackHandler });
+      routes.push({ url: API_ADMIN_HEALTH_RE, handler: adminHealthHandler });
+    }
 
     routes.push({ url: '**/api/polls/*/vote', handler: pollVoteHandler });
     routes.push({ url: '**/api/polls/*/results', handler: pollResultsHandler });

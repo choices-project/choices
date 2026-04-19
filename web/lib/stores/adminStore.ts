@@ -13,6 +13,8 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
+import { env } from '@/lib/config/env';
+
 import type {
   ActivityItem,
   AdminNotification,
@@ -751,6 +753,39 @@ export const createAdminActions = (
         },
 
         loadDashboardStats: async () => {
+          if (typeof window !== 'undefined' && env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+            setLoadingState(true);
+            clearErrorState();
+            try {
+              const stats: AdminDashboardStats = {
+                totalUsers: 3,
+                activePolls: 2,
+                totalVotes: 12,
+                systemHealth: 'healthy',
+                pollsCreatedLast7Days: 0,
+                pollsCreatedToday: 0,
+                milestoneAlertsLast7Days: 0,
+                shareActionsLast24h: 0,
+                topShareChannel: null,
+                latestMilestone: null,
+              };
+              setState((state) => {
+                state.dashboardStats = stats;
+              });
+              logger.info('Dashboard stats loaded (E2E harness stub)');
+            } catch (error) {
+              const message = error instanceof Error ? error.message : 'Unknown error';
+              setErrorState(message);
+              logger.error(
+                'Failed to load dashboard stats (harness stub)',
+                error instanceof Error ? error : new Error(message)
+              );
+            } finally {
+              setLoadingState(false);
+            }
+            return;
+          }
+
           try {
         setLoadingState(true);
         clearErrorState();
