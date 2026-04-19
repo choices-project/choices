@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 
+import type { Session } from '@supabase/supabase-js';
+
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import PasskeyControls from '@/features/auth/components/PasskeyControls';
@@ -383,23 +385,34 @@ export default function AuthPageClient() {
     logger.info('Native toggle after setState! New isSignUp should be', { newIsSignUp: !isSignUp });
   };
 
-  const syncSupabaseSession = React.useCallback(async () => {
-    try {
-      const supabase = await getSupabaseBrowserClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  const syncSupabaseSession = React.useCallback(
+    async (knownSession?: Session | null) => {
+      try {
+        const supabase = await getSupabaseBrowserClient();
+        let session: Session | null =
+          knownSession?.user ? knownSession : null;
 
-      if (session?.user) {
-        initializeAuth(session.user, session, true);
-        setSessionAndDerived(session);
-      } else {
-        initializeAuth(null, null, false);
+        if (!session) {
+          const sessionPromise = supabase.auth.getSession();
+          const timeoutPromise = new Promise<{ data: { session: Session | null } }>((resolve) => {
+            setTimeout(() => resolve({ data: { session: null } }), 5000);
+          });
+          const { data: fetched } = await Promise.race([sessionPromise, timeoutPromise]);
+          session = fetched.session;
+        }
+
+        if (session?.user) {
+          initializeAuth(session.user, session, true);
+          setSessionAndDerived(session);
+        } else {
+          initializeAuth(null, null, false);
+        }
+      } catch (error) {
+        logger.error('Auth page failed to synchronize Supabase session', error);
       }
-    } catch (error) {
-      logger.error('Auth page failed to synchronize Supabase session', error);
-    }
-  }, [initializeAuth, setSessionAndDerived]);
+    },
+    [initializeAuth, setSessionAndDerived],
+  );
 
 
   const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent | React.MouseEvent | Event) => {
@@ -469,7 +482,14 @@ export default function AuthPageClient() {
           password: effectivePassword,
         });
         if (result?.success) {
-          await syncSupabaseSession();
+          if (result?.data?.session) {
+            const supabase = await getSupabaseBrowserClient();
+            await supabase.auth.setSession({
+              access_token: result.data.session.access_token,
+              refresh_token: result.data.session.refresh_token,
+            });
+          }
+          await syncSupabaseSession(result?.data?.session ?? null);
           setMessage(t('auth.success.accountCreated'));
           if (result?.data?.session) {
             setTimeout(() => {
@@ -505,7 +525,7 @@ export default function AuthPageClient() {
             });
           }
 
-          await syncSupabaseSession();
+          await syncSupabaseSession(loginResult?.data?.session ?? null);
           // Redirect to feed (default for authenticated users per middleware)
           // Use router.replace to avoid adding to history
           router.replace(redirectTarget);
