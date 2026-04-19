@@ -153,6 +153,11 @@ export function getValidatedEnv(): EnvConfig {
       PLAYWRIGHT_USE_MOCKS: process.env.PLAYWRIGHT_USE_MOCKS,
       E2E: process.env.E2E,
       PLAYWRIGHT: process.env.PLAYWRIGHT,
+      GOVINFO_API_KEY: process.env.GOVINFO_API_KEY,
+      GPO_API_KEY: process.env.GPO_API_KEY,
+      GOVINFO_APIKEY: process.env.GOVINFO_APIKEY,
+      GOVINFO_KEY: process.env.GOVINFO_KEY,
+      DEBUG_MIDDLEWARE: process.env.DEBUG_MIDDLEWARE,
     } as EnvConfig;
     return _validatedEnv;
   }

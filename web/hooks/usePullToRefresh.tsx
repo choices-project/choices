@@ -95,8 +95,8 @@ export function usePullToRefresh({
 
   const pullLabel =
     pullDistance >= threshold
-      ? t('polls.pullToRefresh.release', { defaultValue: 'Release to refresh' })
-      : t('polls.pullToRefresh.pull', { defaultValue: 'Pull to refresh' });
+      ? t('common.pullToRefresh.release')
+      : t('common.pullToRefresh.pull');
 
   const indicator = (isPulling || isRefreshing) && (
     <div
@@ -121,7 +121,7 @@ export function usePullToRefresh({
         />
         <span className="text-sm font-medium">
           {isRefreshing
-            ? t('polls.pullToRefresh.refreshing', { defaultValue: 'Refreshing…' })
+            ? t('common.pullToRefresh.refreshing')
             : pullLabel}
         </span>
       </div>

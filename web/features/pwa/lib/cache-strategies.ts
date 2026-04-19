@@ -1,4 +1,6 @@
 import logger from '@/lib/utils/logger';
+
+import { CACHE_CONFIG } from './sw-config';
 /**
  * @fileoverview Cache Strategy Utilities for Service Worker
  * 
@@ -29,15 +31,9 @@ export enum CacheStrategy {
 }
 
 /**
- * Cache names used by service worker
- * Must match service worker cache names
+ * Cache names used by service worker (single source: `sw-config.ts`).
  */
-export const CACHE_NAMES = {
-  static: 'choices-pwa-v1.0.0-static',
-  dynamic: 'choices-pwa-v1.0.0-dynamic',
-  api: 'choices-pwa-v1.0.0-api',
-  images: 'choices-pwa-v1.0.0-images',
-} as const;
+export const CACHE_NAMES = CACHE_CONFIG.names;
 
 /**
  * Maximum cache ages in milliseconds
@@ -60,7 +56,6 @@ export const CACHEABLE_API_ROUTES = [
   '/api/feeds',
   '/api/hashtags',
   '/api/dashboard',
-  '/api/profile',
 ] as const;
 
 /**

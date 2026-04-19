@@ -12,7 +12,7 @@ import { env } from '@/lib/config/env';
  * Service worker version
  * Increment this to force service worker update across all clients
  */
-export const SW_VERSION = 'v1.0.0';
+export const SW_VERSION = 'v1.0.1';
 
 /**
  * Cache names configuration
@@ -79,7 +79,6 @@ export const CACHEABLE_API_ROUTES = [
   '/api/hashtags',
   '/api/trending',              // CONSOLIDATED: Handles hashtags, polls, and topics
   '/api/dashboard',             // CONSOLIDATED: Includes all dashboard data
-  '/api/profile',
   '/api/user/profile',
 ] as const;
 

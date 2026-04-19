@@ -562,7 +562,14 @@ test.describe('Authentication Flow', () => {
       console.log('[DIAGNOSTIC] Root redirect result:', {
         finalUrl,
         expectedFeed: finalUrl.includes('/feed'),
-        redirectedToLanding: finalUrl.includes('/landing'),
+        stayedOnMarketingHome: (() => {
+          try {
+            const p = new URL(finalUrl).pathname || '/';
+            return p === '/' || p === '/landing';
+          } catch {
+            return false;
+          }
+        })(),
         redirectedToAuth: finalUrl.includes('/auth'),
         redirectChain: redirectChain.filter(r => r.includes(BASE_URL) || r.includes('/feed') || r.includes('/landing')),
         redirectDetails: redirectDetails.map(r => ({
@@ -584,12 +591,19 @@ test.describe('Authentication Flow', () => {
 
       // Authenticated users should be redirected to /feed
       // Note: SameSite=Lax cookies may not be sent on programmatic navigations,
-      // so middleware may redirect to /landing first, then to /feed on next request
+      // so middleware may leave the session on the marketing home (`/`), then /feed on the next navigation
       // Wait for final redirect to /feed (handles two-step redirect)
       let currentUrl = page.url();
 
-      // If we're on /landing, trigger a navigation to /feed to help cookies be sent
-      if (currentUrl.includes('/landing')) {
+      // If we're on marketing home (`/` or legacy `/landing`), navigate to /feed so cookies are sent
+      const marketingPath = (() => {
+        try {
+          return new URL(currentUrl).pathname || '/';
+        } catch {
+          return '';
+        }
+      })();
+      if ((marketingPath === '/' || marketingPath === '/landing') && !currentUrl.includes('/feed')) {
         // Wait a bit for any pending redirects
         await page.waitForTimeout(1_000);
 
@@ -809,13 +823,19 @@ test.describe('Authentication Flow', () => {
 
       // Visit root - should redirect to /feed (not /auth)
       // Note: SameSite=Lax cookies may not be sent on programmatic navigations,
-      // so middleware may redirect to /landing first, then we need to navigate to /feed
+      // so middleware may leave the session on the marketing home (`/`), then /feed on the next navigation
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
 
       let currentUrl = page.url();
 
-      // If we're on /landing, trigger a navigation to /feed to help cookies be sent
-      if (currentUrl.includes('/landing')) {
+      const marketingPathAfterRoot = (() => {
+        try {
+          return new URL(currentUrl).pathname || '/';
+        } catch {
+          return '';
+        }
+      })();
+      if ((marketingPathAfterRoot === '/' || marketingPathAfterRoot === '/landing') && !currentUrl.includes('/feed')) {
         // Wait a bit for any pending redirects
         await page.waitForTimeout(1_000);
 

@@ -32,7 +32,7 @@ export default function AuthPage() {
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold text-gray-900">Welcome back!</h1>
           <p className="mb-6 text-gray-600">You are already logged in.</p>
-          <Link href="/" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+          <Link href="/feed" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
             Go to Dashboard
           </Link>
         </div>
@@ -47,7 +47,7 @@ export default function AuthPage() {
         <p className="mb-6 text-gray-600">Please log in to continue.</p>
 
         <div className="mb-6">
-          <Link href="/login" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+          <Link href="/auth" className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
             Login
           </Link>
         </div>

@@ -1,15 +1,17 @@
 {
-  "name": "Choices - Democratic Polling Platform",
+  "id": "/",
+  "name": "Choices",
   "short_name": "Choices",
-  "description": "A privacy-first, democratic polling platform with advanced voting methods",
+  "description": "A privacy-first civic engagement platform for polls, actions, and local democracy.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
-  "scope": "/",
   "lang": "en",
-  "categories": ["social", "politics", "utilities"],
+  "dir": "ltr",
+  "categories": ["social", "productivity", "utilities", "news", "politics"],
   "icons": [
     {
       "src": "/icons/icon-72x72.svg",
@@ -62,26 +64,39 @@
   ],
   "shortcuts": [
     {
-      "name": "Create Poll",
-      "short_name": "Create",
-      "description": "Create a new poll",
-      "url": "/create",
+      "name": "Open Feed",
+      "short_name": "Feed",
+      "description": "See trending polls and civic actions",
+      "url": "/feed",
       "icons": [
         {
-          "src": "/icons/shortcut-create.svg",
-          "sizes": "96x96",
+          "src": "/icons/icon-192x192.svg",
+          "sizes": "192x192",
           "type": "image/svg+xml"
         }
       ]
     },
     {
-      "name": "My Polls",
-      "short_name": "My Polls",
-      "description": "View your polls",
-      "url": "/my-polls",
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your activity and saved content",
+      "url": "/dashboard",
       "icons": [
         {
-          "src": "/icons/shortcut-mypolls.svg",
+          "src": "/icons/icon-192x192.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Create Poll",
+      "short_name": "Create",
+      "description": "Create a new poll",
+      "url": "/polls/create",
+      "icons": [
+        {
+          "src": "/icons/shortcut-create.svg",
           "sizes": "96x96",
           "type": "image/svg+xml"
         }

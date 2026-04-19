@@ -52,7 +52,7 @@ export const Header: React.FC = () => {
       logger.error('Failed to sign out:', error instanceof Error ? error : new Error(String(error)));
     } finally {
       resetUserStateRef.current();
-      routerRef.current.push('/login');
+      routerRef.current.push('/auth');
     }
   }, []);  
 

@@ -8,14 +8,15 @@ import { config as loadDotenv } from 'dotenv';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from .env files
-// Priority order (highest to lowest): .env.local > .env.test.local > .env.test > .env
-// .env.local has the highest priority as it contains all variables for local development
+// Load env from repo root (../) and web/ so E2E_* in root .env.local are available when running from web/.
+const repoRoot = resolve(__dirname, '..');
 const envFiles = [
+  { path: resolve(repoRoot, '.env'), override: false },
   { path: resolve(__dirname, '.env'), override: false },
   { path: resolve(__dirname, '.env.test'), override: false },
   { path: resolve(__dirname, '.env.test.local'), override: false },
-  { path: resolve(__dirname, '.env.local'), override: true }, // Highest priority - can override everything
+  { path: resolve(repoRoot, '.env.local'), override: true },
+  { path: resolve(__dirname, '.env.local'), override: true },
 ];
 
 for (const { path: envFile, override } of envFiles) {

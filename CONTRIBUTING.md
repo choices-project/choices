@@ -2,7 +2,7 @@
 
 We welcome contributions! This project is licensed under MIT and uses the Developer Certificate of Origin (DCO) for inbound contributions.
 
-_Documentation last reviewed: April 5, 2026._
+_Documentation last reviewed: April 19, 2026._
 
 ## Quick Start (~15 minutes to first local run)
 
@@ -110,6 +110,8 @@ npm run lint          # Check code style
 npm run types:ci       # Verify TypeScript
 npm run test           # Run unit tests
 ```
+
+For **live demos or screen recordings**, leave `DEBUG_MIDDLEWARE` unset in `.env.local` so Edge middleware stays quiet (auth/cookie diagnostics and E2E bypass traces only run when `DEBUG_MIDDLEWARE=1`).
 
 **When your change touches stores, API routes, migrations, feature flags, or canonical docs**, also from **repository root**:
 ```bash

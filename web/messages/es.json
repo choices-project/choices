@@ -1333,6 +1333,11 @@
     },
     "messages": {
       "dismiss": "Descartar mensaje"
+    },
+    "pullToRefresh": {
+      "pull": "↓ Desliza para actualizar",
+      "release": "↓ Suelta para actualizar",
+      "refreshing": "Actualizando…"
     }
   },
   "navigation": {
@@ -3702,7 +3707,8 @@
         "signUp": "Registrarse",
         "signIn": "Iniciar sesión"
       },
-      "altSignInDivider": "O continúa con"
+      "altSignInDivider": "O usa una llave de acceso",
+      "passkeySectionSummary": "Iniciar sesión con llave de acceso"
     }
   },
   "pwa": {
@@ -4032,6 +4038,18 @@
       "title": "Choices — participación cívica con privacidad",
       "description": "Herramientas centradas en la privacidad para explorar representantes, encuestas y registros públicos con fuentes. Sin venta de datos personales; información agregada opcional solo con consentimiento."
     }
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "No pudimos encontrar la página que buscas.",
+    "backHome": "Ir al inicio",
+    "signIn": "Iniciar sesión"
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados",
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad",
+    "legalNav": "Avisos legales"
   }
 }
 

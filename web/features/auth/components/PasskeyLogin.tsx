@@ -188,10 +188,6 @@ export function PasskeyLogin({
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">
-              {t('auth.passkey.loginDescription')}
-            </p>
-
             {error && (
               <Alert
                 ref={errorRegionRef}

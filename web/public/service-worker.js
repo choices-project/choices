@@ -7,7 +7,7 @@
  * - IndexedDB-backed offline queue compatible with `background-sync.ts`
  */
 
-const SW_VERSION = 'v1.0.0';
+const SW_VERSION = 'v1.0.1';
 const CACHE_PREFIX = 'choices-pwa';
 const CACHE_NAMES = {
   static: `${CACHE_PREFIX}-${SW_VERSION}-static`,
@@ -34,7 +34,6 @@ const CACHEABLE_API_ROUTES = [
   '/api/hashtags',
   '/api/trending',
   '/api/dashboard',
-  '/api/profile',
   '/api/user/profile',
 ];
 
@@ -157,19 +156,27 @@ self.addEventListener('push', (event) => {
     return;
   }
 
-  const data = event.data.json();
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch (error) {
+    console.warn('[SW] Push payload was not JSON; using defaults', error);
+  }
+
+  const payload = typeof data === 'object' && data !== null ? data : {};
+  const title = typeof payload.title === 'string' ? payload.title : 'Choices';
   const options = {
-    body: data.body || 'New notification from Choices',
+    body: typeof payload.body === 'string' ? payload.body : 'New notification from Choices',
     icon: '/icons/icon-192x192.svg',
     badge: '/icons/icon-192x192.svg',
-    tag: data.tag || 'choices-notification',
-    data: data.data || {},
-    actions: data.actions || [],
-    requireInteraction: Boolean(data.requireInteraction),
-    silent: Boolean(data.silent),
+    tag: typeof payload.tag === 'string' ? payload.tag : 'choices-notification',
+    data: typeof payload.data === 'object' && payload.data !== null ? payload.data : {},
+    actions: Array.isArray(payload.actions) ? payload.actions : [],
+    requireInteraction: Boolean(payload.requireInteraction),
+    silent: Boolean(payload.silent),
   };
 
-  event.waitUntil(self.registration.showNotification(data.title || 'Choices', options));
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {

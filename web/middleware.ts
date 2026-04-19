@@ -225,7 +225,8 @@ function checkAuthInMiddleware(
     parsedCookiesHasSb: false,
   }
 
-  const enableDiagnostics = env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production'
+  /** Verbose cookie/auth tracing (opt-in). Avoid logging on every request in dev/demo. */
+  const verboseAuthMiddlewareLog = env.DEBUG_MIDDLEWARE === '1'
 
   // Helper to extract project ref from Supabase URL for exact cookie name matching
   const getProjectRef = (): string | null => {
@@ -250,16 +251,13 @@ function checkAuthInMiddleware(
   // request.cookies.getAll() may not include httpOnly cookies in Edge Runtime
   const cookieHeader = request.headers.get('cookie') || ''
   const pathname = request.nextUrl.pathname
-  const isRootPath = pathname === '/'
 
-  // DIAGNOSTIC: Log cookie detection start - ALWAYS log for root path
-  if (enableDiagnostics || isRootPath) {
+  if (verboseAuthMiddlewareLog) {
     console.warn('[checkAuthInMiddleware] Cookie detection start:', {
       pathname,
-      cookieHeaderPresent: !!cookieHeader,
+      cookieHeaderPresent: Boolean(cookieHeader),
       cookieHeaderLength: cookieHeader.length,
       hasSbInHeader: cookieHeader.includes('sb-'),
-      cookieHeaderPreview: cookieHeader.substring(0, 300),
     })
     if (cookieHeader) {
       const cookieNames = cookieHeader.split(';').map(c => {
@@ -268,7 +266,7 @@ function checkAuthInMiddleware(
       }).filter(Boolean)
       console.warn('[checkAuthInMiddleware] Cookie header names (first 10):', cookieNames.slice(0, 10))
     } else {
-      console.warn('[checkAuthInMiddleware] NO COOKIE HEADER - this is the problem!')
+      console.warn('[checkAuthInMiddleware] No Cookie header on request')
     }
   }
 
@@ -288,8 +286,7 @@ function checkAuthInMiddleware(
   diagnostics.parsedCookiesCount = cookies.length
   diagnostics.parsedCookiesHasSb = cookies.some(c => c.name.startsWith('sb-'))
 
-  // DIAGNOSTIC: Log parsed cookies for root path
-  if (isRootPath) {
+  if (verboseAuthMiddlewareLog) {
     console.warn('[checkAuthInMiddleware] Parsed cookies:', {
       count: cookies.length,
       names: cookies.map(c => c.name),
@@ -298,7 +295,7 @@ function checkAuthInMiddleware(
   }
 
   // DIAGNOSTIC: Log expected cookie name
-  if (enableDiagnostics) {
+  if (verboseAuthMiddlewareLog) {
     console.warn('[checkAuthInMiddleware] Project ref:', projectRef)
     console.warn('[checkAuthInMiddleware] Expected cookie name:', expectedCookieName)
   }
@@ -306,7 +303,7 @@ function checkAuthInMiddleware(
   // SIMPLEST CHECK FIRST: If Cookie header contains "sb-" and has substantial content, trust it
   // This is the most permissive check - if any sb- cookie exists with substantial value, authenticate
   if (cookieHeader && cookieHeader.includes('sb-')) {
-    if (enableDiagnostics) {
+    if (verboseAuthMiddlewareLog) {
       console.warn('[checkAuthInMiddleware] Running simplest check: looking for any sb- cookie with >=100 chars')
     }
     // Find all sb- cookies and check for substantial values
@@ -326,7 +323,7 @@ function checkAuthInMiddleware(
         // If cookie value is substantial (>=100 chars), trust it as auth
         // 2569 chars should definitely pass this check
         if (cookieValue.length >= 100) {
-          if (enableDiagnostics) {
+          if (verboseAuthMiddlewareLog) {
             console.warn('[checkAuthInMiddleware] Found substantial sb- cookie:', {
               name: cookieName,
               valueLength: cookieValue.length,
@@ -363,7 +360,7 @@ function checkAuthInMiddleware(
             cookieValue !== 'null' && cookieValue !== 'undefined' &&
             cookieValue !== '{}' && cookieValue !== '""' && cookieValue !== "''") {
           authCookie = { name: cookieName, value: cookieValue }
-          if (enableDiagnostics) {
+          if (verboseAuthMiddlewareLog) {
             console.warn('[checkAuthInMiddleware] Method 0 (Any sb- cookie in header) succeeded:', { name: cookieName, valueLength: cookieValue.length })
           }
           break
@@ -387,7 +384,7 @@ function checkAuthInMiddleware(
 
       if (cookieValue.length >= 10) {
         authCookie = { name: expectedCookieName, value: cookieValue }
-        if (enableDiagnostics) {
+        if (verboseAuthMiddlewareLog) {
           console.warn('[checkAuthInMiddleware] Method 1 (Exact match in header) succeeded:', { name: expectedCookieName, valueLength: cookieValue.length })
         }
       }
@@ -409,7 +406,7 @@ function checkAuthInMiddleware(
 
       if (isSupabaseAuthCookie(cookieName) && cookieValue.length >= 10) {
         authCookie = { name: cookieName, value: cookieValue }
-        if (enableDiagnostics) {
+        if (verboseAuthMiddlewareLog) {
           console.warn('[checkAuthInMiddleware] Method 2 (Pattern match in header) succeeded:', { name: cookieName, valueLength: cookieValue.length })
         }
         break
@@ -424,7 +421,7 @@ function checkAuthInMiddleware(
       const exactCookie = cookies.find(c => c.name === expectedCookieName)
       if (exactCookie && exactCookie.value && exactCookie.value.length >= 10) {
         authCookie = { name: exactCookie.name, value: exactCookie.value }
-        if (enableDiagnostics) {
+        if (verboseAuthMiddlewareLog) {
           console.warn('[checkAuthInMiddleware] Method 3 (Exact match in parsed cookies) succeeded:', { name: exactCookie.name, valueLength: exactCookie.value.length })
         }
       }
@@ -437,7 +434,7 @@ function checkAuthInMiddleware(
         cookie.value &&
         cookie.value.length >= 10
       ) || null
-      if (authCookie && enableDiagnostics) {
+      if (authCookie && verboseAuthMiddlewareLog) {
         console.warn('[checkAuthInMiddleware] Method 3 (Pattern match in parsed cookies) succeeded:', { name: authCookie.name, valueLength: authCookie.value.length })
       }
     }
@@ -451,7 +448,7 @@ function checkAuthInMiddleware(
 
   // If no auth cookie found, user is not authenticated
   if (!authCookie || !authCookie.value) {
-    if (enableDiagnostics) {
+    if (verboseAuthMiddlewareLog) {
       console.warn('[checkAuthInMiddleware] No auth cookie found - returning false')
     }
     return { isAuthenticated: false, diagnostics }
@@ -465,13 +462,13 @@ function checkAuthInMiddleware(
       trimmedValue === '{}' ||
       trimmedValue === '""' ||
       trimmedValue === "''") {
-    if (enableDiagnostics) {
+    if (verboseAuthMiddlewareLog) {
       console.warn('[checkAuthInMiddleware] Auth cookie value is invalid - returning false')
     }
     return { isAuthenticated: false, diagnostics }
   }
 
-  if (enableDiagnostics) {
+  if (verboseAuthMiddlewareLog) {
     console.warn('[checkAuthInMiddleware] Auth cookie found and valid - returning true:', {
       name: authCookie.name,
       valueLength: authCookie.value.length
@@ -528,55 +525,65 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
 
-  // Handle root path redirect based on authentication status
+  // Legacy marketing URL: consolidate to `/` (or `/feed` when signed in), including `/landing/*`
+  if (pathname === '/landing' || pathname.startsWith('/landing/')) {
+    const { isAuthenticated } = checkAuthInMiddleware(request)
+    const targetPath = isAuthenticated ? '/feed' : '/'
+    const redirectUrl = new URL(targetPath, request.url)
+    redirectUrl.search = request.nextUrl.search
+    return NextResponse.redirect(redirectUrl, 308)
+  }
+
+  // Root path: authenticated users go to feed; unauthenticated users stay on `/` (marketing home)
   if (pathname === '/') {
-    // Use Supabase authentication check (Edge Runtime compatible)
     const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
 
-    // SECURITY: Only redirect to /feed if authentication cookies are actually detected.
-    // We do NOT use workarounds that allow unauthenticated access based on User-Agent or
-    // other headers, as this creates security vulnerabilities.
-    //
-    // Note: SameSite=Lax cookies may not be sent on programmatic top-level navigations
-    // (like page.goto() in tests), but they ARE sent on same-site fetch requests (like RSC).
-    // In production, users clicking links will have cookies sent, so this is primarily
-    // a test environment concern. The protected route handler will verify auth on /feed.
-    const redirectPath = isAuthenticated ? '/feed' : '/landing'
-    const redirectUrl = new URL(redirectPath, request.url)
+    if (isAuthenticated) {
+      const redirectPath = '/feed'
+      const redirectUrl = new URL(redirectPath, request.url)
 
-    // DIAGNOSTIC: Log what we're redirecting to
-    console.warn('[middleware] Root path redirect:', {
-      pathname,
-      isAuthenticated,
-      redirectPath,
-      redirectUrl: redirectUrl.toString(),
-      cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
-      authCookieFound: diagnostics?.authCookieFound,
-      timestamp: new Date().toISOString(),
-    })
-
-    const redirectResponse = NextResponse.redirect(redirectUrl, 307)
-
-    // Add cache headers to help with redirect performance
-    redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
-
-    // Add diagnostic headers for debugging (non-production only - never expose in production)
-    if (process.env.NODE_ENV !== 'production' && diagnostics) {
-      redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
-      redirectResponse.headers.set('X-Auth-Debug-RedirectPath', redirectPath)
-      redirectResponse.headers.set('X-Auth-Debug-CookieHeaderPresent', String(diagnostics.cookieHeaderPresent))
-      redirectResponse.headers.set('X-Auth-Debug-CookieHeaderLength', String(diagnostics.cookieHeaderLength || 0))
-      redirectResponse.headers.set('X-Auth-Debug-HasSbInHeader', String(diagnostics.hasSbInHeader))
-      redirectResponse.headers.set('X-Auth-Debug-AuthCookieFound', String(diagnostics.authCookieFound))
-      redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesCount', String(diagnostics.parsedCookiesCount || 0))
-      redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesHasSb', String(diagnostics.parsedCookiesHasSb))
-      if (diagnostics.authCookieName) {
-        redirectResponse.headers.set('X-Auth-Debug-AuthCookieName', String(diagnostics.authCookieName))
-        redirectResponse.headers.set('X-Auth-Debug-AuthCookieValueLength', String(diagnostics.authCookieValueLength || 0))
+      if (env.DEBUG_MIDDLEWARE === '1') {
+        console.warn('[middleware] Root path redirect:', {
+          pathname,
+          isAuthenticated,
+          redirectPath,
+          redirectUrl: redirectUrl.toString(),
+          cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
+          authCookieFound: diagnostics?.authCookieFound,
+          timestamp: new Date().toISOString(),
+        })
       }
+
+      const redirectResponse = NextResponse.redirect(redirectUrl, 307)
+      redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+
+      if (process.env.NODE_ENV !== 'production' && diagnostics) {
+        redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
+        redirectResponse.headers.set('X-Auth-Debug-RedirectPath', redirectPath)
+        redirectResponse.headers.set('X-Auth-Debug-CookieHeaderPresent', String(diagnostics.cookieHeaderPresent))
+        redirectResponse.headers.set('X-Auth-Debug-CookieHeaderLength', String(diagnostics.cookieHeaderLength || 0))
+        redirectResponse.headers.set('X-Auth-Debug-HasSbInHeader', String(diagnostics.hasSbInHeader))
+        redirectResponse.headers.set('X-Auth-Debug-AuthCookieFound', String(diagnostics.authCookieFound))
+        redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesCount', String(diagnostics.parsedCookiesCount || 0))
+        redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesHasSb', String(diagnostics.parsedCookiesHasSb))
+        if (diagnostics.authCookieName) {
+          redirectResponse.headers.set('X-Auth-Debug-AuthCookieName', String(diagnostics.authCookieName))
+          redirectResponse.headers.set('X-Auth-Debug-AuthCookieValueLength', String(diagnostics.authCookieValueLength || 0))
+        }
+      }
+
+      return redirectResponse
     }
 
-    return redirectResponse
+    if (env.DEBUG_MIDDLEWARE === '1') {
+      console.warn('[middleware] Root path: unauthenticated, serving marketing home', {
+        pathname,
+        isAuthenticated,
+        cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
+        authCookieFound: diagnostics?.authCookieFound,
+        timestamp: new Date().toISOString(),
+      })
+    }
   }
 
   // SECURITY: Protect routes that require authentication
@@ -592,9 +599,7 @@ export async function middleware(request: NextRequest) {
     const bypassCookie2 = request.cookies.get('E2E');
     const hasE2EBypassCookie = allowE2EBypass && (bypassCookie1?.value === '1' || bypassCookie2?.value === '1');
 
-    // DIAGNOSTIC: Log bypass cookie check for debugging
-    // Always log when PLAYWRIGHT_USE_MOCKS is set (production tests) or in debug mode
-    if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || isPlaywrightTest || hasE2EBypassCookie) {
+    if (env.DEBUG_MIDDLEWARE === '1') {
       console.warn('[middleware] Bypass cookie check:', {
         pathname,
         hasE2EBypassCookie,
@@ -602,10 +607,7 @@ export async function middleware(request: NextRequest) {
         bypassCookie2Value: bypassCookie2?.value,
         isPlaywrightTest,
         PLAYWRIGHT_USE_MOCKS: env.PLAYWRIGHT_USE_MOCKS,
-        allCookies: Array.from(request.cookies.getAll()).map(c => ({
-          name: c.name,
-          value: c.value.length > 20 ? c.value.substring(0, 20) + '...' : c.value,
-        })),
+        cookieNames: Array.from(request.cookies.getAll()).map((c) => c.name),
         timestamp: new Date().toISOString(),
       });
     }
@@ -628,7 +630,7 @@ export async function middleware(request: NextRequest) {
 
     // CRITICAL: If E2E harness is enabled, skip all authentication checks and allow access
     if (isE2EHarness) {
-      if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || hasE2EBypassCookie) {
+      if (env.DEBUG_MIDDLEWARE === '1') {
         console.warn('[middleware] E2E harness enabled - bypassing authentication', {
           pathname,
           hasE2EBypassCookie,
@@ -649,8 +651,7 @@ export async function middleware(request: NextRequest) {
       // No exceptions, no workarounds - cookies must be present and valid
       const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
 
-      // DIAGNOSTIC: Log protected route check (only in debug/test mode)
-      if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production' || hasE2EBypassCookie) {
+      if (env.DEBUG_MIDDLEWARE === '1') {
         console.warn('[middleware] Protected route check:', {
           pathname,
           isAuthenticated,
@@ -677,7 +678,7 @@ export async function middleware(request: NextRequest) {
         // Preserve the original destination for redirect after login
         authUrl.searchParams.set('redirectTo', pathname)
 
-        if (env.DEBUG_MIDDLEWARE === '1' || process.env.NODE_ENV !== 'production') {
+        if (env.DEBUG_MIDDLEWARE === '1') {
           console.warn('[middleware] Redirecting unauthenticated user from protected route:', {
             pathname,
             redirectTo: authUrl.toString(),

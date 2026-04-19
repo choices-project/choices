@@ -2,7 +2,7 @@
 
 _Last updated: March 2026_
 
-Manual checklist for the roadmap item **§2.2 Keyboard navigation audit**. E2E coverage: `tests/e2e/specs/accessibility/keyboard-navigation.spec.ts` (skip link, landing focusables, dashboard main).
+Manual checklist for the roadmap item **2.2 Keyboard navigation audit**. E2E coverage: `tests/e2e/specs/accessibility/keyboard-navigation.spec.ts` (skip link, marketing home focusables, dashboard main).
 
 ## Scope
 
@@ -14,7 +14,7 @@ Manual checklist for the roadmap item **§2.2 Keyboard navigation audit**. E2E c
 
 | Page | Notes |
 |------|--------|
-| `/landing` | Skip link first, then primary CTAs |
+| `/` (marketing home) | Skip link first, then primary CTAs; legacy `/landing` redirects here (308) |
 | `/auth` | Form fields, submit, links |
 | `/dashboard` | Nav, main content, any widgets |
 | `/feed` | Filters, items, load more |
@@ -39,10 +39,10 @@ Manual checklist for the roadmap item **§2.2 Keyboard navigation audit**. E2E c
 1. Use **Tab** only (no mouse) to reach all interactive elements.
 2. Use **Shift+Tab** to go backward; order should be consistent.
 3. Open each modal; confirm **Escape** closes it and focus returns.
-4. Confirm **Skip to main content** is first focusable on key pages.
+4. Confirm **Skip to main content** is first focusable on key pages (one skip link, rendered inside `NextIntlClientProvider` so copy matches locale; accessible name comes from link text only).
 
 ## Related
 
-- `docs/ROADMAP.md` §2.2 Accessibility QA
+- `docs/ROADMAP.md` — Accessibility QA (section 2.2)
 - `docs/HEADING_HIERARCHY.md` — heading structure and data-testid fallbacks
 - `web/tests/e2e/specs/accessibility/keyboard-navigation.spec.ts` — automated checks

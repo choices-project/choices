@@ -151,8 +151,7 @@ export async function register(config: ServiceWorkerConfig = {}): Promise<Servic
     // This prevents registration errors in development or when file is missing
     try {
       const response = await fetch('/service-worker.js', { method: 'HEAD' });
-      if (!response.ok && response.status !== 404) {
-        // If file doesn't exist, skip registration gracefully
+      if (response.status === 404) {
         if (config.debug) logger.info('[SW] Service worker file not found, skipping registration');
         return null;
       }

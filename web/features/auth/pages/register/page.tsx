@@ -253,7 +253,7 @@ export default function RegisterPage() {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
-              <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <a href="/auth" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Sign in
               </a>
             </p>
@@ -313,7 +313,7 @@ export default function RegisterPage() {
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   Already have an account?{' '}
-                  <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  <a href="/auth" className="font-medium text-indigo-600 hover:text-indigo-500">
                     Sign in
                   </a>
                 </p>

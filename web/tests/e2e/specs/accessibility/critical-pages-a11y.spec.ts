@@ -47,7 +47,7 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
   });
 
   const criticalPages = [
-    { path: '/landing', name: 'Landing' },
+    { path: '/', name: 'Marketing home' },
     { path: '/dashboard', name: 'Dashboard' },
     { path: '/feed', name: 'Feed' },
     { path: '/representatives', name: 'Representatives' },

@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
@@ -33,6 +33,7 @@ export default function AuthPageClient() {
   }, []);
   const searchParams = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
+  const [passkeySectionOpen, setPasskeySectionOpen] = useState(() => searchParams.get('mode') !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -366,6 +367,10 @@ export default function AuthPageClient() {
 
   // Note: Removed user/isLoading checks to avoid hydration mismatch
   // User authentication will be handled by the form submission
+
+  React.useEffect(() => {
+    setPasskeySectionOpen(!isSignUp);
+  }, [isSignUp]);
 
   // Native DOM event handler as workaround for Playwright onClick issues
   const handleToggle = (e: Event) => {
@@ -980,24 +985,23 @@ export default function AuthPageClient() {
           </div>
         )}
 
-        {/* Passkey Authentication */}
-        <div className="border-t border-border pt-6 mt-6">
-          <div className="relative mb-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-muted-foreground">
-                {t('auth.form.altSignInDivider')}
-              </span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <PasskeyControls
-              onLoginSuccess={() => router.replace(redirectTarget)}
+        {/* Passkey: collapsed by default on sign-up to shorten the page; sign-in opens the section */}
+        <details
+          open={passkeySectionOpen}
+          onToggle={(event) => setPasskeySectionOpen(event.currentTarget.open)}
+          className="group mt-6 rounded-lg border border-border bg-muted/10 open:bg-muted/20 dark:bg-muted/5"
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground outline-none marker:content-none [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900">
+            <span>{t('auth.form.passkeySectionSummary')}</span>
+            <ChevronDown
+              className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+              aria-hidden
             />
+          </summary>
+          <div className="border-t border-border px-4 pb-4 pt-2">
+            <PasskeyControls onLoginSuccess={() => router.replace(redirectTarget)} />
           </div>
-        </div>
+        </details>
       </div>
     </div>
   );

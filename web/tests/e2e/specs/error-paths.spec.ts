@@ -28,8 +28,8 @@ test.describe('Error paths and edge cases', () => {
     await waitForPageReady(page);
 
     await expect(page.getByText('404').first()).toBeVisible();
-    await expect(page.getByRole('heading', { name: /page not found/i })).toBeVisible();
-    const homeLink = page.getByRole('link', { name: /go to homepage|home/i }).first();
+    await expect(page.getByRole('heading', { name: /page not found|página no encontrada/i })).toBeVisible();
+    const homeLink = page.getByRole('link', { name: /go to homepage|ir al inicio|home/i }).first();
     await expect(homeLink).toBeVisible();
     await expect(homeLink).toHaveAttribute('href', '/');
   });
@@ -38,11 +38,36 @@ test.describe('Error paths and edge cases', () => {
     await page.goto('/nonexistent-route-xyz', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
-    const homeLink = page.getByRole('link', { name: /go to homepage|home/i }).first();
+    const homeLink = page.getByRole('link', { name: /go to homepage|ir al inicio|home/i }).first();
     await homeLink.click();
-    await page.waitForURL(/\/(landing|auth|dashboard)?\/?/, { timeout: 10_000 });
-    const url = page.url();
-    expect(url).toMatch(/\/(landing|auth|dashboard|$)/);
+    await page.waitForLoadState('domcontentloaded');
+    const path = new URL(page.url()).pathname.replace(/\/$/, '') || '/';
+    expect(['/', '/feed', '/auth', '/dashboard', '/landing'].includes(path)).toBeTruthy();
+  });
+
+  test('404 page sign-in link goes to /auth', async ({ page }) => {
+    await page.goto('/missing-page-for-signin-link', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+
+    const signIn = page.getByRole('link', { name: /sign in|iniciar sesión/i });
+    await expect(signIn).toBeVisible();
+    await expect(signIn).toHaveAttribute('href', '/auth');
+    await signIn.click();
+    await expect(page).toHaveURL(/\/auth/, { timeout: 10_000 });
+  });
+
+  test('legacy /landing URL redirects to marketing home', async ({ page }) => {
+    await page.goto('/landing', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    const path = new URL(page.url()).pathname.replace(/\/$/, '') || '/';
+    expect(path).toBe('/');
+  });
+
+  test('legacy /landing/* paths redirect to marketing home', async ({ page }) => {
+    await page.goto('/landing/old-path', { waitUntil: 'domcontentloaded' });
+    await waitForPageReady(page);
+    const path = new URL(page.url()).pathname.replace(/\/$/, '') || '/';
+    expect(path).toBe('/');
   });
 
   test('unauthenticated contact submit returns 401', async ({ request }) => {

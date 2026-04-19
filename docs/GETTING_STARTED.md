@@ -1,6 +1,6 @@
 # Getting Started with Choices
 
-_Last updated: April 5, 2026_
+_Last updated: April 19, 2026_
 
 Welcome to the Choices platform! This guide targets **about 15 minutes** from clone to a running dev server (longer if you are new to Supabase).
 
@@ -98,6 +98,8 @@ npm run types:ci       # Verify TypeScript
 npm run test           # Run unit tests
 npm run test:e2e       # Run E2E tests (optional, takes longer)
 ```
+
+When **recording or presenting** the app locally, keep `DEBUG_MIDDLEWARE` unset in `.env.local` so middleware stays quiet; set `DEBUG_MIDDLEWARE=1` only when you need verbose auth/cookie traces (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 ### 4. Sign Your Commits (DCO)
 

@@ -1,8 +1,10 @@
 # Testing Guide
 
-_Last updated: April 5, 2026 (E2E curated for CI and production)_
+_Last updated: April 5, 2026 (local-first E2E; production smoke optional)_
 
 This guide explains how we exercise the Choices web app and where to add coverage when working on new features or store refactors.
+
+**Default workflow:** Run E2E against the local dev server (`npm run test:e2e` and related scripts below). That exercises the same curated `web/playwright.config.ts` as CI without consuming Vercel preview/production quota or waiting on deploys. Pushing to GitHub still triggers Vercel builds on connected branches—batch commits when you are iterating so you are not paying for a deployment per tiny change.
 
 **API contracts:** Response envelopes and error codes are defined in **[`docs/API/contracts.md`](API/contracts.md)**. When you change a route’s JSON shape or status codes, update that doc and the matching **`web/tests/contracts/*.test.ts`** (or add one).
 
@@ -108,15 +110,18 @@ npm run test:e2e:axe
 # Manual Playwright startup (only when you want to reuse an existing server):
 npm run dev                # terminal 1
 NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 npx playwright test --config=playwright.config.ts
+```
 
-# Production smoke (against https://www.choices-app.com)
+### Production testing (optional)
+
+Use these only when you intentionally want to hit the live site (e.g. after a release or when preview usage is available). Day-to-day development should rely on local E2E above.
+
+```bash
 cd web && npm run test:e2e:production:smoke   # ~20s: API health, feature flags, ingest, core pages
 cd web && npm run test:e2e:production          # Full suite (skips harness specs; auth/admin tests may fail without credentials)
 ```
 
-### Production Testing
-
-Production tests run against the live site at `https://www.choices-app.com`. Use `test:e2e:production:smoke` for a fast (~20s) check after deployments:
+Production tests run against the live site at `https://www.choices-app.com`. Use `test:e2e:production:smoke` for a fast (~20s) check after deployments when you are validating production:
 
 - **API smoke** (`production-api.spec.ts`): `/api/health`, `/api/feature-flags/public`, `/api/health/ingest`
 - **Page smoke** (`mvp-smoke.spec.ts`): auth, civics, representatives, civic-actions create, contact submissions, account pages

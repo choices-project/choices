@@ -2,7 +2,10 @@
 import { cookies, headers } from 'next/headers';
 import React from 'react';
 
-import { SkipNavLink, SkipNavTarget } from '@/components/accessibility/SkipNavLink';
+import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
+
+import { LocaleSkipNavLink } from '@/components/accessibility/LocaleSkipNavLink';
+import { SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { ScrollRestoration } from '@/components/shared/ScrollRestoration';
 import { ThemeScript } from '@/components/shared/ThemeScript';
@@ -154,8 +157,7 @@ export default async function RootLayout({
         {/* ThemeScript runs immediately when HTML is parsed, before React even starts */}
         <ThemeScript />
 
-        {/* PWA Manifest - no preload needed as it's loaded via rel="manifest" */}
-        <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
+        {/* PWA manifest: `metadata.manifest` adds rel="manifest" (avoid duplicate links). */}
 
         {/* PWA Icons - Optimized loading */}
         <link rel="icon" href="/icons/icon-192x192.svg" />
@@ -202,17 +204,17 @@ export default async function RootLayout({
       </head>
       <body className="bg-background text-foreground">
         <ScrollRestoration />
-        <SkipNavLink />
-        <Providers locale={locale} messages={messages}>
-          <SkipNavTarget>
-            {/* SkipNavTarget provides the main landmark for accessibility. */}
-            {/* Avoid adding another <main> in downstream layouts to prevent nesting. */}
-            {children}
-          </SkipNavTarget>
-          <SiteFooter />
-        </Providers>
-
-        {/* PWA Background is handled in app layout */}
+        <ServiceWorkerProvider debug={process.env.NODE_ENV === 'development'}>
+          <Providers locale={locale} messages={messages}>
+            <LocaleSkipNavLink />
+            <SkipNavTarget>
+              {/* SkipNavTarget provides the main landmark for accessibility. */}
+              {/* Avoid adding another <main> in downstream layouts to prevent nesting. */}
+              {children}
+            </SkipNavTarget>
+            <SiteFooter />
+          </Providers>
+        </ServiceWorkerProvider>
       </body>
     </html>
   );

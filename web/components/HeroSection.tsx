@@ -193,7 +193,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               ) : (
                 <>
                   <Link
-                    href="/register"
+                    href="/auth?mode=signup"
                     className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
                   >
                     <Vote className="w-5 h-5 mr-2" />
@@ -201,7 +201,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Link>
                   <Link
-                    href="/login"
+                    href="/auth"
                     className="inline-flex items-center justify-center px-8 py-4 border-2 border-border text-foreground/80 font-semibold rounded-lg hover:border-primary hover:bg-muted transition-colors duration-200"
                   >
                     Sign In

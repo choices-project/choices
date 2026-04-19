@@ -62,7 +62,7 @@ export default function GlobalNavigation() {
       void authSignOutRef.current();
     } catch (error) {
       logger.error('Logout failed:', error);
-      if (typeof window !== 'undefined') window.location.replace('/landing');
+      if (typeof window !== 'undefined') window.location.replace('/');
     }
   }, []);
 
@@ -158,7 +158,7 @@ export default function GlobalNavigation() {
                   </Button>
                 ) : (
                   <Button asChild variant="default" size="sm">
-                    <Link href="/login" prefetch={false}>{t('navigation.login') || 'Sign in'}</Link>
+                    <Link href="/auth" prefetch={false}>{t('navigation.login') || 'Sign in'}</Link>
                   </Button>
                 )}
               </div>
@@ -179,7 +179,7 @@ export default function GlobalNavigation() {
                   </Button>
                 ) : (
                   <Button asChild variant="default" size="sm">
-                    <Link href="/login" prefetch={false}>{t('navigation.login') || 'Sign in'}</Link>
+                    <Link href="/auth" prefetch={false}>{t('navigation.login') || 'Sign in'}</Link>
                   </Button>
                 )}
               </div>

@@ -8,7 +8,6 @@ import React, { Suspense, useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 import { usePollCreatedListener } from '@/features/polls/hooks/usePollCreatedListener';
-import { ServiceWorkerProvider } from '@/features/pwa/components/ServiceWorkerProvider';
 
 import { AppShell } from '@/components/shared/AppShell';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -431,20 +430,18 @@ export default function AppLayout({
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <UserStoreProvider>
-            <ServiceWorkerProvider debug={process.env.NODE_ENV === 'development'}>
-              <AppShell
-                siteMessages={<SiteMessages />}
-                feedback={
-                  !DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null
-                }
-              >
-                <ErrorBoundary>
-                  {children}
-                </ErrorBoundary>
-                {/* Unified offline indicator (replaces PWABackground + OfflineIndicator) */}
-                <OfflineIndicator />
-              </AppShell>
-            </ServiceWorkerProvider>
+            <AppShell
+              siteMessages={<SiteMessages />}
+              feedback={
+                !DISABLE_FEEDBACK_WIDGET ? <EnhancedFeedbackWidget /> : null
+              }
+            >
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+              {/* Unified offline indicator (replaces PWABackground + OfflineIndicator) */}
+              <OfflineIndicator />
+            </AppShell>
           </UserStoreProvider>
         </AuthProvider>
       </QueryClientProvider>

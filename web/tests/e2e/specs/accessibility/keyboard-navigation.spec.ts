@@ -22,7 +22,7 @@ test.describe('@axe Keyboard Navigation', () => {
   });
 
   test('skip link is focusable and targets main content', async ({ page }) => {
-    await page.goto('/landing', { waitUntil: 'domcontentloaded' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     // Tab to skip link (first focusable)
@@ -31,8 +31,8 @@ test.describe('@axe Keyboard Navigation', () => {
     await expect(skipLink).toBeFocused();
   });
 
-  test('landing page has focusable elements in logical order', async ({ page }) => {
-    await page.goto('/landing', { waitUntil: 'domcontentloaded' });
+  test('marketing home has focusable elements in logical order', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     // Tab through first few elements

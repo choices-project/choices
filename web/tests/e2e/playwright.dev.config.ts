@@ -14,12 +14,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables
+// __dirname = web/tests/e2e → webDir ../../, repo root ../../../
+const webDir = resolve(__dirname, '../..');
+const repoRoot = resolve(__dirname, '../../..');
 const envFiles = [
-  { path: resolve(__dirname, '../../.env'), override: false },
-  { path: resolve(__dirname, '../../.env.test'), override: false },
-  { path: resolve(__dirname, '../../.env.test.local'), override: false },
-  { path: resolve(__dirname, '../../.env.local'), override: true },
+  { path: resolve(repoRoot, '.env'), override: false },
+  { path: resolve(webDir, '.env'), override: false },
+  { path: resolve(webDir, '.env.test'), override: false },
+  { path: resolve(webDir, '.env.test.local'), override: false },
+  { path: resolve(repoRoot, '.env.local'), override: true },
+  { path: resolve(webDir, '.env.local'), override: true },
 ];
 
 for (const { path: envFile, override } of envFiles) {

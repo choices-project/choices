@@ -13,12 +13,11 @@ import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
 
-// Lazy load feedback widget - not critical for initial page load
 const EnhancedFeedbackWidget = dynamic(
   () => import('@/components/EnhancedFeedbackWidget'),
   {
     ssr: false,
-    loading: () => null, // Don't show loading indicator for widget
+    loading: () => null,
   }
 );
 
@@ -26,7 +25,6 @@ const isFeedbackWidgetEnabled =
   env.NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET !== '1' &&
   process.env.NODE_ENV === 'production';
 
-// Trending Polls Component - Lazy loaded to not block TTI
 type TrendingPoll = {
   id: string;
   title: string;
@@ -42,16 +40,14 @@ function TrendingPollsSection() {
   const [isLoading, setIsLoading] = useState(true);
   const [shouldLoad, setShouldLoad] = useState(false);
 
-  // Defer loading until after initial render to not block TTI
   useEffect(() => {
     const timer = setTimeout(() => {
       setShouldLoad(true);
-    }, 1500); // Load 1.5s after page load
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch trending polls
   useEffect(() => {
     if (!shouldLoad) return;
 
@@ -78,23 +74,20 @@ function TrendingPollsSection() {
     return () => controller.abort();
   }, [shouldLoad]);
 
-  // Deferred: don't render until we're ready to load
   if (!shouldLoad) {
     return null;
   }
 
-  // Show skeleton while loading
   if (isLoading && polls.length === 0) {
     return <TrendingPollsSkeleton />;
   }
 
-  // Don't show section if no polls
   if (polls.length === 0) {
     return null;
   }
 
   return (
-    <section 
+    <section
       className="bg-gradient-to-b from-background to-muted/30 dark:from-background dark:to-muted py-20"
       aria-labelledby="trending-polls-heading"
     >
@@ -110,8 +103,8 @@ function TrendingPollsSection() {
 
         <div className="grid gap-6 md:grid-cols-3" role="list">
           {polls.map((poll) => {
-            const topOption = poll.options.reduce((prev, current) => 
-              (current.votes > prev.votes) ? current : prev
+            const topOption = poll.options.reduce((prev, current) =>
+              current.votes > prev.votes ? current : prev
             );
 
             return (
@@ -129,14 +122,10 @@ function TrendingPollsSection() {
                   </span>
                 </div>
 
-                <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">
-                  {poll.title}
-                </h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">{poll.title}</h3>
 
                 {poll.description && (
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {poll.description}
-                  </p>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{poll.description}</p>
                 )}
 
                 {poll.options.length > 0 && (
@@ -182,33 +171,14 @@ function TrendingPollsSection() {
 }
 
 /**
- * Landing Page Client Component
- * 
- * Public-facing homepage for the Choices platform (client-side rendered).
- * Features mission statement, key features, and clear CTAs.
- * 
- * Accessibility Features:
- * - Semantic HTML structure with proper heading hierarchy
- * - ARIA labels for all interactive elements
- * - Skip link target for keyboard navigation
- * - High contrast colors (WCAG AA compliant)
- * - Focus indicators on all interactive elements
- * - Screen reader announcements for dynamic content
- * 
- * Internationalization:
- * - All text content uses i18n translation keys
- * - Supports English (en) and Spanish (es)
- * 
- * Created: December 17, 2025
- * Status: ✅ PRODUCTION READY
+ * Public marketing home (served at `/` for unauthenticated visitors).
+ * Skip navigation is provided by root `SkipNavLink` in `app/layout.tsx`.
  */
-export default function LandingPageClient() {
+export function LandingPage() {
   const { t } = useI18n();
   const [showFeedbackWidget, setShowFeedbackWidget] = useState(false);
 
-  // Defer feedback widget loading until after initial render
   useEffect(() => {
-    // Load feedback widget after page is interactive (1 second delay)
     const timer = setTimeout(() => {
       setShowFeedbackWidget(true);
     }, 1000);
@@ -218,16 +188,7 @@ export default function LandingPageClient() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-muted dark:to-background">
-      {/* Skip to main content link for keyboard navigation */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:shadow-lg"
-      >
-        {t('common.skipToContent')}
-      </a>
-
-      {/* Navigation */}
-      <nav 
+      <nav
         className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50"
         role="navigation"
         aria-label={t('navigation.menu.title')}
@@ -235,13 +196,11 @@ export default function LandingPageClient() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group">
-              <Shield 
-                className="h-8 w-8 text-primary group-hover:text-primary/90 transition-colors" 
+              <Shield
+                className="h-8 w-8 text-primary group-hover:text-primary/90 transition-colors"
                 aria-hidden="true"
               />
-              <span className="text-xl font-bold text-foreground">
-                {t('landing.footer.platformName')}
-              </span>
+              <span className="text-xl font-bold text-foreground">{t('landing.footer.platformName')}</span>
               <span className="sr-only">{t('landing.nav.logoAlt')}</span>
             </Link>
             <div className="flex items-center gap-4">
@@ -264,11 +223,7 @@ export default function LandingPageClient() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <header 
-        id="main-content"
-        className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20"
-      >
+      <header className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 pb-16 sm:pt-24 sm:pb-20">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-6xl md:text-7xl">
             {t('landing.hero.title')}
@@ -298,11 +253,7 @@ export default function LandingPageClient() {
         </div>
       </header>
 
-      {/* Mission Statement */}
-      <section 
-        className="bg-slate-900 py-16"
-        aria-label={t('landing.mission.quote')}
-      >
+      <section className="bg-slate-900 py-16" aria-label={t('landing.mission.quote')}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <blockquote className="text-center">
             <p className="text-xl font-medium text-white sm:text-3xl">
@@ -314,8 +265,7 @@ export default function LandingPageClient() {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section 
+      <section
         className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20"
         aria-labelledby="features-heading"
       >
@@ -323,14 +273,11 @@ export default function LandingPageClient() {
           <h2 id="features-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
             {t('landing.features.heading')}
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            {t('landing.features.subheading')}
-          </p>
+          <p className="mt-4 text-lg text-muted-foreground">{t('landing.features.subheading')}</p>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3" role="list">
-          {/* Feature 1: Level Playing Field */}
-          <article 
+          <article
             className="group rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary"
             role="listitem"
           >
@@ -340,13 +287,10 @@ export default function LandingPageClient() {
             <h3 className="mt-4 text-xl font-semibold text-foreground">
               {t('landing.features.levelPlayingField.title')}
             </h3>
-            <p className="mt-2 text-muted-foreground">
-              {t('landing.features.levelPlayingField.description')}
-            </p>
+            <p className="mt-2 text-muted-foreground">{t('landing.features.levelPlayingField.description')}</p>
           </article>
 
-          {/* Feature 2: Campaign Finance Transparency */}
-          <article 
+          <article
             className="group rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 focus-within:ring-2 focus-within:ring-amber-600"
             role="listitem"
           >
@@ -356,13 +300,10 @@ export default function LandingPageClient() {
             <h3 className="mt-4 text-xl font-semibold text-foreground">
               {t('landing.features.followMoney.title')}
             </h3>
-            <p className="mt-2 text-muted-foreground">
-              {t('landing.features.followMoney.description')}
-            </p>
+            <p className="mt-2 text-muted-foreground">{t('landing.features.followMoney.description')}</p>
           </article>
 
-          {/* Feature 3: Direct Engagement */}
-          <article 
+          <article
             className="group rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 focus-within:ring-2 focus-within:ring-purple-600"
             role="listitem"
           >
@@ -372,13 +313,10 @@ export default function LandingPageClient() {
             <h3 className="mt-4 text-xl font-semibold text-foreground">
               {t('landing.features.directEngagement.title')}
             </h3>
-            <p className="mt-2 text-muted-foreground">
-              {t('landing.features.directEngagement.description')}
-            </p>
+            <p className="mt-2 text-muted-foreground">{t('landing.features.directEngagement.description')}</p>
           </article>
 
-          {/* Feature 4: Privacy-First */}
-          <article 
+          <article
             className="group rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 focus-within:ring-2 focus-within:ring-green-600"
             role="listitem"
           >
@@ -388,50 +326,36 @@ export default function LandingPageClient() {
             <h3 className="mt-4 text-xl font-semibold text-foreground">
               {t('landing.features.privacyFirst.title')}
             </h3>
-            <p className="mt-2 text-muted-foreground">
-              {t('landing.features.privacyFirst.description')}
-            </p>
+            <p className="mt-2 text-muted-foreground">{t('landing.features.privacyFirst.description')}</p>
           </article>
 
-          {/* Feature 5: Equal Voting */}
-          <article 
+          <article
             className="group rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 focus-within:ring-2 focus-within:ring-rose-600"
             role="listitem"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-900/30 group-hover:bg-rose-600 transition-colors">
               <Vote className="h-6 w-6 text-rose-600 group-hover:text-white transition-colors" aria-hidden="true" />
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-foreground">
-              {t('landing.features.polling.title')}
-            </h3>
-            <p className="mt-2 text-muted-foreground">
-              {t('landing.features.polling.description')}
-            </p>
+            <h3 className="mt-4 text-xl font-semibold text-foreground">{t('landing.features.polling.title')}</h3>
+            <p className="mt-2 text-muted-foreground">{t('landing.features.polling.description')}</p>
           </article>
 
-          {/* Feature 6: Location-Based */}
-          <article 
+          <article
             className="group rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 focus-within:ring-2 focus-within:ring-cyan-600"
             role="listitem"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/30 group-hover:bg-cyan-600 transition-colors">
               <Shield className="h-6 w-6 text-cyan-600 group-hover:text-white transition-colors" aria-hidden="true" />
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-foreground">
-              {t('landing.features.location.title')}
-            </h3>
-            <p className="mt-2 text-muted-foreground">
-              {t('landing.features.location.description')}
-            </p>
+            <h3 className="mt-4 text-xl font-semibold text-foreground">{t('landing.features.location.title')}</h3>
+            <p className="mt-2 text-muted-foreground">{t('landing.features.location.description')}</p>
           </article>
         </div>
       </section>
 
-      {/* Trending Polls Section */}
       <TrendingPollsSection />
 
-      {/* CTA Section */}
-      <section 
+      <section
         className="bg-gradient-to-br from-blue-600 to-blue-700 py-16"
         aria-labelledby="cta-heading"
       >
@@ -439,9 +363,7 @@ export default function LandingPageClient() {
           <h2 id="cta-heading" className="text-3xl font-bold text-white sm:text-4xl">
             {t('landing.cta.heading')}
           </h2>
-          <p className="mt-4 text-lg text-blue-100">
-            {t('landing.cta.subheading')}
-          </p>
+          <p className="mt-4 text-lg text-blue-100">{t('landing.cta.subheading')}</p>
           <div className="mt-8">
             <Link
               href="/auth?mode=signup"
@@ -455,9 +377,7 @@ export default function LandingPageClient() {
         </div>
       </section>
 
-      {/* Feedback Widget - Allow users to provide feedback from landing page */}
       {showFeedbackWidget && isFeedbackWidgetEnabled && <EnhancedFeedbackWidget />}
     </div>
   );
 }
-

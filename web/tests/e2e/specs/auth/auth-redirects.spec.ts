@@ -318,9 +318,9 @@ test.describe('Authentication Redirects', () => {
 
       // Should see login button, not logout button
       const loginLink = page
-        .locator('a[href="/login"], a[href="/auth"]')
-        .or(page.getByRole('link', { name: /log in|sign in/i }))
-        .or(page.getByRole('button', { name: /log in|sign in/i }));
+        .locator('a[href="/auth"], a[href="/login"]')
+        .or(page.getByRole('link', { name: /log in|sign in|iniciar sesión/i }))
+        .or(page.getByRole('button', { name: /log in|sign in|iniciar sesión/i }));
       const logoutButtonAfterLogout = page.locator('[data-testid="logout-button"]');
 
       const hasLogin = await loginLink.count();

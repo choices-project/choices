@@ -233,9 +233,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initializeAuthRef.current(null, null, false)
       setSession(null)
       setUser(null)
-      // Redirect to landing page after logout
+      // Redirect to marketing home after logout
       if (typeof window !== 'undefined') {
-        window.location.replace('/landing')
+        window.location.replace('/')
       }
       return
     }
@@ -289,10 +289,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Always redirect to auth landing page, even if API calls fail
+      // Always redirect to the auth page, even if API calls fail
       if (typeof window !== 'undefined') {
         // Use replace instead of href to prevent back button issues
-        // This ensures users are taken back to the auth landing page after sign out
+        // This ensures users are taken back to sign-in after sign out
         // Use full URL to ensure proper redirect
         const authUrl = window.location.origin + '/auth';
         window.location.replace(authUrl);

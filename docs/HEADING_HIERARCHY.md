@@ -8,7 +8,7 @@ Expected h1→h2→h3 order for key pages. Use for manual accessibility QA and E
 
 | Page | Expected Structure | data-testid Fallback |
 |------|--------------------|----------------------|
-| `/landing` | h1 (hero) | — |
+| `/` (marketing) | h1 (hero) | — |
 | `/auth` | h1 Sign In / Sign Up | `login-form`, `auth-form` |
 | `/dashboard` | h1 Dashboard/Welcome | — |
 | `/feed` | h1 Feed | — |

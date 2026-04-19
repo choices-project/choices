@@ -2,7 +2,7 @@
  * Critical User Journey E2E Tests
  *
  * Covers the most important user flows before go-live:
- * - Landing → key entry points visible and reachable
+ * - Marketing home (`/`) → key entry points visible and reachable
  * - Auth page → sign in / sign up visible
  * - Dashboard/Feed reachable (with harness or gated)
  * - Key nav links work
@@ -24,16 +24,16 @@ test.describe('Critical user journey', () => {
     });
   });
 
-  test('landing page loads and shows primary entry points', async ({ page }) => {
-    await page.goto('/landing', { waitUntil: 'domcontentloaded' });
+  test('marketing home loads and shows primary entry points', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     const signInOrGetStarted = page.getByRole('link', { name: /sign in|get started|log in/i });
     await expect(signInOrGetStarted.first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test('from landing, auth link navigates to auth page', async ({ page }) => {
-    await page.goto('/landing', { waitUntil: 'domcontentloaded' });
+  test('from marketing home, auth link navigates to auth page', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);
 
     const authLink = page.getByRole('link', { name: /sign in|get started|log in/i }).first();
@@ -53,16 +53,11 @@ test.describe('Critical user journey', () => {
     await expect(heading).toBeVisible();
   });
 
-  test('dashboard is reachable with harness and shows content', async ({ page }) => {
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-    await waitForPageReady(page);
-    await page.waitForTimeout(2_000);
-
-    const hasContent =
-      (await page.getByRole('heading', { name: /dashboard|welcome/i }).first().isVisible()) ||
-      (await page.getByText(/feed|activity|polls/i).first().isVisible()) ||
-      (await page.locator('main').first().isVisible());
-    expect(hasContent).toBe(true);
+  test('/dashboard redirects to /feed (canonical activity surface)', async ({ page }) => {
+    // `app/(app)/dashboard/page.tsx` issues `redirect('/feed')`. Assert final URL after full
+    // document load so we are not racing client hydration of `AppShell` (first compile can delay it).
+    await page.goto('/dashboard', { waitUntil: 'load', timeout: 60_000 });
+    await expect(page).toHaveURL(/\/feed\/?(\?|$)/);
   });
 
   test('feed page is reachable with harness', async ({ page }) => {
@@ -97,5 +92,46 @@ test.describe('Critical user journey', () => {
       (await page.getByText(/sign in|log in/i).first().isVisible()) ||
       (await page.locator('main').first().isVisible());
     expect(hasContent).toBe(true);
+  });
+
+  test('PWA manifest is served and shortcuts point at real app routes', async ({ request }) => {
+    const res = await request.get('/manifest.json');
+    expect(res.ok()).toBe(true);
+    const manifest = (await res.json()) as {
+      shortcuts?: { url?: string }[];
+      icons?: unknown[];
+    };
+    expect(manifest).toMatchObject({
+      name: expect.any(String),
+      short_name: expect.any(String),
+      start_url: '/',
+      display: 'standalone',
+    });
+    expect(Array.isArray(manifest.icons)).toBe(true);
+    expect((manifest.icons ?? []).length).toBeGreaterThanOrEqual(2);
+    const shortcutUrls = (manifest.shortcuts ?? [])
+      .map((s) => s?.url)
+      .filter((u): u is string => typeof u === 'string');
+    expect(shortcutUrls).toEqual(
+      expect.arrayContaining(['/feed', '/dashboard', '/polls/create']),
+    );
+  });
+
+  test('PWA manifest API returns same shortcut routes as static manifest', async ({ request }) => {
+    const res = await request.get('/api/pwa/manifest');
+    expect(res.ok()).toBe(true);
+    const body = (await res.json()) as {
+      success?: boolean;
+      data?: { manifest?: { shortcuts?: { url?: string }[]; start_url?: string } };
+    };
+    expect(body.success).toBe(true);
+    const manifest = body.data?.manifest;
+    expect(manifest?.start_url).toBe('/');
+    const shortcutUrls = (manifest?.shortcuts ?? [])
+      .map((s) => s?.url)
+      .filter((u): u is string => typeof u === 'string');
+    expect(shortcutUrls).toEqual(
+      expect.arrayContaining(['/feed', '/dashboard', '/polls/create']),
+    );
   });
 });
