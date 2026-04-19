@@ -12,13 +12,13 @@ import { AlertCircle, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
-
 import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';

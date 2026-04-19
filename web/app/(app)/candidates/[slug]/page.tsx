@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react';
 
 import useSWR from '@/shims/swr';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -15,7 +17,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
 
 import { useI18n } from '@/hooks/useI18n';
 
