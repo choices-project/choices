@@ -114,9 +114,21 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       .limit(1);
 
     if (credsErr || !creds?.length) {
+      const { count: credCount, error: countErr } = await supabase
+        .from('webauthn_credentials')
+        .select('*', { count: 'exact', head: true })
+        .eq('rp_id', rpID);
+
+      if (!countErr && (credCount === 0 || credCount === null)) {
+        return validationError(
+          { credential: 'No passkeys registered for this site' },
+          'No passkey is registered for Choices on this domain yet. Sign in with email and password, then use Create Passkey (after you are signed in) to add one to your account.',
+        );
+      }
+
       return validationError(
         { credential: 'Unknown credential' },
-        'Passkey not recognized. Add a passkey from this device or use email/password.'
+        'Passkey not recognized. If you have not added a passkey to Choices on this site, sign in with email and password first, then create a passkey. Otherwise try another passkey or device.',
       );
     }
 

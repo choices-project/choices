@@ -300,6 +300,11 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
         <p className="mt-3 text-xs text-muted-foreground text-center">
           {t('auth.passkey.hint')}
         </p>
+        {!isAuthenticated && (
+          <p className="mt-2 text-xs text-muted-foreground text-center border-t border-border pt-2">
+            {t('auth.passkey.signInFirstForPasskey')}
+          </p>
+        )}
       </div>
 
       {/* Advanced options - collapsible, less prominent */}

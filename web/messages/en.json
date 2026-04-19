@@ -3781,6 +3781,7 @@
       "loginSuccess": "Login successful!",
       "loginSuccessBody": "You have been signed in successfully.",
       "hint": "Use your device's fingerprint, face ID, or security key for secure, passwordless authentication",
+      "signInFirstForPasskey": "To use a Choices passkey, sign in with email and password first, then create a passkey from this page while you are logged in. Passkeys stored only in your browser or password manager for this URL are not registered with Choices until you add one.",
       "yourPasskeys": "Your Passkeys",
       "loadingPasskeys": "Loading passkeys...",
       "noPasskeysYet": "No passkeys yet. Add one from this device—biometrics stay on your device.",

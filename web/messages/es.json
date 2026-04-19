@@ -3605,6 +3605,7 @@
       "loginSuccess": "¡Inicio de sesión exitoso!",
       "loginSuccessBody": "Has iniciado sesión correctamente.",
       "hint": "Usa la huella, Face ID o llave de seguridad de tu dispositivo para una autenticación segura sin contraseña.",
+      "signInFirstForPasskey": "Para usar una llave de acceso de Choices, inicia sesión primero con correo y contraseña y luego crea una llave desde esta página mientras estés conectado. Las llaves que solo guarda tu navegador o gestor para esta URL no están registradas en Choices hasta que las añadas.",
       "yourPasskeys": "Tus llaves de acceso",
       "loadingPasskeys": "Cargando llaves de acceso...",
       "noPasskeysYet": "Aún no hay llaves. Añade una desde este dispositivo; la biometría se queda en tu dispositivo.",
