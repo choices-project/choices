@@ -30,6 +30,7 @@ Use this table before deep-diving §4–§9. “✅” means the **default accep
 | Step | Result | Notes |
 |------|--------|--------|
 | **Push** | `457959931` → `main` | Commit message: `feat(security): CSRF parity across API routes and browser callers`. |
+| **Push (infra follow-up)** | _(add Actions run URL after this lands on `main`)_ | Trivy action pin, submodule gitlink removal, `.gitignore` for `.cursor/govinfo-mcp/`. |
 | **GitHub Actions** | [Run 24639702397](https://github.com/choices-project/choices/actions/runs/24639702397) | Workflow **CI/CD Pipeline** for that SHA. |
 | **Code Quality job** | Passed | Includes `npm run verify:docs`, `lint:strict`, `types:ci`, locale + i18n gates, `web` build. |
 | **Contract Tests job** | Passed | `web/tests/contracts/**` (including newer profile/privacy/onboarding suites). |
@@ -37,7 +38,8 @@ Use this table before deep-diving §4–§9. “✅” means the **default accep
 | **Unit Tests job** | Failed → **fixed in follow-up** | Failure was **test drift**: `profileStore.test.ts` still expected bare `fetch('/api/profile', { method, body })` after the store began sending **`X-CSRF-Token`** and **`credentials: 'include'`**. Resolution: `jest.mock('@/features/auth/lib/csrf-token')` + updated `toHaveBeenCalledWith` expectations — fix commit **`13363bef3`** on `main`. |
 | **Full E2E job** | Failed | Log showed **accessibility-critical** specs (representatives / civics / polls list) plus **`TypeError: fetch failed`** from the dev server—triage as **flake or env**, not attributed to CSRF until reproduced with a narrowed repro. |
 | **Playwright Axe A11y job** | Failed | Separate a11y job; same triage bucket as full E2E. |
-| **Security Scan job** | Failed | **Infrastructure:** `Unable to resolve action aquasecurity/trivy-action@0.24.0` (pin / marketplace availability). **Not** caused by application CSRF edits. |
+| **Security Scan job** | Failed → **fixed in follow-up** | **Infrastructure:** `Unable to resolve action aquasecurity/trivy-action@0.24.0`. **Resolution:** pin all workflows to **`aquasecurity/trivy-action@v0.35.0`** (same change across `ci.yml`, `web-ci.yml`, `test.yml`, `deploy.yml`). **Not** caused by application CSRF edits. |
+| **CD / Pages checkout** | Failed → **fixed in follow-up** | **Infrastructure:** index had a **gitlink** for `.cursor/govinfo-mcp` without a `.gitmodules` URL (`No url found for submodule path ...`), breaking checkout for jobs that need the full tree. **Resolution:** `git rm --cached .cursor/govinfo-mcp` (drop the stray gitlink only) and **`.gitignore`** `.cursor/govinfo-mcp/` so a local MCP clone is not tracked. |
 | **Vercel production** | Not exercised here | After Vercel finishes deploying `main`, manually smoke **login**, **profile preference save**, **vote**, **contact submit** (if feature on), and **poll close** as cookie + CSRF-sensitive flows. |
 
 ---

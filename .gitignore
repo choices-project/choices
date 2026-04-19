@@ -24,6 +24,9 @@ build/
 # Secrets rotation tracking
 .secrets-rotation.json
 
+# Local Cursor MCP (clone separately; see docs/AGENT_SETUP.md)
+.cursor/govinfo-mcp/
+
 # IDE and editor files
 .vscode/
 .idea/
