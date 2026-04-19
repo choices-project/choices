@@ -34,7 +34,7 @@ Use this table before deep-diving §4–§9. “✅” means the **default accep
 | **Code Quality job** | Passed | Includes `npm run verify:docs`, `lint:strict`, `types:ci`, locale + i18n gates, `web` build. |
 | **Contract Tests job** | Passed | `web/tests/contracts/**` (including newer profile/privacy/onboarding suites). |
 | **Playwright Smoke job** | Passed | Harness smoke path stayed green. |
-| **Unit Tests job** | Failed → **fixed in follow-up** | Failure was **test drift**: `profileStore.test.ts` still expected bare `fetch('/api/profile', { method, body })` after the store began sending **`X-CSRF-Token`** and **`credentials: 'include'`**. Resolution: `jest.mock('@/features/auth/lib/csrf-token')` + updated `toHaveBeenCalledWith` expectations (see next commit on `main`). |
+| **Unit Tests job** | Failed → **fixed in follow-up** | Failure was **test drift**: `profileStore.test.ts` still expected bare `fetch('/api/profile', { method, body })` after the store began sending **`X-CSRF-Token`** and **`credentials: 'include'`**. Resolution: `jest.mock('@/features/auth/lib/csrf-token')` + updated `toHaveBeenCalledWith` expectations — fix commit **`13363bef3`** on `main`. |
 | **Full E2E job** | Failed | Log showed **accessibility-critical** specs (representatives / civics / polls list) plus **`TypeError: fetch failed`** from the dev server—triage as **flake or env**, not attributed to CSRF until reproduced with a narrowed repro. |
 | **Playwright Axe A11y job** | Failed | Separate a11y job; same triage bucket as full E2E. |
 | **Security Scan job** | Failed | **Infrastructure:** `Unable to resolve action aquasecurity/trivy-action@0.24.0` (pin / marketplace availability). **Not** caused by application CSRF edits. |
