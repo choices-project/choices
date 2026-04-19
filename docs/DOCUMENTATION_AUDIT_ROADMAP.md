@@ -30,7 +30,8 @@ Use this table before deep-diving §4–§9. “✅” means the **default accep
 | Step | Result | Notes |
 |------|--------|--------|
 | **Push** | `457959931` → `main` | Commit message: `feat(security): CSRF parity across API routes and browser callers`. |
-| **Push (infra follow-up)** | _(add Actions run URL after this lands on `main`)_ | Trivy action pin, submodule gitlink removal, `.gitignore` for `.cursor/govinfo-mcp/`. |
+| **Push (infra + CI pins)** | [`3e0e09c6f`](https://github.com/choices-project/choices/commit/3e0e09c6f271916d49b0a8482a72adaebb6026c2) → `main` | Trivy **`aquasecurity/trivy-action@v0.35.0`**, remove `.cursor/govinfo-mcp` gitlink, **`.gitignore`**. **pages-build-deployment:** [run 24640133184](https://github.com/choices-project/choices/actions/runs/24640133184) **success** (checkout no longer hits missing submodule URL). **CI/CD Pipeline:** [run 24640133332](https://github.com/choices-project/choices/actions/runs/24640133332) for that SHA. |
+| **Push (deploy `lint:strict`)** | [`f4c7ccf82`](https://github.com/choices-project/choices/commit/f4c7ccf82) → `main` | **Continuous Deployment** failed **Pre-deployment Validation → Lint (strict mode)** on `import/order` in five files; fixed by reordering **`@/features/auth/lib/csrf-token`** vs UI imports, one blank line in **`api/shared/vote`**, and removing an intra-group blank in **`EnhancedFeedbackWidget`**. Link the new Actions run after push for ground truth. |
 | **GitHub Actions** | [Run 24639702397](https://github.com/choices-project/choices/actions/runs/24639702397) | Workflow **CI/CD Pipeline** for that SHA. |
 | **Code Quality job** | Passed | Includes `npm run verify:docs`, `lint:strict`, `types:ci`, locale + i18n gates, `web` build. |
 | **Contract Tests job** | Passed | `web/tests/contracts/**` (including newer profile/privacy/onboarding suites). |
