@@ -12,6 +12,7 @@ import {
   createPollRecord,
 } from '../../fixtures/api/polls';
 import { profileRecord } from '../../fixtures/api/profile';
+import { buildE2ERepresentativesListPayload } from '../../fixtures/api/representatives';
 import { buildShareAnalytics } from '../../fixtures/api/share';
 import {
   buildFeedCategoriesResponse,
@@ -1286,6 +1287,19 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       await respondJson(route, buildDashboardData(polls));
     };
 
+    const representativesListHandler: RouteHandler = async (route) => {
+      if (route.request().method() !== 'GET') {
+        await route.continue();
+        return;
+      }
+      const url = new URL(route.request().url());
+      if (url.pathname !== '/api/representatives') {
+        await route.continue();
+        return;
+      }
+      await respondJson(route, buildE2ERepresentativesListPayload());
+    };
+
     const civicsStateHandler: RouteHandler = async (route) => {
       await respondJson(route, {
         success: true,
@@ -1400,6 +1414,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/polls/*/results', pollResultsHandler);
     await page.route('**/api/polls/*', pollDetailHandler);
     await page.route('**/api/dashboard', dashboardHandler);
+    await page.route('**/api/representatives', representativesListHandler);
     await page.route('**/api/v1/civics/by-state**', civicsStateHandler);
     await page.route('**/api/pwa/notifications/subscribe', pwaSubscribeHandler);
     await page.route('**/api/pwa/notifications/send', pwaNotificationHandler);
@@ -1415,6 +1430,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     routes.push({ url: '**/api/polls/*/results', handler: pollResultsHandler });
     routes.push({ url: '**/api/polls/*', handler: pollDetailHandler });
     routes.push({ url: '**/api/dashboard', handler: dashboardHandler });
+    routes.push({ url: '**/api/representatives', handler: representativesListHandler });
     routes.push({ url: '**/api/v1/civics/by-state**', handler: civicsStateHandler });
     routes.push({ url: '**/api/pwa/notifications/subscribe', handler: pwaSubscribeHandler });
     routes.push({ url: '**/api/pwa/notifications/send', handler: pwaNotificationHandler });

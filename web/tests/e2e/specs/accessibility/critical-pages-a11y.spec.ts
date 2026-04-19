@@ -8,13 +8,24 @@
  * Status: ✅ ACTIVE
  */
 
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import {
   setupExternalAPIMocks,
   waitForPageReady,
 } from '../../helpers/e2e-setup';
 import { runAxeAudit } from '../../helpers/accessibility';
+
+async function gotoCriticalPage(page: Page, path: string): Promise<void> {
+  await page.goto(path);
+  // `app/(app)/dashboard/page.tsx` redirects to `/feed`; finish navigation before axe runs.
+  if (path === '/dashboard') {
+    await page.waitForURL(
+      (u) => u.pathname === '/feed' || u.pathname.startsWith('/feed/'),
+      { timeout: 20_000 },
+    );
+  }
+}
 
 test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
   test.beforeEach(async ({ page }) => {
@@ -77,7 +88,7 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
       });
 
       try {
-        await page.goto(pageInfo.path);
+        await gotoCriticalPage(page, pageInfo.path);
         await waitForPageReady(page);
         await page.waitForTimeout(3000); // Wait for React hydration and data loading
 
@@ -123,7 +134,7 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
       });
 
       try {
-        await page.goto(pageInfo.path);
+        await gotoCriticalPage(page, pageInfo.path);
         await waitForPageReady(page);
         // Wait for main content (h1) so heading-structure assertions run on stable DOM; admin pages can load slowly
         await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => undefined);
@@ -178,7 +189,7 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
       });
 
       try {
-        await page.goto(pageInfo.path);
+        await gotoCriticalPage(page, pageInfo.path);
         await waitForPageReady(page);
         await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => undefined);
         await page.waitForTimeout(2000);

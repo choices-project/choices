@@ -12,24 +12,51 @@ type AxeOptions = {
 
 export type AxeResults = Awaited<ReturnType<AxeBuilder['analyze']>>;
 
+function isDestroyedContextError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('Execution context was destroyed') ||
+    message.includes('Target closed') ||
+    message.includes('navigation')
+  );
+}
+
 export async function runAxeAudit(page: Page, context: string, options: AxeOptions = {}): Promise<AxeResults> {
   const { allowViolations = false, include, exclude } = options;
 
-  const builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+  const buildBuilder = () => {
+    const builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']);
+    if (include?.length) {
+      for (const selector of include) {
+        builder.include(selector);
+      }
+    }
+    if (exclude?.length) {
+      for (const selector of exclude) {
+        builder.exclude(selector);
+      }
+    }
+    return builder;
+  };
 
-  if (include?.length) {
-    for (const selector of include) {
-      builder.include(selector);
+  let results: AxeResults | undefined;
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      results = await buildBuilder().analyze();
+      break;
+    } catch (error) {
+      if (!isDestroyedContextError(error) || attempt === maxAttempts) {
+        throw error;
+      }
+      await page.waitForLoadState('domcontentloaded').catch(() => undefined);
+      await page.waitForTimeout(400);
     }
   }
 
-  if (exclude?.length) {
-    for (const selector of exclude) {
-      builder.exclude(selector);
-    }
+  if (!results) {
+    throw new Error(`[axe] ${context}: analyze() produced no results`);
   }
-
-  const results = await builder.analyze();
 
   if (results.violations.length > 0) {
     // Filter out known false positives for E2E harness pages
@@ -39,10 +66,10 @@ export async function runAxeAudit(page: Page, context: string, options: AxeOptio
     const filteredViolations = isE2EHarness
       ? results.violations.filter(v => !['document-title', 'html-has-lang'].includes(v.id))
       : results.violations;
-    
+
     if (filteredViolations.length > 0) {
       console.error(`[axe] ${context} violations detected:`, filteredViolations);
-    if (!allowViolations) {
+      if (!allowViolations) {
         expect(filteredViolations, `${context} accessibility violations`).toEqual([]);
       }
     } else {
@@ -54,4 +81,3 @@ export async function runAxeAudit(page: Page, context: string, options: AxeOptio
 
   return results;
 }
-
