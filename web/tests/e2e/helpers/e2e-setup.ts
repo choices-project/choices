@@ -27,6 +27,12 @@ type RouteHandler = Parameters<Page['route']>[1];
 type RoutePattern = Parameters<Page['route']>[0];
 type PlaywrightRoute = Parameters<RouteHandler>[0];
 
+/** Playwright URL globs do not reliably match `?query=...`; use regex for list endpoints. */
+const API_POLLS_COLLECTION_RE = /https?:\/\/[^/]+\/api\/polls(?:\?|$)/;
+const API_REPRESENTATIVES_LIST_RE = /https?:\/\/[^/]+\/api\/representatives(?:\?|$)/;
+const API_DASHBOARD_RE = /https?:\/\/[^/]+\/api\/dashboard(?:\?|$)/;
+const API_PROFILE_RE = /https?:\/\/[^/]+\/api\/profile(?:\?|$)/;
+
 type SeedRecord = {
   user: TestUser;
   poll?: TestPoll;
@@ -1157,7 +1163,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/v1/auth/webauthn/native/authenticate/verify', authVerifyHandler);
     await page.route('**/api/auth/login', loginHandler);
     await page.route('**/api/auth/register', registerHandler);
-    await page.route('**/api/profile', profileHandler);
+    await page.route(API_PROFILE_RE, profileHandler);
     await page.route('**/api/auth/logout', logoutHandler);
 
     routes.push({ url: '**/api/v1/auth/webauthn/native/register/options', handler: registerOptionsHandler });
@@ -1166,7 +1172,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     routes.push({ url: '**/api/v1/auth/webauthn/native/authenticate/verify', handler: authVerifyHandler });
     routes.push({ url: '**/api/auth/login', handler: loginHandler });
     routes.push({ url: '**/api/auth/register', handler: registerHandler });
-    routes.push({ url: '**/api/profile', handler: profileHandler });
+    routes.push({ url: API_PROFILE_RE, handler: profileHandler });
     routes.push({ url: '**/api/auth/logout', handler: logoutHandler });
   }
 
@@ -1421,12 +1427,12 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       }, 201);
     };
 
-    await page.route('**/api/polls', pollsHandler);
     await page.route('**/api/polls/*/vote', pollVoteHandler);
     await page.route('**/api/polls/*/results', pollResultsHandler);
     await page.route('**/api/polls/*', pollDetailHandler);
-    await page.route('**/api/dashboard', dashboardHandler);
-    await page.route('**/api/representatives', representativesListHandler);
+    await page.route(API_POLLS_COLLECTION_RE, pollsHandler);
+    await page.route(API_DASHBOARD_RE, dashboardHandler);
+    await page.route(API_REPRESENTATIVES_LIST_RE, representativesListHandler);
     await page.route('**/api/v1/civics/by-state**', civicsStateHandler);
     await page.route('**/api/pwa/notifications/subscribe', pwaSubscribeHandler);
     await page.route('**/api/pwa/notifications/send', pwaNotificationHandler);
@@ -1437,12 +1443,12 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
     await page.route('**/api/shared/vote', sharedVoteHandler);
     await page.route('**/api/site-messages', siteMessagesHandler);
 
-    routes.push({ url: '**/api/polls', handler: pollsHandler });
     routes.push({ url: '**/api/polls/*/vote', handler: pollVoteHandler });
     routes.push({ url: '**/api/polls/*/results', handler: pollResultsHandler });
     routes.push({ url: '**/api/polls/*', handler: pollDetailHandler });
-    routes.push({ url: '**/api/dashboard', handler: dashboardHandler });
-    routes.push({ url: '**/api/representatives', handler: representativesListHandler });
+    routes.push({ url: API_POLLS_COLLECTION_RE, handler: pollsHandler });
+    routes.push({ url: API_DASHBOARD_RE, handler: dashboardHandler });
+    routes.push({ url: API_REPRESENTATIVES_LIST_RE, handler: representativesListHandler });
     routes.push({ url: '**/api/v1/civics/by-state**', handler: civicsStateHandler });
     routes.push({ url: '**/api/pwa/notifications/subscribe', handler: pwaSubscribeHandler });
     routes.push({ url: '**/api/pwa/notifications/send', handler: pwaNotificationHandler });
