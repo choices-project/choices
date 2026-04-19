@@ -220,6 +220,18 @@ export async function waitForPageReady(page: Page, timeoutMs = DEFAULT_TIMEOUTS.
   );
 }
 
+/**
+ * `app/(app)/dashboard/page.tsx` server-redirects to `/feed`. Use this so tests land on a stable URL
+ * before assertions or axe (avoids mid-navigation execution context teardown).
+ */
+export async function gotoDashboardResolvingRedirect(page: Page, timeoutMs = 20_000): Promise<void> {
+  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+  await page.waitForURL(
+    (u) => u.pathname === '/feed' || u.pathname.startsWith('/feed/'),
+    { timeout: timeoutMs },
+  );
+}
+
 export async function loginWithPassword(page: Page, credentials: TestUser, options: LoginOptions = {}): Promise<void> {
   const {
     path = '/auth',

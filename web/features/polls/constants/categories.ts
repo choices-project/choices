@@ -10,7 +10,7 @@ export const POLL_CATEGORIES: PollCategoryDefinition[] = [
   { id: 'business', nameKey: 'polls.categories.business', icon: '💼', color: 'bg-blue-100 text-blue-700' },
   { id: 'education', nameKey: 'polls.categories.education', icon: '🎓', color: 'bg-green-100 text-green-700' },
   { id: 'technology', nameKey: 'polls.categories.technology', icon: '💻', color: 'bg-purple-100 text-purple-700' },
-  { id: 'health', nameKey: 'polls.categories.health', icon: '🏥', color: 'bg-red-100 text-red-700' },
+  { id: 'health', nameKey: 'polls.categories.health', icon: '🏥', color: 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-200' },
   { id: 'finance', nameKey: 'polls.categories.finance', icon: '💰', color: 'bg-emerald-100 text-emerald-700' },
   { id: 'environment', nameKey: 'polls.categories.environment', icon: '🌱', color: 'bg-lime-100 text-lime-700' },
   { id: 'social', nameKey: 'polls.categories.social', icon: '👥', color: 'bg-teal-100 text-teal-700' },

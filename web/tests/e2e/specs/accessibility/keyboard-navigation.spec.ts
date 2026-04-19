@@ -12,10 +12,40 @@
 
 import { expect, test } from '@playwright/test';
 
-import { setupExternalAPIMocks, waitForPageReady } from '../../helpers/e2e-setup';
+import {
+  gotoDashboardResolvingRedirect,
+  setupExternalAPIMocks,
+  waitForPageReady,
+} from '../../helpers/e2e-setup';
 
 test.describe('@axe Keyboard Navigation', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('e2e-dashboard-bypass', '1');
+      } catch {
+        /* noop */
+      }
+    });
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const url = new URL(baseUrl);
+    const domain = url.hostname.startsWith('www.') ? url.hostname.substring(4) : url.hostname;
+    try {
+      await page.context().addCookies([
+        {
+          name: 'e2e-dashboard-bypass',
+          value: '1',
+          path: '/',
+          domain: `.${domain}`,
+          sameSite: 'None' as const,
+          secure: true,
+          httpOnly: false,
+        },
+      ]);
+    } catch {
+      /* cookie may fail on plain HTTP dev hosts */
+    }
+
     if (process.env.PLAYWRIGHT_USE_MOCKS === '1') {
       await setupExternalAPIMocks(page);
     }
@@ -55,7 +85,7 @@ test.describe('@axe Keyboard Navigation', () => {
   });
 
   test('dashboard page has focusable main content', async ({ page }) => {
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await gotoDashboardResolvingRedirect(page);
     await waitForPageReady(page);
     await page.waitForTimeout(2000);
 

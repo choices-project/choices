@@ -11,20 +11,18 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import {
+  gotoDashboardResolvingRedirect,
   setupExternalAPIMocks,
   waitForPageReady,
 } from '../../helpers/e2e-setup';
 import { runAxeAudit } from '../../helpers/accessibility';
 
 async function gotoCriticalPage(page: Page, path: string): Promise<void> {
-  await page.goto(path);
-  // `app/(app)/dashboard/page.tsx` redirects to `/feed`; finish navigation before axe runs.
   if (path === '/dashboard') {
-    await page.waitForURL(
-      (u) => u.pathname === '/feed' || u.pathname.startsWith('/feed/'),
-      { timeout: 20_000 },
-    );
+    await gotoDashboardResolvingRedirect(page);
+    return;
   }
+  await page.goto(path);
 }
 
 test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {

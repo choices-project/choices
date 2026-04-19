@@ -343,7 +343,7 @@ export function PollFiltersPanel({ actions }: PollFiltersPanelProps) {
       {trendingHashtags.length > 0 && (
         <div className="mt-4 rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 dark:border-blue-800 dark:from-blue-900/20 dark:to-indigo-900/20">
           <div className="mb-3 flex items-center gap-2">
-            <Flame className="h-5 w-5 text-orange-500" />
+            <Flame className="h-5 w-5 text-orange-700 dark:text-orange-400" aria-hidden="true" />
             <h2 className="text-sm font-semibold text-foreground">{trendingHeading}</h2>
           </div>
           <div className="mb-2 flex items-center text-sm text-muted-foreground">

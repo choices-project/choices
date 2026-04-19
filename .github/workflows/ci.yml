@@ -278,6 +278,18 @@ jobs:
     name: Playwright Axe A11y
     runs-on: ubuntu-latest
     needs: quality
+    # Match E2E job: Next.js rate limiting / session paths expect Redis; without it the UI surfaces
+    # error affordances that fail strict axe color-contrast in CI.
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
     env:
       # Safe fallbacks so forked PRs (no secrets) still compile without calling real services
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
