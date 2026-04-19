@@ -10,6 +10,10 @@ jest.mock('@/features/profile/lib/profile-service', () => ({
   updateProfile: jest.fn(),
 }));
 
+jest.mock('@/features/auth/lib/csrf-token', () => ({
+  fetchAuthCsrfToken: jest.fn().mockResolvedValue('test-csrf-token'),
+}));
+
 const createTestProfileStore = () =>
   create<ProfileStore>()(
     devtools(
@@ -136,6 +140,11 @@ describe('profileStore', () => {
       '/api/profile',
       expect.objectContaining({
         method: 'POST',
+        credentials: 'include',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': 'test-csrf-token',
+        }),
         body: JSON.stringify({ preferences: { theme: 'light' } }),
       }),
     );
@@ -164,6 +173,11 @@ describe('profileStore', () => {
       '/api/profile',
       expect.objectContaining({
         method: 'POST',
+        credentials: 'include',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': 'test-csrf-token',
+        }),
         body: JSON.stringify({ preferences: { theme: 'light' } }),
       }),
     );

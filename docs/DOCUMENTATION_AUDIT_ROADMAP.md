@@ -1,6 +1,6 @@
 # Documentation ↔ codebase audit roadmap
 
-_Last updated: April 5, 2026_  
+_Last updated: April 19, 2026_  
 _Audience: new developers and maintainers doing a truth-alignment pass_
 
 This document is the **master checklist** for making every piece of documentation, inline comment, governance rule, and onboarding step **match the actual application** (routes, schema, stores, env, feature flags, security boundaries). It is intentionally detailed so you can execute it in order without guessing what “done” means.
@@ -22,6 +22,23 @@ Use this table before deep-diving §4–§9. “✅” means the **default accep
 | **§11 A1–A6** Agents / MCP | ✅ doc | **A6** and **§3.8** env drift are **rolling** (quarterly or when tooling/env changes). |
 
 **Full topical index:** [`docs/README.md`](README.md) (operations, API, compliance, archive).
+
+### Deploy / CI verification log (April 19, 2026)
+
+**Scope:** CSRF parity rollout on `main` (double-submit on mutating API routes + client `X-CSRF-Token` / `credentials: 'include'` alignment). Ground-truth for “did CI accept it?” is the Actions run linked below—not this paragraph alone.
+
+| Step | Result | Notes |
+|------|--------|--------|
+| **Push** | `457959931` → `main` | Commit message: `feat(security): CSRF parity across API routes and browser callers`. |
+| **GitHub Actions** | [Run 24639702397](https://github.com/choices-project/choices/actions/runs/24639702397) | Workflow **CI/CD Pipeline** for that SHA. |
+| **Code Quality job** | Passed | Includes `npm run verify:docs`, `lint:strict`, `types:ci`, locale + i18n gates, `web` build. |
+| **Contract Tests job** | Passed | `web/tests/contracts/**` (including newer profile/privacy/onboarding suites). |
+| **Playwright Smoke job** | Passed | Harness smoke path stayed green. |
+| **Unit Tests job** | Failed → **fixed in follow-up** | Failure was **test drift**: `profileStore.test.ts` still expected bare `fetch('/api/profile', { method, body })` after the store began sending **`X-CSRF-Token`** and **`credentials: 'include'`**. Resolution: `jest.mock('@/features/auth/lib/csrf-token')` + updated `toHaveBeenCalledWith` expectations (see next commit on `main`). |
+| **Full E2E job** | Failed | Log showed **accessibility-critical** specs (representatives / civics / polls list) plus **`TypeError: fetch failed`** from the dev server—triage as **flake or env**, not attributed to CSRF until reproduced with a narrowed repro. |
+| **Playwright Axe A11y job** | Failed | Separate a11y job; same triage bucket as full E2E. |
+| **Security Scan job** | Failed | **Infrastructure:** `Unable to resolve action aquasecurity/trivy-action@0.24.0` (pin / marketplace availability). **Not** caused by application CSRF edits. |
+| **Vercel production** | Not exercised here | After Vercel finishes deploying `main`, manually smoke **login**, **profile preference save**, **vote**, **contact submit** (if feature on), and **poll close** as cookie + CSRF-sensitive flows. |
 
 ---
 
