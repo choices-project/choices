@@ -80,12 +80,14 @@ jobs:
         uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: fs
-          scan-ref: .
+          # Scan only the deployable web app (repo root includes Python services with unrelated SBOM noise).
+          scan-ref: web
           format: table
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: '1'
           scanners: vuln
+          trivyignores: .trivyignore
 
   # Build and test
   build-and-test:

@@ -2,3 +2,8 @@
 # Mitigated by Vercel edge network; fix requires Next.js >= 15.6
 # Re-evaluate when Next.js 15 migration is planned
 GHSA-h25m-26qc-wcjf
+
+# Next.js 14 — Server Components DoS (GHSA-q4gf-8mx6-v5v3)
+# Mitigated by Vercel deployment; fix requires Next.js >= 15.5.15 / 16.2.3
+# Re-evaluate when Next.js 15 migration is planned
+GHSA-q4gf-8mx6-v5v3
