@@ -12,6 +12,7 @@ import {
   authError,
   parseBody,
 } from '@/lib/api';
+import { shouldBypassAuthRateLimitsInTestModes } from '@/lib/auth/rate-limit-test-bypass'
 import { env } from '@/lib/config/env'
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
@@ -44,12 +45,9 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
     // Rate limiting: 10 login attempts per 15 minutes per IP.
     // To avoid blocking real users while we refine the UX, this is gated behind
     // AUTH_RATE_LIMIT_ENABLED=1 and always disabled in E2E harness mode.
-    const isE2E =
-      env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' ||
-      env.PLAYWRIGHT_USE_MOCKS === '0';
     const isRateLimitEnabled = env.AUTH_RATE_LIMIT_ENABLED === '1';
 
-    if (!isE2E && isRateLimitEnabled) {
+    if (!shouldBypassAuthRateLimitsInTestModes() && isRateLimitEnabled) {
       const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown';
       const userAgent = request.headers.get('user-agent') ?? undefined;
       try {

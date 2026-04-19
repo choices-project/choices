@@ -79,6 +79,39 @@ export function normalizeRequestOrigin(req: NextRequest): string {
 }
 
 /**
+ * Resolve the WebAuthn `expectedOrigin` for SimpleWebAuthn.
+ * Prefer Origin / Referer when they match the allowlist; otherwise derive
+ * `proto + host` from forwarding headers so www vs apex matches the real page.
+ * Returns null when no safe origin can be determined (fail closed).
+ */
+export function resolveExpectedWebauthnOrigin(
+  req: NextRequest,
+  allowedOrigins: readonly string[],
+): string | null {
+  const fromHeader = normalizeRequestOrigin(req);
+  if (fromHeader && allowedOrigins.includes(fromHeader)) {
+    return fromHeader;
+  }
+
+  const hostRaw = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
+  const host = hostRaw.split(',')[0]?.trim() ?? '';
+  if (!host) {
+    return null;
+  }
+
+  const protoRaw = req.headers.get('x-forwarded-proto') ?? 'https';
+  const proto = protoRaw.split(',')[0]?.trim() ?? 'https';
+  const candidate = `${proto}://${host}`.replace(/\/$/, '');
+
+  if (allowedOrigins.includes(candidate)) {
+    return candidate;
+  }
+
+  return null;
+}
+
+
+/**
  * WebAuthn error message mapping
  */
 export const errorMessages = {

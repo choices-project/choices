@@ -15,6 +15,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
 
 import { withErrorHandling, successResponse, authError, forbiddenError, errorResponse, rateLimitError } from '@/lib/api';
+import { shouldBypassAuthRateLimitsInTestModes } from '@/lib/auth/rate-limit-test-bypass';
 import { env } from '@/lib/config/env';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
@@ -36,8 +37,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return forbiddenError('Passkeys disabled on preview');
   }
 
-  const isE2E = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || env.PLAYWRIGHT_USE_MOCKS === '0';
-  if (!isE2E) {
+  if (!shouldBypassAuthRateLimitsInTestModes()) {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
     const result = await apiRateLimiter.checkLimit(ip, '/api/v1/auth/webauthn', WEBAUTHN_RATE_LIMIT);
     if (!result.allowed) {

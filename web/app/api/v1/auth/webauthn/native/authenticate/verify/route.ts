@@ -14,10 +14,12 @@ import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
-import { getRPIDAndOrigins, normalizeRequestOrigin } from '@/features/auth/lib/webauthn/config';
+import { getRPIDAndOrigins, resolveExpectedWebauthnOrigin } from '@/features/auth/lib/webauthn/config';
+
 
 import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse, rateLimitError } from '@/lib/api';
 import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS, WEBAUTHN_CREDENTIAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { shouldBypassAuthRateLimitsInTestModes } from '@/lib/auth/rate-limit-test-bypass';
 import { env } from '@/lib/config/env';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { logger } from '@/lib/utils/logger';
@@ -38,8 +40,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return validationError({ enabled: 'Passkeys disabled on preview' });
     }
 
-    const isE2E = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || env.PLAYWRIGHT_USE_MOCKS === '0';
-    if (!isE2E) {
+    if (!shouldBypassAuthRateLimitsInTestModes()) {
       const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
       const result = await apiRateLimiter.checkLimit(ip, '/api/v1/auth/webauthn', { maxRequests: 30, windowMs: 15 * 60 * 1000 });
       if (!result.allowed) {
@@ -84,24 +85,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return forbiddenError('Invalid relying party');
     }
 
-    // Get current request origin (scheme + host + port); use Origin or parse Referer
-    const currentOrigin = normalizeRequestOrigin(req);
-    if (!currentOrigin) {
-      logger.warn('WebAuthn verify with no Origin/Referer', { challengeId });
-    }
-    // SECURITY: Validate origin against allowed origins
-    if (currentOrigin && !allowedOrigins.includes(currentOrigin)) {
-      logger.warn('WebAuthn authentication attempt from unauthorized origin', {
-        origin: currentOrigin,
-        allowedOrigins,
-        challengeId
-      });
-      return forbiddenError('Unauthorized origin');
-    }
-
-    const expectedOrigin = currentOrigin || allowedOrigins[0];
+    const expectedOrigin = resolveExpectedWebauthnOrigin(req, allowedOrigins);
     if (!expectedOrigin) {
-      logger.warn('WebAuthn auth verify: no origin available', { challengeId });
+      logger.warn('WebAuthn auth verify: could not resolve allowed origin', {
+        challengeId,
+        host: req.headers.get('host'),
+        forwardedHost: req.headers.get('x-forwarded-host'),
+      });
       return forbiddenError('Origin required for verification');
     }
 
@@ -174,11 +164,28 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       );
     }
 
-    // Update counter
-    await supabase
+    const priorCounter = Number(cred.counter ?? 0);
+    const { data: counterUpdateRow, error: counterErr } = await supabase
       .from('webauthn_credentials')
       .update({ counter: newCounter, last_used_at: new Date().toISOString() })
-      .eq('id', cred.id);
+      .eq('id', cred.id)
+      .eq('counter', priorCounter)
+      .select('id')
+      .maybeSingle();
+
+    if (counterErr || !counterUpdateRow) {
+      logger.warn('WebAuthn counter update failed or concurrent sign-in race', {
+        credentialId: cred.id,
+        userId: cred.user_id,
+        priorCounter,
+        newCounter,
+        error: counterErr?.message,
+      });
+      return validationError(
+        { counter: 'Credential update conflict' },
+        'This sign-in conflicted with another request or reused an old prompt. Please try again.',
+      );
+    }
 
     // Mark challenge as used
     await supabase

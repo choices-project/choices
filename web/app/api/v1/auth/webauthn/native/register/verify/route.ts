@@ -13,10 +13,12 @@ import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { getRPIDAndOrigins, normalizeRequestOrigin } from '@/features/auth/lib/webauthn/config';
+import { getRPIDAndOrigins, resolveExpectedWebauthnOrigin } from '@/features/auth/lib/webauthn/config';
+
 
 import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse, rateLimitError } from '@/lib/api';
 import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import { shouldBypassAuthRateLimitsInTestModes } from '@/lib/auth/rate-limit-test-bypass';
 import { env } from '@/lib/config/env';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { normalizeTrustTier } from '@/lib/trust/trust-tiers';
@@ -38,8 +40,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return forbiddenError('Passkeys disabled on preview');
   }
 
-  const isE2E = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || env.PLAYWRIGHT_USE_MOCKS === '0';
-  if (!isE2E) {
+  if (!shouldBypassAuthRateLimitsInTestModes()) {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip') ?? 'unknown';
     const result = await apiRateLimiter.checkLimit(ip, '/api/v1/auth/webauthn', { maxRequests: 30, windowMs: 15 * 60 * 1000 });
     if (!result.allowed) {
@@ -79,24 +80,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       return validationError({ challenge: 'Challenge expired' });
     }
 
-    // Get current request origin (scheme + host + port); use Origin or parse Referer
-    const currentOrigin = normalizeRequestOrigin(req);
-    if (!currentOrigin) {
-      logger.warn('WebAuthn verify with no Origin/Referer', { userId: user.id });
-    }
-    // SECURITY: Validate origin against allowed origins
-    if (currentOrigin && !allowedOrigins.includes(currentOrigin)) {
-      logger.warn('WebAuthn registration attempt from unauthorized origin', {
-        origin: currentOrigin,
-        allowedOrigins,
-        userId: user.id
-      });
-      return forbiddenError('Unauthorized origin');
-    }
-
-    const expectedOrigin = currentOrigin || allowedOrigins[0];
+    const expectedOrigin = resolveExpectedWebauthnOrigin(req, allowedOrigins);
     if (!expectedOrigin) {
-      logger.warn('WebAuthn verify: no origin available', { userId: user.id });
+      logger.warn('WebAuthn registration verify: could not resolve allowed origin', {
+        userId: user.id,
+        host: req.headers.get('host'),
+        forwardedHost: req.headers.get('x-forwarded-host'),
+      });
       return forbiddenError('Origin required for verification');
     }
 
