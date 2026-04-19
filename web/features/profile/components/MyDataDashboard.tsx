@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
 import { useProfileDelete, useProfileExport } from '@/features/profile/hooks/use-profile';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -240,8 +241,14 @@ export default function MyDataDashboard({
     setDeleteSuccess(null);
 
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch(`/api/profile/data?type=${dataType}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'X-CSRF-Token': csrf },
       });
 
       if (!response.ok) {

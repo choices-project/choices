@@ -7,6 +7,8 @@
 
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '../../../../../lib/utils/logger';
 
 import type {
@@ -181,6 +183,17 @@ const extractApiResult = <T>(payload: unknown): { data?: T; error?: string } => 
   return { data: payload as T };
 };
 
+async function webAuthnPostHeaders(fetcher: typeof fetch): Promise<Record<string, string>> {
+  const token = await fetchAuthCsrfToken(fetcher);
+  if (!token) {
+    throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+  }
+  return {
+    'Content-Type': 'application/json',
+    'X-CSRF-Token': token,
+  };
+}
+
 /**
  * Create public key credential for registration
  */
@@ -281,11 +294,10 @@ export async function beginRegister(
   options?: BeginRegisterOptions
 ): Promise<WebAuthnResult> {
   try {
+    const postHeaders = await webAuthnPostHeaders(fetcher);
     const rawOptions = await fetcher('/api/v1/auth/webauthn/native/register/options', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: postHeaders,
       credentials: 'include',
       body: JSON.stringify({
         username: options?.username,
@@ -294,13 +306,18 @@ export async function beginRegister(
     }).then(r => r.json());
 
     const opts = extractApiData<any>(rawOptions);
+    const challengeId = opts?.challengeId as string | undefined;
+    if (!challengeId) {
+      throw new Error('Missing registration challenge');
+    }
+    const { challengeId: _omitChallenge, ...creationOptions } = opts;
     const registrationOptions = {
-      ...opts,
+      ...creationOptions,
       authenticatorSelection: {
-        ...opts.authenticatorSelection,
+        ...creationOptions.authenticatorSelection,
         authenticatorAttachment:
-          options?.authenticatorAttachment ?? opts.authenticatorSelection?.authenticatorAttachment,
-        userVerification: options?.userVerification ?? opts.authenticatorSelection?.userVerification,
+          options?.authenticatorAttachment ?? creationOptions.authenticatorSelection?.authenticatorAttachment,
+        userVerification: options?.userVerification ?? creationOptions.authenticatorSelection?.userVerification,
       },
     };
 
@@ -308,11 +325,9 @@ export async function beginRegister(
 
     const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/register/verify', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: postHeaders,
       credentials: 'include',
-      body: JSON.stringify(credential),
+      body: JSON.stringify({ ...credential, challengeId }),
     }).then(r => r.json());
 
     const verifyResult = extractApiResult<any>(verifyPayload);
@@ -357,11 +372,10 @@ export async function beginAuthenticate(
   options?: BeginAuthenticateOptions
 ): Promise<WebAuthnResult> {
   try {
+    const postHeaders = await webAuthnPostHeaders(fetcher);
     const rawOptions = await fetcher('/api/v1/auth/webauthn/native/authenticate/options', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: postHeaders,
       credentials: 'include',
       body: JSON.stringify({
         userVerification: options?.userVerification,
@@ -384,9 +398,7 @@ export async function beginAuthenticate(
 
     const verifyPayload = await fetcher('/api/v1/auth/webauthn/native/authenticate/verify', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: postHeaders,
       credentials: 'include',
       body: JSON.stringify({ ...assertion, challengeId }),
     }).then(r => r.json());

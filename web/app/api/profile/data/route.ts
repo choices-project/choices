@@ -11,6 +11,10 @@
  * Status: ✅ ACTIVE - PRODUCTION READY
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
@@ -23,6 +27,10 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabase = await getSupabaseServerClient();
   
   if (!supabase) {

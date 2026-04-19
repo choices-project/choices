@@ -8,6 +8,8 @@
  * Status: ✅ CONSOLIDATED
  */
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import logger from '@/lib/utils/logger';
 
 import {
@@ -37,6 +39,21 @@ type ProfileApiEnvelope = {
   profile?: unknown;
   error?: unknown;
 };
+
+async function csrfHeaders(jsonContentType: boolean): Promise<
+  | { ok: true; headers: Record<string, string> }
+  | { ok: false; error: string }
+> {
+  const token = await fetchAuthCsrfToken();
+  if (!token) {
+    return { ok: false, error: 'Unable to obtain CSRF token. Please refresh and try again.' };
+  }
+  const headers: Record<string, string> = { 'X-CSRF-Token': token };
+  if (jsonContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+  return { ok: true, headers };
+}
 
 type ProfileApiRecord = Record<string, unknown>;
 
@@ -495,12 +512,15 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
     // Transform data for API
     const apiData = transformProfileUpdateToApi(updates);
 
+    const hdr = await csrfHeaders(true);
+    if (!hdr.ok) {
+      return { success: false, error: hdr.error };
+    }
+
     const response = await fetch('/api/profile', {
       method: 'PATCH',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: hdr.headers,
       body: JSON.stringify(apiData),
     });
 
@@ -556,9 +576,18 @@ export async function updateProfileAvatar(file: File): Promise<AvatarUploadResul
     const formData = new FormData();
     formData.append('avatar', file);
 
+    const hdr = await csrfHeaders(false);
+    if (!hdr.ok) {
+      return {
+        success: false,
+        error: hdr.error,
+      };
+    }
+
     const response = await fetch('/api/profile?action=avatar', {
       method: 'POST',
       credentials: 'include',
+      headers: hdr.headers,
       body: formData,
     });
 
@@ -595,12 +624,15 @@ export async function updateProfileAvatar(file: File): Promise<AvatarUploadResul
  */
 export async function exportUserData(options?: ExportOptions): Promise<ProfileExportData> {
   try {
+    const hdr = await csrfHeaders(true);
+    if (!hdr.ok) {
+      throw new Error(hdr.error);
+    }
+
     const response = await fetch('/api/profile/export', {
       method: 'POST',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: hdr.headers,
       body: JSON.stringify(options ?? {}),
     });
 
@@ -628,12 +660,15 @@ export async function exportUserData(options?: ExportOptions): Promise<ProfileEx
  */
 export async function deleteProfile(): Promise<ProfileActionResult> {
   try {
+    const hdr = await csrfHeaders(true);
+    if (!hdr.ok) {
+      return { success: false, error: hdr.error };
+    }
+
     const response = await fetch('/api/profile/delete', {
       method: 'DELETE',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: hdr.headers,
     });
 
     if (!response.ok) {

@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -91,6 +95,10 @@ function validateRequestSize(request: NextRequest): { valid: boolean; reason?: s
 }
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || '127.0.0.1';

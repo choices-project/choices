@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
@@ -113,8 +115,16 @@ export function CivicActionList({
     } else {
       // Default sign handler
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch(`/api/civic-actions/${actionId}/sign`, {
           method: 'POST',
+          credentials: 'include',
+          headers: {
+            'X-CSRF-Token': csrf,
+          },
         });
 
         if (!response.ok) {

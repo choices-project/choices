@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -23,6 +27,10 @@ const AppealSchema = z.object({
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabase = await getSupabaseServerClient();
   const { data: { user }, error: authErr } = await supabase.auth.getUser();
   if (authErr || !user) {

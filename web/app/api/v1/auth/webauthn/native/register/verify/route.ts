@@ -11,10 +11,13 @@
 import { verifyRegistrationResponse } from '@simplewebauthn/server';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, resolveExpectedWebauthnOrigin } from '@/features/auth/lib/webauthn/config';
-
 
 import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse, rateLimitError } from '@/lib/api';
 import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
@@ -33,6 +36,10 @@ export const dynamic = 'force-dynamic';
 export const POST = withErrorHandling(async (req: NextRequest) => {
   if (process.env.NODE_ENV === 'production' && !env.VERCEL) {
     return errorResponse('WebAuthn routes disabled during build', 503);
+  }
+
+  if (!(await validateCsrfProtection(req))) {
+    return createCsrfErrorResponse();
   }
 
   const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
@@ -54,16 +61,22 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return authError('Authentication required');
   }
 
-    const body = await req.json();
+    const body = (await req.json()) as Record<string, unknown>;
+    const challengeId = typeof body.challengeId === 'string' ? body.challengeId : undefined;
+    if (!challengeId) {
+      return validationError({ challengeId: 'Challenge ID is required' }, 'Session expired. Please try again.');
+    }
+
+    const { challengeId: _omit, ...registrationResponse } = body;
 
     // Get challenge from database
     const { data: chalRows } = await supabase
       .from('webauthn_challenges')
       .select(WEBAUTHN_CHALLENGE_SELECT_COLUMNS)
+      .eq('id', challengeId)
       .eq('user_id', user.id)
       .eq('kind', 'registration')
       .is('used_at', null)
-      .order('created_at', { ascending: false })
       .limit(1);
 
     if (!chalRows?.length) {
@@ -78,6 +91,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Check challenge expiry
     if (new Date(chal.expires_at).getTime() < Date.now()) {
       return validationError({ challenge: 'Challenge expired' });
+    }
+    if (chal.rp_id && chal.rp_id !== rpID) {
+      return forbiddenError('Invalid relying party');
     }
 
     const expectedOrigin = resolveExpectedWebauthnOrigin(req, allowedOrigins);
@@ -94,7 +110,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     let registrationInfo: Awaited<ReturnType<typeof verifyRegistrationResponse>>['registrationInfo'];
     try {
       const result = await verifyRegistrationResponse({
-        response: body,
+        response: registrationResponse as unknown as Parameters<
+          typeof verifyRegistrationResponse
+        >[0]['response'],
         expectedChallenge: chal.challenge,
         expectedOrigin,
         expectedRPID: rpID,
@@ -119,7 +137,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     const credentialId = registrationInfo.credential.id;
     const publicKey = isoBase64URL.fromBuffer(registrationInfo.credential.publicKey);
-    const transports = Array.isArray(body?.response?.transports) ? body.response.transports : undefined;
+    const regPayload = registrationResponse as { response?: { transports?: unknown } };
+    const transports = Array.isArray(regPayload.response?.transports)
+      ? (regPayload.response.transports as string[])
+      : undefined;
     const metadata = stripUndefinedDeep({
       transports,
       deviceType: registrationInfo.credentialDeviceType,

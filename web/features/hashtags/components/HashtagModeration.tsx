@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -307,7 +309,9 @@ export function ModerationQueue({
       if (status) params.append('status', status);
       params.append('limit', limit.toString());
 
-      const response = await fetch(`/api/hashtags?action=moderation-queue&${params}`);
+      const response = await fetch(`/api/hashtags?action=moderation-queue&${params}`, {
+        credentials: 'include',
+      });
       const result = await response.json();
 
       if (result.success) {
@@ -329,9 +333,18 @@ export function ModerationQueue({
 
   const handleModerationAction = async (hashtagId: string, action: string) => {
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        setError('Unable to obtain CSRF token. Please refresh and try again.');
+        return;
+      }
       const response = await fetch('/api/hashtags?action=moderate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         body: JSON.stringify({
           hashtagId,
           status: action,
@@ -487,7 +500,9 @@ export default function HashtagModerationView({
     setError(null);
 
     try {
-      const response = await fetch(`/api/hashtags?action=moderation&hashtagId=${hashtagId}`);
+      const response = await fetch(`/api/hashtags?action=moderation&hashtagId=${hashtagId}`, {
+        credentials: 'include',
+      });
       const result = await response.json();
 
       if (result.success) {
@@ -584,9 +599,18 @@ export default function HashtagModerationView({
 
   async function handleModerationAction(status: string) {
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        setError('Unable to obtain CSRF token. Please refresh and try again.');
+        return;
+      }
       const response = await fetch('/api/hashtags?action=moderate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         body: JSON.stringify({
           hashtagId,
           status,

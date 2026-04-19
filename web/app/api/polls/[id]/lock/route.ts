@@ -1,3 +1,7 @@
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, validationError, notFoundError, forbiddenError, errorResponse } from '@/lib/api';
@@ -14,6 +18,10 @@ export const POST = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { id } = await params;
   const pollId = id;
 
@@ -106,6 +114,10 @@ export const DELETE = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { id } = await params;
   const pollId = id;
 

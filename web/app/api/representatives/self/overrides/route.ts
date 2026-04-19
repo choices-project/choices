@@ -1,5 +1,9 @@
 // Server route handler
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, validationError, errorResponse, forbiddenError, methodNotAllowed } from '@/lib/api';
@@ -21,6 +25,10 @@ const isValidUrl = (u: string) => {
 };
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const rate = await rateLimitMiddleware(request, createRateLimiter({
     interval: 60 * 60 * 1000,
     uniqueTokenPerInterval: 20,

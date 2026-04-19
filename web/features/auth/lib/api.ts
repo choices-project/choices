@@ -6,6 +6,7 @@
 
 // Use API routes instead of importing server actions to satisfy boundaries rules
 
+import { fetchAuthCsrfToken } from './csrf-token';
 import {
   beginRegister,
   beginAuthenticate,
@@ -27,30 +28,13 @@ export type RegisterPayload = {
   password: string;
 };
 
-async function getCsrfToken(): Promise<string | null> {
-  try {
-    const response = await fetch('/api/auth/csrf', {
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json().catch(() => null);
-    return data?.data?.csrfToken ?? null;
-  } catch {
-    return null;
-  }
-}
-
 function readApiErrorMessage(errorBody: Record<string, unknown>, fallback: string): string {
   const fromApi = errorBody.error ?? errorBody.message;
   return typeof fromApi === 'string' && fromApi.length > 0 ? fromApi : fallback;
 }
 
 export async function loginWithPassword(payload: LoginPayload) {
-  const csrfToken = await getCsrfToken();
+  const csrfToken = await fetchAuthCsrfToken();
   if (!csrfToken) {
     const error = new Error('Unable to obtain CSRF token. Please refresh and try again.');
     (error as Error & { status?: number }).status = 403;
@@ -80,7 +64,7 @@ export async function loginWithPassword(payload: LoginPayload) {
 }
 
 export async function registerUser(payload: RegisterPayload) {
-  const csrfToken = await getCsrfToken();
+  const csrfToken = await fetchAuthCsrfToken();
   if (!csrfToken) {
     const error = new Error('Unable to obtain CSRF token. Please refresh and try again.');
     (error as any).status = 403;

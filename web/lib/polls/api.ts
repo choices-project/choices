@@ -1,3 +1,5 @@
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '@/lib/utils/logger';
 
 import type { PollCreatePayload } from './wizard/submission';
@@ -171,12 +173,18 @@ export type PollUndoVoteRequestSuccess = {
 
 export type PollUndoVoteRequestResult = PollUndoVoteRequestSuccess | PollActionErrorResult;
 
-const createJsonRequestInit = (body: unknown, signal?: AbortSignal): RequestInit => {
+const createJsonRequestInit = async (body: unknown, signal?: AbortSignal): Promise<RequestInit> => {
+  const csrf = await fetchAuthCsrfToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (csrf) {
+    headers['X-CSRF-Token'] = csrf;
+  }
+
   const requestInit: RequestInit = {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     cache: 'no-store',
     credentials: 'include',
     body: JSON.stringify(body),
@@ -226,7 +234,7 @@ export async function createPollRequest(
   payload: PollCreatePayload,
   signal?: AbortSignal,
 ): Promise<PollCreateRequestResult> {
-  const requestInit = createJsonRequestInit(payload, signal);
+  const requestInit = await createJsonRequestInit(payload, signal);
   const startedAt = typeof performance !== 'undefined' ? performance.now() : undefined;
 
   let response: Response;
@@ -339,7 +347,7 @@ export async function voteOnPollRequest(
   optionId: string,
   signal?: AbortSignal,
 ): Promise<PollVoteRequestResult> {
-  const requestInit = createJsonRequestInit({ pollId, optionId }, signal);
+  const requestInit = await createJsonRequestInit({ pollId, optionId }, signal);
   const startedAt = typeof performance !== 'undefined' ? performance.now() : undefined;
 
   let response: Response;
@@ -428,7 +436,7 @@ export async function voteOnPollRequest(
 }
 
 export async function undoVoteRequest(pollId: string, signal?: AbortSignal): Promise<PollUndoVoteRequestResult> {
-  const requestInit = createJsonRequestInit({ pollId }, signal);
+  const requestInit = await createJsonRequestInit({ pollId }, signal);
   const startedAt = typeof performance !== 'undefined' ? performance.now() : undefined;
 
   let response: Response;

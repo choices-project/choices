@@ -13,6 +13,8 @@
 import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { env } from '@/lib/config/env';
 import { useUser } from '@/lib/stores';
 import { usePWAPreferences, usePWAActions } from '@/lib/stores/pwaStore';
@@ -178,10 +180,18 @@ export default function NotificationPreferences({ className = '' }: Notification
       // Convert subscription to JSON
       const subscriptionJson = subscription.toJSON();
 
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       // Send subscription to server
       const response = await fetch('/api/pwa/notifications/subscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         body: JSON.stringify({
           subscription: subscriptionJson,
           userId: user.id,
@@ -234,11 +244,19 @@ export default function NotificationPreferences({ className = '' }: Notification
         await subscription.unsubscribe();
 
         // Remove from server using query parameters
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const url = new URL('/api/pwa/notifications/subscribe', window.location.origin);
         url.searchParams.set('userId', user.id);
 
         const response = await fetch(url.toString(), {
           method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'X-CSRF-Token': csrf,
+          },
         });
 
         if (!response.ok) {
@@ -269,9 +287,19 @@ export default function NotificationPreferences({ className = '' }: Notification
     // If subscribed, update preferences on server
     if (isSubscribed && user?.id) {
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          setLocalPreferences(localPreferences);
+          setError('Unable to obtain CSRF token. Please refresh and try again.');
+          return;
+        }
         const response = await fetch('/api/pwa/notifications/subscribe', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
+          },
           body: JSON.stringify({
             userId: user.id,
             preferences: newPreferences,

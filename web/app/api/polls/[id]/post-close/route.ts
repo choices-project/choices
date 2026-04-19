@@ -8,6 +8,10 @@
  * Updated: September 15, 2025
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError, notFoundError, forbiddenError } from '@/lib/api';
@@ -20,9 +24,13 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { id } = await params;
   const pollId = id;
 
@@ -101,9 +109,13 @@ export const POST = withErrorHandling(async (
 });
 
 export const DELETE = withErrorHandling(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { id } = await params;
   const pollId = id;
 

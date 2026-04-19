@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { useI18n } from '@/hooks/useI18n';
 
 type FlashTone = 'info' | 'success' | 'warning' | 'error';
@@ -482,9 +484,16 @@ function SuggestCorrectionSection({ candidateName, candidateSlug, t }: SuggestCo
         },
       };
 
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error(t('candidates.profile.correction.error'));
+      }
       const response = await fetch('/api/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         credentials: 'include',
         body: JSON.stringify(payload),
       });

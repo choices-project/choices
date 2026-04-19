@@ -9,6 +9,10 @@
 
 import { z } from 'zod';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -166,6 +170,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
  * POST /api/civic-actions - Create a new civic action
  */
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   if (!isFeatureEnabled('CIVIC_ENGAGEMENT_V2')) {
     return errorResponse('Civic Engagement V2 feature is disabled', 403);
   }

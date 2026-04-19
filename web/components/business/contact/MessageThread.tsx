@@ -189,7 +189,9 @@ export function MessageThread({
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/contact/messages?threadId=${threadId}`);
+      const response = await fetch(`/api/contact/messages?threadId=${threadId}`, {
+        credentials: 'include',
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to load messages: ${response.statusText}`);

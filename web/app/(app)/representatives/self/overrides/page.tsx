@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -33,9 +35,17 @@ export default function RepresentativeOverridesPage() {
     setSaving(true);
     setMessage(null);
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        setMessage('Unable to obtain CSRF token. Please refresh and try again.');
+        return;
+      }
       const res = await fetch('/api/representatives/self/overrides', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         credentials: 'include',
         body: JSON.stringify({
           representativeId: Number(representativeId),

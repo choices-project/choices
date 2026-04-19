@@ -3,6 +3,9 @@ import { env } from '@/lib/config/env';
 /**
  * Skip Upstash-style HTTP rate limits only in explicit test modes.
  * Production must never set PLAYWRIGHT_USE_MOCKS=0 to mean "tests" — unset is not a test signal.
+ *
+ * CSRF validation uses a different bypass (`validateCsrfProtection` in `app/api/auth/_shared/csrf.ts`):
+ * harness/mocks env flags plus `x-e2e-bypass` / `NODE_ENV === 'test'` / `E2E=1`. Keep rate-limit skips here only.
  */
 export function shouldBypassAuthRateLimitsInTestModes(): boolean {
   return (

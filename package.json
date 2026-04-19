@@ -22,6 +22,7 @@
     "ci:install": "npm ci --ignore-scripts",
     "ci:verify": "npm audit --audit-level=moderate",
     "governance:check": "node scripts/check-governance.js",
+    "quality:weekly": "node scripts/quality-weekly.mjs",
     "verify:docs": "node scripts/verify-docs.mjs",
     "verify:doc-links": "node scripts/verify-doc-links.mjs",
     "verify:store-docs": "node scripts/verify-store-docs.mjs",

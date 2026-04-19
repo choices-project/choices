@@ -7,6 +7,8 @@
 
 import { useState, useCallback } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import {
   createInitialPollWizardData,
   POLL_WIZARD_TOTAL_STEPS,
@@ -205,11 +207,18 @@ export function usePollWizard() {
         tags: wizardState.data.tags
       };
 
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
+
       // Submit to API
       const response = await fetch('/api/polls', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         body: JSON.stringify(pollData)
       });

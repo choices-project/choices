@@ -7,6 +7,10 @@
  * Status: ✅ ACTIVE
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -132,6 +136,10 @@ export const PATCH = withErrorHandling(async (
     return forbiddenError('Contact Information System is currently disabled');
   }
 
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { id } = await params;
   const contactId = parseInt(id, 10);
 
@@ -247,12 +255,16 @@ export const PATCH = withErrorHandling(async (
 // ============================================================================
 
 export const DELETE = withErrorHandling(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   // Check feature flag
   if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
     return forbiddenError('Contact Information System is currently disabled');
+  }
+
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
   }
 
   const { id } = await params;

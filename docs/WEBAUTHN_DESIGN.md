@@ -1,6 +1,6 @@
 # WebAuthn (Passkeys) — Design & Implementation
 
-_Last updated: April 4, 2026_
+_Last updated: April 19, 2026_
 
 **Purpose:** Document WebAuthn architecture, security model, and implementation details. Passkeys provide strong proof-of-personhood (biometric/device-bound) and are critical for bot resistance and user experience.
 
@@ -20,8 +20,8 @@ Supabase Auth does **not** provide native passkeys. We use:
 
 | Flow | Steps |
 |------|-------|
-| **Register** | User logged in → POST `/register/options` → browser `create()` → POST `/register/verify` → credential stored |
-| **Authenticate** | POST `/authenticate/options` → browser `get()` → POST `/authenticate/verify` → session via magic link → cookies set |
+| **Register** | User logged in → POST `/register/options` (returns `challengeId` + WebAuthn options) → browser `create()` → POST `/register/verify` with `{ ...credential, challengeId }` → credential stored; challenge row consumed by id (avoids multi-tab “latest challenge” races) |
+| **Authenticate** | POST `/authenticate/options` (returns `challengeId` + options) → browser `get()` → POST `/authenticate/verify` with assertion + `challengeId` → session via magic link → cookies set |
 
 ---
 
@@ -45,6 +45,7 @@ Passkeys are the strongest available proof-of-personhood:
 | Credential cloning | Counter stored; decrease = rejection |
 | Preview abuse | Passkeys disabled on Vercel preview URLs |
 | Build-time execution | Routes return 503 when `NODE_ENV=production` and `!VERCEL` |
+| CSRF | Native WebAuthn **POST** routes and credential **PATCH/DELETE** require `X-CSRF-Token` aligned with `/api/auth/csrf` cookie (see [SECURITY.md](SECURITY.md)); Jest/E2E bypass flags match `validateCsrfProtection` |
 
 ---
 
@@ -86,18 +87,30 @@ Passkeys are the strongest available proof-of-personhood:
 
 **File:** `web/features/auth/components/PasskeyControls.tsx`
 
+### 4. CSRF + stable registration `challengeId` (April 2026)
+
+**Problem:** WebAuthn POSTs lacked CSRF parity with password auth; registration verify picked the “latest” challenge row, which is wrong when multiple tabs or retries create several rows.
+
+**Fix:** `validateCsrfProtection` on all native WebAuthn POSTs and on credential **PATCH/DELETE**; registration **options** returns **`challengeId`** from `webauthn_challenges.id` and **verify** requires that id; clients send `X-CSRF-Token` from `/api/auth/csrf` (`fetchAuthCsrfToken` / `webAuthnPostHeaders` in `web/features/auth/lib/webauthn/native/client.ts`).
+
+**Files:** `web/app/api/v1/auth/webauthn/**`, `web/features/auth/lib/webauthn/native/client.ts`, `web/features/auth/lib/csrf-token.ts`, passkey UI components under `web/features/auth/components/`.
+
 ---
 
 ## API Routes
 
 | Route | Method | Auth | Purpose |
 |-------|--------|------|---------|
-| `/api/v1/auth/webauthn/native/register/options` | POST | Required | Get registration options |
-| `/api/v1/auth/webauthn/native/register/verify` | POST | Required | Verify and store credential |
-| `/api/v1/auth/webauthn/native/authenticate/options` | POST | None | Get auth options (discoverable) |
-| `/api/v1/auth/webauthn/native/authenticate/verify` | POST | None | Verify assertion, create session |
-| `/api/v1/auth/webauthn/credentials` | GET | Required | List user’s credentials |
-| `/api/v1/auth/webauthn/credentials/[id]` | DELETE | Required | Remove credential |
+| `/api/v1/auth/webauthn/native/register/options` | POST | Session | Registration options + persisted **`challengeId`** |
+| `/api/v1/auth/webauthn/native/register/verify` | POST | Session | Verify attestation; body includes WebAuthn credential JSON + **`challengeId`** |
+| `/api/v1/auth/webauthn/native/authenticate/options` | POST | None | Discoverable auth options + **`challengeId`** |
+| `/api/v1/auth/webauthn/native/authenticate/verify` | POST | None | Verify assertion; body includes assertion + **`challengeId`**; sets session cookies |
+| `/api/v1/auth/webauthn/credentials` | GET | Session | List user’s credentials |
+| `/api/v1/auth/webauthn/credentials/[id]` | PATCH | Session | Update **`device_label`** (validated: string or null, max 120 chars after trim) |
+| `/api/v1/auth/webauthn/credentials/[id]` | DELETE | Session | Remove credential |
+| `/api/v1/auth/webauthn/trust-score` | GET | Session | Trust score payload for UI |
+
+All **POST/PATCH/DELETE** rows above expect CSRF on the real site (see [SECURITY.md](SECURITY.md)).
 
 ---
 
@@ -114,7 +127,7 @@ Passkeys are the strongest available proof-of-personhood:
 
 **E2E / harness**
 
-- When **`NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`**, **middleware** relaxes auth checks for automated tests (see **`web/middleware.ts`** and **`AGENTS.md`**). Native WebAuthn **`authenticate/verify`** **skips `apiRateLimiter`** when `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` **or** **`PLAYWRIGHT_USE_MOCKS`** is literally **`'0'`** (see `web/app/api/v1/auth/webauthn/native/authenticate/verify/route.ts`).
+- When **`NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`** or **`PLAYWRIGHT_USE_MOCKS=1`**, **middleware** and **`shouldBypassAuthRateLimitsInTestModes()`** relax auth/rate-limit behavior for automated tests (see **`web/middleware.ts`**, **`web/lib/auth/rate-limit-test-bypass.ts`**, and **`AGENTS.md`**). Native WebAuthn routes **skip `apiRateLimiter`** in those modes only—**not** when `PLAYWRIGHT_USE_MOCKS` is unset or any other value.
 
 ---
 
@@ -203,7 +216,7 @@ Error and success regions use ARIA for screen readers:
 
 ### Implemented (continued)
 
-- **Rate limiting** — Native WebAuthn routes use **`apiRateLimiter`** (e.g. **30 / 15 min** per IP on **authenticate/verify**; others may differ—grep `@/lib/rate-limiting` per file). **Bypass** conditions for verify are documented above under **Sessions, cookies, and logout**.
+- **Rate limiting** — Native WebAuthn routes use **`apiRateLimiter`** (e.g. **30 / 15 min** per IP on the shared WebAuthn limiter key; grep `apiRateLimiter` under `web/app/api/v1/auth/webauthn/`). **Bypass** uses **`shouldBypassAuthRateLimitsInTestModes()`** only (`NEXT_PUBLIC_ENABLE_E2E_HARNESS=1` or `PLAYWRIGHT_USE_MOCKS=1`); see **`web/lib/auth/rate-limit-test-bypass.ts`** (distinct from CSRF test bypass in `csrf.ts`).
 
 ### Recommended
 

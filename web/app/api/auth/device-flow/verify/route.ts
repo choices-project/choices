@@ -7,6 +7,10 @@
  * This is called when the user enters their user code on the verification page.
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -37,6 +41,10 @@ type VerifyResponse = {
 };
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   // Rate limiting: 10 verification attempts per 15 minutes per IP
   const ip = request.headers.get('x-forwarded-for') ?? 
              request.headers.get('x-real-ip') ?? 

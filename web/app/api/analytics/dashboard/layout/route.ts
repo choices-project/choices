@@ -9,6 +9,10 @@
  * Status: PRODUCTION
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { applyAnalyticsCacheHeaders } from '@/lib/analytics/cache-headers';
@@ -62,6 +66,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const layout = await request.json();
 
   if (!layout.userId) {
@@ -116,6 +124,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 });
 
 export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
 

@@ -7,6 +7,10 @@
 
 import { generateAuthenticationOptions } from '@simplewebauthn/server';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
@@ -27,6 +31,10 @@ export const dynamic = 'force-dynamic';
 export const POST = withErrorHandling(async (req: NextRequest) => {
   if (process.env.NODE_ENV === 'production' && !env.VERCEL) {
     return errorResponse('WebAuthn routes disabled during build', 503);
+  }
+
+  if (!(await validateCsrfProtection(req))) {
+    return createCsrfErrorResponse();
   }
 
   if (!shouldBypassAuthRateLimitsInTestModes()) {

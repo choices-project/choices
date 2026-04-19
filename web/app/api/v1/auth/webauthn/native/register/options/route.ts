@@ -10,6 +10,10 @@
 
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
@@ -30,6 +34,10 @@ export const dynamic = 'force-dynamic';
 export const POST = withErrorHandling(async (req: NextRequest) => {
   if (process.env.NODE_ENV === 'production' && !env.VERCEL) {
     return errorResponse('WebAuthn routes disabled during build', 503);
+  }
+
+  if (!(await validateCsrfProtection(req))) {
+    return createCsrfErrorResponse();
   }
 
   const { enabled, rpID } = getRPIDAndOrigins(req);
@@ -88,21 +96,30 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS).toISOString();
     const challengeBase64Url = options.challenge;
 
-    const { error: chalErr } = await supabase.from('webauthn_challenges').insert(stripUndefinedDeep({
-      user_id: user.id,
-      rp_id: rpID,
-      kind: 'registration',
-      challenge: challengeBase64Url,
-      expires_at: expiresAt,
-    }));
+    const { data: challengeRow, error: chalErr } = await supabase
+      .from('webauthn_challenges')
+      .insert(
+        stripUndefinedDeep({
+          user_id: user.id,
+          rp_id: rpID,
+          kind: 'registration',
+          challenge: challengeBase64Url,
+          expires_at: expiresAt,
+        }),
+      )
+      .select('id')
+      .single();
 
-    if (chalErr) {
+    if (chalErr || !challengeRow?.id) {
       logger.error('Challenge persist failed', { error: chalErr });
       return errorResponse('Challenge persist failed', 500, undefined, 'WEBAUTHN_CHALLENGE_PERSIST_FAILED');
     }
 
   logger.info('WebAuthn registration options generated', { userId: user.id });
 
-  return successResponse(options);
+  return successResponse({
+    challengeId: challengeRow.id,
+    ...options,
+  });
 });
 

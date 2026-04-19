@@ -1,4 +1,8 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, errorResponse } from '@/lib/api';
 import { logger } from '@/lib/utils/logger'
@@ -6,6 +10,10 @@ import { logger } from '@/lib/utils/logger'
 import type { NextRequest } from 'next/server';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabase = getSupabaseServerClient()
   const supabaseClient = await supabase
 

@@ -4,6 +4,8 @@
  * This module provides PWA-specific utility functions.
  */
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -174,12 +176,19 @@ export class PWAManager {
           userVisibleOnly: true,
           applicationServerKey
         });
-        
-        // Send subscription to existing server endpoint
+
+        const csrf = await fetchAuthCsrfToken();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (csrf) {
+          headers['X-CSRF-Token'] = csrf;
+        }
+
+        // Send subscription to existing server endpoint (userId should be supplied by callers when available)
         await fetch('/api/pwa/notifications/subscribe', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(subscription)
+          credentials: 'include',
+          headers,
+          body: JSON.stringify(subscription.toJSON()),
         });
         
         logger.info('Push notifications enabled:', { endpoint: subscription.endpoint });

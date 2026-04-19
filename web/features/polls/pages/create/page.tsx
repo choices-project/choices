@@ -15,6 +15,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
 import { useRecordPollEvent, type PollEventOptions } from '@/features/polls/hooks/usePollAnalytics';
 // Vote Milestones - Commented out per user request
 // import { usePollMilestoneNotifications, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
@@ -335,8 +336,16 @@ export default function CreatePollPage() {
 
     setIsDeletingPoll(true);
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error(safeT('polls.create.share.dialog.delete.error.message', 'Failed to delete poll'));
+      }
       const response = await fetch(`/api/polls/${shareInfo.pollId}`, {
         method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': csrf,
+        },
       });
 
       if (!response.ok) {

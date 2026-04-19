@@ -3,6 +3,8 @@
 import { AlertTriangle } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,10 +55,17 @@ export default function ReportModal({
     setError(null);
 
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch('/api/moderation/reports', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         body: JSON.stringify({
           target_type: targetType,
           target_id: targetId,

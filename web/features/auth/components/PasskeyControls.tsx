@@ -12,6 +12,7 @@ import { useI18n } from '@/hooks/useI18n';
 
 import PasskeyLogin from './PasskeyLogin';
 import PasskeyRegister from './PasskeyRegister';
+import { fetchAuthCsrfToken } from '../lib/csrf-token';
 import {
   useInitializeBiometricState,
   useUserActions,
@@ -137,8 +138,14 @@ export function PasskeyControls({ onLoginSuccess }: PasskeyControlsProps) {
     async (id: string) => {
       setRemovingId(id);
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          setCredentialsError('Unable to obtain CSRF token. Please refresh and try again.');
+          return;
+        }
         const res = await fetch(`/api/v1/auth/webauthn/credentials/${id}`, {
           method: 'DELETE',
+          headers: { 'X-CSRF-Token': csrf },
           credentials: 'include',
         });
         if (!res.ok) {

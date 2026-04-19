@@ -65,7 +65,9 @@ export default function ContactHistoryPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/contact/threads');
+      const response = await fetch('/api/contact/threads', {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         if (response.status === 401) {

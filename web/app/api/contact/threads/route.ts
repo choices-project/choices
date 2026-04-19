@@ -8,6 +8,10 @@
  * Status: ✅ IMPLEMENTATION READY
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -176,6 +180,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 export const POST = withErrorHandling(async (request: NextRequest) => {
     if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
       return forbiddenError('Contact Information System is currently disabled');
+    }
+
+    if (!(await validateCsrfProtection(request))) {
+      return createCsrfErrorResponse();
     }
 
     // Get Supabase client
@@ -369,6 +377,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 export const PUT = withErrorHandling(async (request: NextRequest) => {
   if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
     return forbiddenError('Contact Information System is currently disabled');
+  }
+
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
   }
 
   const supabase = await getSupabaseServerClient();

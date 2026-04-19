@@ -1,3 +1,7 @@
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
@@ -70,6 +74,10 @@ export const GET = withErrorHandling(async (): Promise<any> => {
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabase = getSupabaseServerClient()
 
   if (!supabase) {

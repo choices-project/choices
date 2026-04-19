@@ -1,4 +1,8 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger'
@@ -14,7 +18,11 @@ type CleanupWarning = {
   message: string;
 };
 
-export const DELETE = withErrorHandling(async (_request: NextRequest) => {
+export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   // Get Supabase client
   const supabase = await getSupabaseServerClient()
   

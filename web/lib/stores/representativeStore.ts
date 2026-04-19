@@ -16,6 +16,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { REPRESENTATIVE_CONSTANTS } from '@/types/representative';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
 import { getRepresentativeDivisionIds } from '@/features/civics/utils/divisions';
 
 import { representativeService } from '@/lib/services/representative-service';
@@ -376,8 +377,16 @@ export const createRepresentativeActions = (
       clearError();
 
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch(`/api/representatives/${representativeId}/follow`, {
-          method: 'POST'
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'X-CSRF-Token': csrf,
+          },
         });
 
         if (!response.ok) {
@@ -405,8 +414,16 @@ export const createRepresentativeActions = (
       clearError();
 
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch(`/api/representatives/${representativeId}/follow`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'X-CSRF-Token': csrf,
+          },
         });
 
         if (!response.ok) {
@@ -551,7 +568,9 @@ export const createRepresentativeActions = (
 
     checkFollowStatus: async (representativeId) => {
       try {
-        const response = await fetch(`/api/representatives/${representativeId}/follow`);
+        const response = await fetch(`/api/representatives/${representativeId}/follow`, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           return false;

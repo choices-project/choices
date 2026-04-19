@@ -16,6 +16,8 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { createBaseStoreActions } from './baseStoreActions';
 
 import type { BaseStore } from './types';
@@ -468,7 +470,9 @@ const createContactActions = (
 
     try {
       const query = buildThreadsQuery(restOptions);
-      const response = await fetch(`/api/contact/threads${query}`);
+      const response = await fetch(`/api/contact/threads${query}`, {
+        credentials: 'include',
+      });
       const data = await response.json();
       const payload = extractPayload<{ threads?: RawThreadData[]; pagination?: ContactPagination }>(data);
 
@@ -507,10 +511,15 @@ const createContactActions = (
     });
 
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch('/api/contact/threads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -589,7 +598,9 @@ const createContactActions = (
 
     try {
       const query = buildMessagesQuery(threadId, restOptions);
-      const response = await fetch(`/api/contact/messages${query}`);
+      const response = await fetch(`/api/contact/messages${query}`, {
+        credentials: 'include',
+      });
       const data = await response.json();
       const payload = extractPayload<{ messages?: RawMessageData[]; pagination?: ContactPagination }>(data);
 
@@ -677,10 +688,15 @@ const createContactActions = (
     });
 
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch('/api/contact/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         credentials: 'include',
         body: JSON.stringify({

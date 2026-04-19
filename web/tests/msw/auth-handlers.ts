@@ -90,13 +90,20 @@ const errorEnvelope = (error: string, metadata?: Record<string, unknown>) => ({
 
 export const authHandlers = [
   http.post('/api/v1/auth/webauthn/native/register/options', async () => {
-    return HttpResponse.json(successEnvelope(defaultRegistrationOptions));
+    return HttpResponse.json(
+      successEnvelope({ challengeId: 'mock-register-challenge-id', ...defaultRegistrationOptions }),
+    );
   }),
   http.post('/api/v1/auth/webauthn/native/register/verify', async () => {
     return HttpResponse.json(successEnvelope(registrationSuccess));
   }),
   http.post('/api/v1/auth/webauthn/native/authenticate/options', async () => {
-    return HttpResponse.json(successEnvelope(defaultAuthenticationOptions));
+    return HttpResponse.json(
+      successEnvelope({
+        challengeId: 'mock-authenticate-challenge-id',
+        options: defaultAuthenticationOptions,
+      }),
+    );
   }),
   http.post('/api/v1/auth/webauthn/native/authenticate/verify', async ({ request }) => {
     const body = (await request.json()) as CredentialsPayload | undefined;

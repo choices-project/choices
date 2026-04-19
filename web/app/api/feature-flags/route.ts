@@ -10,6 +10,11 @@
  */
 
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
+
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 
 import { withErrorHandling, successResponse, validationError, errorResponse } from '@/lib/api';
@@ -55,6 +60,10 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 });
 
 export const PATCH = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   if (process.env.NODE_ENV === 'production') {
     const authGate = await requireAdminOr401();
     if (authGate) return authGate;

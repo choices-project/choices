@@ -6,6 +6,10 @@
  * Feature Flag: CIVIC_ENGAGEMENT_V2
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -33,6 +37,10 @@ export const POST = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   if (!isFeatureEnabled('CIVIC_ENGAGEMENT_V2')) {
     return errorResponse('Civic Engagement V2 feature is disabled', 403);
   }

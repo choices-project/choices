@@ -10,6 +10,8 @@
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { useIsAuthenticated } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
@@ -50,7 +52,9 @@ export function useFollowRepresentative(representativeId: number | null) {
       try {
         setStatus(prev => ({ ...prev, loading: true, error: null }));
 
-        const response = await fetch(`/api/representatives/${representativeId}/follow`);
+        const response = await fetch(`/api/representatives/${representativeId}/follow`, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -90,11 +94,17 @@ export function useFollowRepresentative(representativeId: number | null) {
     try {
       setStatus(prev => ({ ...prev, loading: true, error: null }));
 
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const fetchOptions: RequestInit = {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
       };
       if (preferences) {
         fetchOptions.body = JSON.stringify(preferences);
@@ -146,8 +156,16 @@ export function useFollowRepresentative(representativeId: number | null) {
     try {
       setStatus(prev => ({ ...prev, loading: true, error: null }));
 
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch(`/api/representatives/${representativeId}/follow`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': csrf,
+        },
       });
 
       if (!response.ok) {

@@ -24,6 +24,8 @@ import { getFeedbackTracker, resetFeedbackTracker } from '@/features/admin/lib/f
 import type { FeedbackTrackerOptions } from '@/features/admin/lib/feedback-tracker'
 import type { FeedbackContext, UserJourney } from '@/features/admin/types'
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { motion, AnimatePresence, useReducedMotion } from '@/components/motion/Motion'
 
 import { useAccessibleDialog } from '@/lib/accessibility/useAccessibleDialog'
@@ -522,11 +524,18 @@ const EnhancedFeedbackWidget: React.FC = () => {
         feedbackContext = fallbackContext
       }
 
+      const csrf = await fetchAuthCsrfToken()
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.')
+      }
+
       // Submit to API
       const response = await fetch('/api/feedback', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         body: JSON.stringify({
           type: feedback.type,

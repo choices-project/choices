@@ -13,6 +13,10 @@
  * POST /api/trending?type=hashtags - Track hashtags
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, validationError, successResponse, errorResponse, authError } from '@/lib/api';
@@ -85,6 +89,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') ?? 'hashtags';
 

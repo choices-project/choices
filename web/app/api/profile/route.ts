@@ -13,6 +13,10 @@
 
 import { z } from 'zod';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError, errorResponse, successResponse, validationError, withErrorHandling, parseBody } from '@/lib/api';
@@ -151,6 +155,10 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
  * }
  */
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || '127.0.0.1';
@@ -416,6 +424,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
  * }
  */
 export const PUT = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || '127.0.0.1';
@@ -490,6 +502,10 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
  * DELETE /api/profile
  */
 export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || '127.0.0.1';
@@ -556,6 +572,10 @@ export const DELETE = withErrorHandling(async (request: NextRequest) => {
  * }
  */
 export const PATCH = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
     || '127.0.0.1';

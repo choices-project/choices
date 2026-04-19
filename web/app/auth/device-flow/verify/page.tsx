@@ -13,6 +13,8 @@ import React, { useEffect, useState } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { Input } from '@/components/ui/input';
 
 import { logger } from '@/lib/utils/logger';
@@ -78,10 +80,17 @@ export default function DeviceFlowVerifyPage() {
       // Normalize user code (remove dashes, uppercase)
       const normalizedCode = userCode.replace(/-/g, '').toUpperCase();
 
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
+
       const response = await fetch('/api/auth/device-flow/verify', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         body: JSON.stringify({
           userCode: normalizedCode,

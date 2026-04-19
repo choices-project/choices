@@ -7,6 +7,10 @@
  * Polls for device authorization completion. Returns session when user completes authorization.
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -41,6 +45,10 @@ type PollResponse = {
 };
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   // Rate limiting: More lenient for polling, but still prevent abuse
   // Allow 60 requests per 5 minutes (matches max polling attempts)
   const ip = request.headers.get('x-forwarded-for') ??

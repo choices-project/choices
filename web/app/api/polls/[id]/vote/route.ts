@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -98,6 +102,10 @@ const normalizeOptions = (options: PollOptionRow[]) =>
     }));
 
 export const POST = withErrorHandling(async (request: NextRequest, { params }: { params: { id: string } }) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const pollId = params.id;
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()

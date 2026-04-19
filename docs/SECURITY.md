@@ -23,7 +23,7 @@ The Choices platform implements a comprehensive, multi-layered security model de
 The following security improvements were implemented across the application:
 
 - **Rate limiting** — **`apiRateLimiter`** is used in **30** `web/app/api/**/route.ts` files (snapshot in § Upstash API rate limits); covers polls (create/vote), feedback, profile mutations, poll close/lock, push notifications, CSP reports, health ingest, and more
-- **CSRF protection** — Double-submit token validation on the login endpoint via `validateCsrfProtection`
+- **CSRF protection** — Double-submit token validation via `validateCsrfProtection` on state-changing auth and profile routes: `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`, `/api/auth/sync-user`, `/api/auth/delete-account`, `/api/auth/device-flow` (+ `verify`, `poll`), `/api/v1/auth/webauthn/native/*` POSTs, `PATCH`/`DELETE` `/api/v1/auth/webauthn/credentials/[id]`, mutating `/api/profile` (POST/PUT/PATCH/DELETE) plus `POST /api/profile/export`, `DELETE /api/profile/data`, `POST /api/profile/avatar`, `POST /api/privacy/preferences`, `POST /api/onboarding/progress`, `POST /api/onboarding/complete`, `POST /api/user/complete-onboarding`, `POST /api/user/link-votes`, `PATCH /api/feature-flags`, `POST`/`PUT` `/api/notifications`, `POST`/`DELETE` `/api/representatives/[id]/follow`, `POST`/`DELETE` `/api/analytics/dashboard/layout`, `POST`/`PUT`/`DELETE` `/api/pwa/notifications/subscribe`, `POST /api/feedback`, `POST /api/polls`, `POST /api/polls/[id]/vote`, `POST /api/polls/[id]/close`, `POST`/`DELETE` `/api/polls/[id]/lock`, `POST`/`DELETE` `/api/polls/[id]/post-close`, `DELETE /api/polls/[id]`, `POST /api/trending` (hashtag tracking), `POST /api/hashtags` (flag / approve / reject / moderate), `POST /api/civic-actions`, `PATCH`/`DELETE` `/api/civic-actions/[id]`, `POST /api/civic-actions/[id]/sign`, `POST /api/shared/vote`, `POST /api/contact/submit`, `POST /api/contact/messages`, `POST`/`PUT` `/api/contact/threads`, `PATCH`/`DELETE` `/api/contact/[id]`, `POST /api/moderation/reports`, `POST /api/moderation/appeals`, and `POST`/`PATCH` `/api/representatives/self/overrides`.
 - **E2E bypass hardening** — Test authentication bypasses are locked out when `NODE_ENV === 'production'`; debug headers (`X-Auth-Debug-*`) only set in non-production
 - **Input sanitization** — `sanitizeInput()` applied to all user-generated fields in poll creation (title, description, question, category, tags, options)
 - **UUID validation** — `UUID_REGEX` validation on OG image routes to prevent injection via poll IDs
@@ -101,13 +101,15 @@ Use this as a **navigation aid** only—predicates and exceptions live in SQL.
 
 | Domain | Example tables | Typical RLS theme |
 |--------|----------------|-------------------|
-| Identity & sessions | `user_profiles`, `user_sessions`, `webauthn_credentials` | Owner (`auth.uid()`) read/write; tight on credentials |
+| Identity & sessions | `user_profiles`, `user_sessions`, `webauthn_credentials`, `webauthn_challenges` | Owner (`auth.uid()`) read/write; tight on credentials; passkey ceremony rows (`webauthn_challenges`) follow migration-defined policies |
 | Polls & voting | `polls`, `poll_options`, `votes` | Creator/moderator writes; public or member **SELECT** for published polls per migration |
 | Civic actions | `civic_actions`, related metadata | Creator + visibility (`is_public`); signing flows check migrations |
 | Contact | `contact_messages`, `contact_threads` | Submitter + admin/moderation paths |
 | Representatives / OpenStates mirror | `representatives_core`, `openstates_*` | Mostly read-heavy; writes often admin or ingest |
 | Admin & audit | `admin_activity_log`, `audit_logs`, moderation tables | Role / service-role patterns in later migrations |
 | System | `rate_limits`, `idempotency_keys`, health/metrics tables | Service or restricted policies |
+
+Passkey **`webauthn_challenges`** detail: RLS and policies live in Supabase migrations; see `docs/archive/2026-02-docs-consolidation/WEBAUTHN_SUPABASE_AUDIT.md` for the intended model (registration rows bound to `auth.uid()`, discoverable authentication with `user_id` null and constrained `kind`, `service_role` for server paths). Registration verify uses the **session** Supabase client; authentication options/verify use **service role** because the user is not signed in yet. Re-check live policies in the Supabase dashboard after any migration touching this table.
 
 ---
 

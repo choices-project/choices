@@ -9,6 +9,10 @@
  * Status: ✅ PRODUCTION READY
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -65,6 +69,10 @@ type CreateMessageRequest = {
 export const POST = withErrorHandling(async (request: NextRequest) => {
   if (!isFeatureEnabled('CONTACT_INFORMATION_SYSTEM')) {
     return forbiddenError('Contact Information System is currently disabled');
+  }
+
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
   }
 
   const startTime = Date.now();

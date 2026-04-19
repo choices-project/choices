@@ -11,6 +11,10 @@
  * Status: ✅ ACTIVE - PRODUCTION READY
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
@@ -34,7 +38,11 @@ export const dynamic = 'force-dynamic';
  * - Privacy settings (always included)
  * - Optional data based on privacy opt-ins
  */
-export const POST = withErrorHandling(async (_request: NextRequest) => {
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   // Get authenticated user
   const supabase = await getSupabaseServerClient();
 

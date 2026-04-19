@@ -7,6 +7,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,10 +77,17 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
     setFeatureFlagError(null);
 
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        setFeatureFlagError('Unable to obtain CSRF token. Please refresh and try again.');
+        return;
+      }
       const response = await fetch('/api/feature-flags', {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         body: JSON.stringify({
           flagId,

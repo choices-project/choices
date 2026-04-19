@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, authError, successResponse, errorResponse } from '@/lib/api';
@@ -17,6 +21,10 @@ const completeOnboardingSchema = z.object({
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
+  if (!(await validateCsrfProtection(req))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabaseClient = await getSupabaseServerClient();
 
   const {

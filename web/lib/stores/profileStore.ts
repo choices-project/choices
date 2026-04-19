@@ -13,6 +13,8 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { useShallow } from 'zustand/react/shallow';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '@/lib/utils/logger';
 
 
@@ -205,11 +207,16 @@ export const createProfileActions = (
       try {
         // Update preferences via POST /api/profile with body.preferences
         // The API expects preferences in body.preferences and stores them in privacy_settings
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch('/api/profile', {
           method: 'POST',
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
           },
           body: JSON.stringify({
             preferences: preferences,

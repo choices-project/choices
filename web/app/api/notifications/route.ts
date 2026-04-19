@@ -13,6 +13,10 @@
 
 import { z } from 'zod';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -43,7 +47,15 @@ export const dynamic = 'force-dynamic';
 const NotificationSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   message: z.string().min(1, 'Message is required'),
-  notification_type: z.enum(['poll_created', 'poll_ended', 'vote_cast', 'civic_action', 'system', 'engagement']),
+  notification_type: z.enum([
+    'poll_created',
+    'poll_ended',
+    'vote_cast',
+    'civic_action',
+    'system',
+    'engagement',
+    'hashtag_trending',
+  ]),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
   action_url: z.string().url().optional(),
   metadata: z.record(z.string(), z.any()).optional()
@@ -130,6 +142,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
  * }
  */
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabase = await getSupabaseServerClient();
 
   // Parse and validate body
@@ -176,6 +192,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
 // PUT /api/notifications - Mark notification as read
 export const PUT = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabase = await getSupabaseServerClient();
   const bodyResult = await parseBody(request, NotificationMarkReadSchema);
   if (!bodyResult.success) {

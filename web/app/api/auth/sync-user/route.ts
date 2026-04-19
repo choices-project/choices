@@ -1,11 +1,21 @@
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 
+import type { NextRequest } from 'next/server';
+
 export const dynamic = 'force-dynamic'
 
-export const POST = withErrorHandling(async () => {
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabase = getSupabaseServerClient()
   
   if (!supabase) {

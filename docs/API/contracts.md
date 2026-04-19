@@ -1,6 +1,6 @@
 # API Contracts & Envelope Standards
 
-_Last updated: April 4, 2026_
+_Last updated: April 19, 2026_
 
 ## Overview
 
@@ -162,6 +162,47 @@ Legacy routes may still drift; **`web/tests/contracts/**`** and **`npm run verif
 - `NOT_FOUND` — Resource not found
 - Handlers may define additional `code` strings for domain errors; prefer the helpers for common HTTP semantics.
 
+### Profile subroutes (privacy / media)
+
+- **`DELETE /api/profile/data?type=…`** — Session via `supabase.auth.getSession()`; state-changing requests require **`X-CSRF-Token`** matching the CSRF cookie (see `validateCsrfProtection` in `web/app/api/auth/_shared/csrf.ts`; Jest and E2E bypass headers skip the check). Success payload is under **`data`**: `{ message, deletedCount, dataType }`. Contract suite: `web/tests/contracts/profile-data.contract.test.ts`.
+- **`POST /api/profile/avatar`** — `multipart/form-data` with field **`avatar`** (image file, ≤5MB). Authenticates with **`getCurrentUser`** (JWT from `Authorization: Bearer` or `auth-token` cookie). Same CSRF rules as above. Success **`data`**: `{ avatarUrl }`. Contract suite: `web/tests/contracts/profile-avatar.contract.test.ts`.
+
+### Privacy and onboarding (session)
+
+- **`POST /api/privacy/preferences`** — JSON body; Supabase session via `getUser`; CSRF required outside test/E2E bypass. Contract: `web/tests/contracts/privacy-preferences.contract.test.ts`.
+- **`POST /api/onboarding/progress`** — JSON `{ step, action?, data? }`; session `getUser`; CSRF as above. **`POST /api/onboarding/complete`** and **`POST /api/user/complete-onboarding`** — session mutations with the same CSRF gate. Contract: `web/tests/contracts/onboarding-session.contract.test.ts`.
+
+### Notifications, civics follow, analytics layout, PWA push
+
+- **`POST` / `PUT` `/api/notifications`** — Authenticated `getUser`; CSRF on mutating methods. `notification_type` includes `hashtag_trending` for hashtag alerts.
+- **`POST` / `DELETE` `/api/representatives/[id]/follow`** — Session `getUser` plus admin client for follow rows; CSRF required.
+- **`POST` / `DELETE` `/api/analytics/dashboard/layout`** — Persists or clears `dashboard_layout` on `user_profiles`; CSRF required (browser: `widgetStore.saveLayout`).
+- **`POST` / `PUT` / `DELETE` `/api/pwa/notifications/subscribe`** — Push subscription lifecycle when the PWA feature flag is enabled; CSRF required. **`POST /api/pwa/offline/sync`** is not CSRF-gated yet (no first-party page client; a service-worker–driven flow would need a dedicated sync token).
+
+### Hashtags (moderation)
+
+- **`GET /api/hashtags?action=moderation&hashtagId=…`** — Session required; returns **`data`** as a moderation summary for that hashtag (derived from `hashtag_flags`).
+- **`GET /api/hashtags?action=moderation-queue&limit=…`** — Session required; returns **`data`** as an array of hashtag records plus a nested **`moderation`** object per item (pending flags only).
+- **`POST /api/hashtags`** — CSRF required for mutating actions: **`?action=flag`**, **`?action=approve&flagId=…`**, **`?action=reject&flagId=…`**, **`?action=moderate`** (JSON body: **`hashtagId`**, **`status`** in `approved` \| `rejected` \| `flagged`, optional **`reason`**).
+
+### Polls (lifecycle and trending)
+
+- **`POST /api/polls/[id]/close`** — Creator (or allowed role per handler) closes an active poll; session + CSRF.
+- **`POST` / `DELETE` `/api/polls/[id]/lock`** — Lock or unlock a poll; creator-only; CSRF on both methods.
+- **`POST` / `DELETE` `/api/polls/[id]/post-close`** — Enable or disable post-close voting on a closed poll; creator-only; CSRF.
+- **`DELETE /api/polls/[id]`** — Creator deletes the poll; CSRF.
+- **`POST /api/trending?type=hashtags`** — Authenticated hashtag engagement tracking; JSON body; CSRF.
+
+### Contact and moderation (session)
+
+- **`POST /api/contact/submit`** — Authenticated representative contact submission; CSRF.
+- **`POST /api/contact/messages`** — Authenticated messaging; CSRF.
+- **`POST` / `PUT` `/api/contact/threads`** — Create thread or update thread status/priority; CSRF.
+- **`PATCH` / `DELETE` `/api/contact/[id]`** — Update or withdraw own unverified contact row; CSRF.
+- **`POST /api/moderation/reports`** — Authenticated user reports; CSRF.
+- **`POST /api/moderation/appeals`** — Authenticated appeals; CSRF.
+- **`POST` / `PATCH` `/api/representatives/self/overrides`** — Linked representative public-field overrides (`PATCH` delegates to `POST`); CSRF.
+
 ## Metadata Fields
 
 Common metadata fields in API responses:
@@ -188,5 +229,5 @@ When modifying API handlers:
 
 - **Owner:** Core maintainer
 - **Update cadence:** Review on major feature changes and at least monthly
-- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
+- **Last verified:** 2026-04-19 (profile data / avatar contract suites + CSRF alignment; hashtag moderation + poll lifecycle / trending POST + contact / moderation / rep overrides contracts)
 

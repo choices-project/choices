@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 
-import type { Session } from '@supabase/supabase-js';
-
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 import PasskeyControls from '@/features/auth/components/PasskeyControls';
@@ -22,6 +20,8 @@ import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
 import { useI18n } from '@/hooks/useI18n';
+
+import type { Session } from '@supabase/supabase-js';
 
 export default function AuthPageClient() {
   const router = useRouter();

@@ -1,3 +1,7 @@
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse, validationError } from '@/lib/api';
@@ -13,6 +17,10 @@ export const DELETE = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { id } = await params;
   const credentialId = id;
 
@@ -67,6 +75,10 @@ export const PATCH = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+    if (!(await validateCsrfProtection(request))) {
+      return createCsrfErrorResponse();
+    }
+
     const { id } = await params;
     const credentialId = id;
 
@@ -74,8 +86,20 @@ export const PATCH = withErrorHandling(async (
       return validationError({ credentialId: 'Credential ID is required' });
     }
 
-    const body = await request.json();
-    const { device_label } = body;
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!('device_label' in body)) {
+      return validationError({ device_label: 'device_label is required' });
+    }
+    const rawLabel = body.device_label;
+    if (rawLabel !== null && rawLabel !== undefined && typeof rawLabel !== 'string') {
+      return validationError({ device_label: 'Must be a string or null' });
+    }
+    const trimmed =
+      rawLabel === null || rawLabel === undefined ? '' : rawLabel.trim();
+    if (trimmed.length > 120) {
+      return validationError({ device_label: 'Label must be at most 120 characters' });
+    }
+    const device_label = trimmed.length === 0 ? null : trimmed;
 
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
@@ -88,7 +112,7 @@ export const PATCH = withErrorHandling(async (
       return authError('Authentication required');
     }
 
-    // Update the credential
+    // Update the credential (empty string clears label)
     const { error: updateError } = await supabase
       .from('webauthn_credentials')
       .update({ device_label })

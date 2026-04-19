@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, notFoundError, validationError, errorResponse } from '@/lib/api';
@@ -112,9 +115,13 @@ export const GET = withErrorHandling(async (
 });
 
 export const DELETE = withErrorHandling(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const { id: pollId } = await params;
 
   // Validate poll ID format (UUID)

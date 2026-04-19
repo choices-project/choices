@@ -1007,6 +1007,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       await respondJson(route, {
         success: true,
         data: {
+        challengeId: 'mock-register-challenge-id',
         challenge: 'dGVzdC1jaGFsbGVuZ2U=',
         rp: { id: 'localhost', name: 'Choices' },
         user: {
@@ -1046,6 +1047,7 @@ export async function setupExternalAPIMocks(page: Page, overrides: Partial<Exter
       await respondJson(route, {
         success: true,
         data: {
+        challengeId: 'mock-authenticate-challenge-id',
         challenge: 'dGVzdC1jaGFsbGVuZ2U=',
         allowCredentials: [
           {

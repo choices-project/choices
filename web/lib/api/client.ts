@@ -1,3 +1,5 @@
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 /**
  * API Client Utilities
  *
@@ -130,11 +132,26 @@ export async function apiClient<T = unknown>(
       });
     }
 
+    const methodUpper = (fetchOptions.method ?? 'GET').toUpperCase();
+    const isMutating = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(methodUpper);
+    const isAppApi = url.startsWith('/api/');
+    const skipCsrf = url.startsWith('/api/auth/csrf');
+    if (isMutating && isAppApi && !skipCsrf && !headers.has('x-csrf-token')) {
+      const csrfToken = await fetchAuthCsrfToken();
+      if (csrfToken) {
+        headers.set('X-CSRF-Token', csrfToken);
+      }
+    }
+
     const requestInit: RequestInit = {
       ...fetchOptions,
       signal: controller.signal,
       headers,
     };
+
+    if (isAppApi && requestInit.credentials === undefined) {
+      requestInit.credentials = 'include';
+    }
 
     const response = await fetchWithRetry(
       `${baseUrl}${url}`,
@@ -404,9 +421,27 @@ export const healthApi = {
  * Auth API client
  */
 export const authApi = {
-  login: (email: string, password: string) => post('/api/auth/login', { email, password }),
-  register: (data: RegisterRequest) => post('/api/auth/register', data),
-  logout: () => post('/api/auth/logout'),
+  login: async (email: string, password: string) => {
+    const token = await fetchAuthCsrfToken();
+    if (!token) {
+      throw new ApiError('Unable to obtain CSRF token. Please refresh and try again.', 403);
+    }
+    return post('/api/auth/login', { email, password }, { headers: { 'X-CSRF-Token': token } });
+  },
+  register: async (data: RegisterRequest) => {
+    const token = await fetchAuthCsrfToken();
+    if (!token) {
+      throw new ApiError('Unable to obtain CSRF token. Please refresh and try again.', 403);
+    }
+    return post('/api/auth/register', data, { headers: { 'X-CSRF-Token': token } });
+  },
+  logout: async () => {
+    const token = await fetchAuthCsrfToken();
+    if (!token) {
+      throw new ApiError('Unable to obtain CSRF token. Please refresh and try again.', 403);
+    }
+    return post('/api/auth/logout', {}, { headers: { 'X-CSRF-Token': token } });
+  },
   me: () => get('/api/auth/me'),
 };
 

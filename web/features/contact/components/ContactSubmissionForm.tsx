@@ -13,6 +13,7 @@
 import { Mail, Phone, MapPin, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import React, { useState, useCallback } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
 import { useFeatureFlag } from '@/features/pwa/hooks/useFeatureFlags';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -70,10 +71,16 @@ export default function ContactSubmissionForm({
       setError(null);
 
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch('/api/contact/submit', {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
           },
           body: JSON.stringify({
             representative_id: representativeId,

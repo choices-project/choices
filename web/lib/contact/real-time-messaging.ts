@@ -1,3 +1,5 @@
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import logger from '@/lib/utils/logger';
 /**
  * Real-time Messaging Service
@@ -35,10 +37,16 @@ export const contactMessagingService = {
   sendMessage: async (message: Omit<Message, 'id' | 'timestamp'>): Promise<Message> => {
     try {
       // Determine thread ID - use provided or create new thread
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch('/api/contact/messages', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         body: JSON.stringify({
           threadId: message.threadId,
@@ -87,6 +95,7 @@ export const contactMessagingService = {
     try {
       const response = await fetch(`/api/contact/messages?threadId=${encodeURIComponent(threadId)}`, {
         method: 'GET',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

@@ -6,7 +6,8 @@
     "core": {
       "error": {
         "title": "Error al cargar el feed",
-        "retry": "Intentar de nuevo"
+        "retry": "Intentar de nuevo",
+        "help": "If this problem persists, please refresh the page or contact support."
       },
       "pullToRefresh": {
         "pull": "↓ Desliza para actualizar",
@@ -37,21 +38,83 @@
       "tabs": {
         "feed": "Feed",
         "polls": "Encuestas",
-        "analytics": "Analítica"
+        "analytics": "Analítica",
+        "community": "Community",
+        "electoral": "Electoral"
       },
       "empty": {
-        "filters": "Ningún contenido coincide con tus filtros",
-        "default": "No hay feeds disponibles",
-        "polls": "La vista de encuestas estará disponible pronto",
-        "analytics": "La analítica no está disponible"
+        "filters": {
+          "title": "No content matches your filters",
+          "description": "Try removing some hashtag filters to see more content, or explore trending topics below.",
+          "clear": "Clear all filters"
+        },
+        "default": {
+          "title": "No feeds available",
+          "description": "There are no feeds to display right now. Check back soon for new content, or explore trending hashtags to discover what's happening.",
+          "create": "Create poll",
+          "refresh": "Refresh feed",
+          "explore": "Explore",
+          "suggestions": "Explore trending topics:"
+        },
+        "polls": {
+          "title": "Polls view coming soon",
+          "description": "We're working on bringing you a dedicated polls view. In the meantime, check out the Feed tab for poll content."
+        },
+        "analytics": {
+          "title": "Analytics not available",
+          "description": "Feed analytics will be available once you start engaging with content. Like, share, and bookmark items to see your activity insights."
+        },
+        "electoral": {
+          "title": "Electoral feed",
+          "description": "Races, officials, and key issues in your district. Add your location or district in Civics to see your electoral feed.",
+          "cta": "Go to Civics"
+        },
+        "community": {
+          "noResults": {
+            "title": "No community feeds yet",
+            "description": "No polls or civic actions in your area right now.",
+            "tip": "Try switching to 'All' to see content from everywhere.",
+            "showAll": "Show All"
+          }
+        }
       },
       "actions": {
         "bookmark": "Guardar",
-        "share": "Compartir"
+        "share": "Compartir",
+        "liked": {
+          "title": "Liked",
+          "message": "Item added to your liked content"
+        },
+        "unliked": {
+          "title": "Unliked",
+          "message": "Item removed from your liked content"
+        },
+        "bookmarked": {
+          "title": "Bookmarked",
+          "message": "Item saved to your bookmarks"
+        },
+        "unbookmarked": {
+          "title": "Unbookmarked",
+          "message": "Item removed from your bookmarks"
+        }
       },
       "status": {
         "online": "En línea",
         "items": "{count, plural, one {{count} elemento} other {{count} elementos}}"
+      },
+      "electoral": {
+        "officials": "Current officials",
+        "races": "Races & elections",
+        "issues": "Key issues",
+        "engagement": "Engagement",
+        "refresh": "Refresh",
+        "noData": "No electoral data available for your district yet.",
+        "loadingAria": "Loading electoral feed",
+        "errorNoData": "No electoral data returned",
+        "errorFailed": "Failed to load electoral feed",
+        "viewRepresentative": "View representative",
+        "viewAllCivics": "View all in Civics",
+        "loadMore": "Load more"
       }
     },
     "infiniteScroll": {
@@ -421,6 +484,21 @@
       "polls": {
         "untitled": "Encuesta sin título"
       }
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "dashboardDescription": "Your personal hub",
+      "profile": "Profile",
+      "profileDescription": "Manage your profile",
+      "privacy": "Privacy & Data",
+      "privacyDescription": "🔒 Your data, your control",
+      "privacyBadge": "Privacy",
+      "myPolls": "My Polls",
+      "myPollsDescription": "Polls you created",
+      "hashtags": "Hashtags",
+      "hashtagsDescription": "Your interests",
+      "preferences": "Preferences",
+      "preferencesDescription": "App settings"
     }
   },
   "civics": {
@@ -735,11 +813,16 @@
       "detail": {
         "back": "Volver a representantes",
         "notFound": {
-          "message": "El representante que buscas no existe."
+          "message": "El representante que buscas no existe.",
+          "title": "Representative Not Found",
+          "securityNote": "Please refresh the page. If the issue continues, your network or security settings may be blocking access."
         },
         "actions": {
           "createBillVotePoll": "Crear encuesta de voto sobre proyecto de ley",
-          "viewAccountability": "Ver rendición de cuentas"
+          "viewAccountability": "Ver rendición de cuentas",
+          "follow": "Follow",
+          "following": "Following",
+          "updating": "Updating..."
         },
         "committees": {
           "current": "Actual",
@@ -752,10 +835,58 @@
           "empty": "No hay actividad de proyectos de ley registrada. La cobertura varía por estado."
         },
         "campaignFinance": {
-          "description": "Datos de financiamiento de campaña federal de la FEC. No incluye finanzas estatales/locales."
+          "description": "Datos de financiamiento de campaña federal de la FEC. No incluye finanzas estatales/locales.",
+          "cycle": "Cycle:",
+          "totalRaised": "Total raised:",
+          "totalSpent": "Total spent:",
+          "cashOnHand": "Cash on hand:",
+          "lastFiling": "Last filing:",
+          "source": "Source:"
         },
         "activityFeed": {
-          "emptyHint": "La actividad de proyectos de ley proviene de OpenStates (estatal/local); la cobertura varía por estado."
+          "emptyHint": "La actividad de proyectos de ley proviene de OpenStates (estatal/local); la cobertura varía por estado.",
+          "description": "Polls, bills, and votes related to this representative"
+        },
+        "election": {
+          "nextElection": "Next election",
+          "isToday": "Election is today",
+          "inDays": "Election in {count} day",
+          "inDaysPlural": "Election in {count} days",
+          "additional": "(+{count})"
+        },
+        "sections": {
+          "civicActions": "Civic Actions",
+          "contactInformation": "Contact Information",
+          "represents": "Represents",
+          "termDetails": "Term Details",
+          "committees": "Committees",
+          "recentActivity": "Recent Activity",
+          "upcomingElections": "Upcoming Elections",
+          "officialWebsite": "Official Website",
+          "socialMedia": "Social Media",
+          "campaignFinance": "Campaign Finance",
+          "activityFeed": "Activity Feed",
+          "externalIdentifiers": "External Identifiers"
+        },
+        "termDetails": {
+          "termStart": "Term start:",
+          "termEnd": "Term end:",
+          "nextElection": "Next election:",
+          "noElection": "No upcoming election on file"
+        },
+        "upcomingElections": {
+          "description": "Elections in your representative's districts. Dates from OpenStates / Google Civic API.",
+          "listed": "{count} listed"
+        },
+        "externalIdentifiers": {
+          "bioguide": "Bioguide:",
+          "fec": "FEC:",
+          "congressGov": "Congress.gov:",
+          "googleCivic": "Google Civic:",
+          "legiscan": "LegiScan:",
+          "govinfo": "GovInfo:",
+          "openstates": "OpenStates:",
+          "ballotpedia": "Ballotpedia profile"
         }
       },
       "accountability": {
@@ -800,7 +931,7 @@
         "advanced": {
           "toggle": "Filtros avanzados",
           "clearAll": "Limpiar todo",
-  "common": {
+          "common": {
             "all": "Todas las opciones"
           },
           "state": {
@@ -1308,7 +1439,8 @@
     "skipToContent": "Saltar al contenido principal",
     "actions": {
       "cancel": "Cancelar",
-      "retry": "Reintentar"
+      "retry": "Reintentar",
+      "tryAgain": "Try again"
     },
     "progressiveDisclosure": {
       "expand": "Expandir contenido",
@@ -1321,7 +1453,13 @@
       "label": "Tema",
       "select": "Seleccionar tema",
       "options": "Opciones de tema",
-      "changed": "Tema cambiado a {theme}"
+      "changed": "Tema cambiado a {theme}",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "lightDescription": "Light theme",
+      "darkDescription": "Dark theme",
+      "systemDescription": "Use system preference"
     },
     "devices": {
       "title": "Tus Dispositivos",
@@ -1369,7 +1507,11 @@
       "title": "Menú",
       "close": "Cerrar menú",
       "profile": "Mi Perfil",
-      "settings": "Configuración",
+      "settings": {
+        "privacy": "Configuración de Privacidad",
+        "notifications": "Notificaciones",
+        "account": "Configuración de Cuenta"
+      },
       "contributeNav": "Ayuda a construir la democracia",
       "badgeNew": "Nuevo",
       "userFallback": "Usuario",
@@ -1426,13 +1568,9 @@
             "outreach": "Difusión"
           }
         }
-      },
-      "settings": {
-        "privacy": "Configuración de Privacidad",
-        "notifications": "Notificaciones",
-        "account": "Configuración de Cuenta"
       }
-    }
+    },
+    "create": "Create"
   },
   "analytics": {
     "heading": {
@@ -1956,6 +2094,9 @@
           }
         }
       }
+    },
+    "accessibility": {
+      "skipToTable": "Skip to data table"
     }
   },
   "accessibility": {
@@ -2638,1131 +2779,6 @@
     }
   },
   "polls": {
-    "filters": {
-      "search": {
-        "placeholder": "Busca encuestas, hashtags o temas...",
-        "ariaLabel": "Buscar encuestas"
-      },
-      "hashtags": {
-        "label": "Filtrar por hashtags",
-        "remove": "Quitar filtro {hashtag}",
-        "addPlaceholder": "Agrega hashtags para filtrar encuestas...",
-        "addAria": "Agregar filtro de hashtag"
-      },
-      "status": {
-        "all": "Todas",
-        "active": "Activas",
-        "trending": "Tendencia",
-        "closed": "Cerradas"
-      },
-      "categories": {
-        "label": "Categorías",
-        "all": "Todas las categorías"
-      },
-      "trending": {
-        "heading": "Hashtags en tendencia",
-        "headingWithCount": "Hashtags en tendencia ({count})",
-        "count": "{formattedCount} {count, plural, one {tendencia activa} other {tendencias activas}}"
-      }
-    },
-    "card": {
-      "status": {
-        "active": "Activa",
-        "closed": "Cerrada",
-        "draft": "Borrador",
-        "archived": "Archivada"
-      },
-      "votingMethod": {
-        "single": "Selección única",
-        "approval": "Aprobación",
-        "ranked": "Voto preferencial",
-        "quadratic": "Cuadrático",
-        "range": "Rango",
-        "multiple": "Selección múltiple",
-        "unknown": "Desconocido"
-      },
-      "createdBy": "Creado por {name}",
-      "createdOn": "Creado el {date}",
-      "endsOn": "Termina el {date} a las {time}",
-      "unknownCreator": "Desconocido",
-      "untitled": "Encuesta sin título",
-      "optionsHeading": "Opciones",
-      "optionItem": "{index}. {option}",
-      "moreOptions": "+{count} opciones adicionales",
-      "votes": "{formattedCount} {count, plural, one {voto} other {votos}}",
-      "participation": "{formattedCount} {count, plural, one {participante} other {participantes}}",
-      "representative": {
-        "fallback": "Representante #{id}",
-        "constituentWill": "Voluntad del Constituyente"
-      },
-      "bill": {
-        "fallback": "Proyecto de Ley #{id}"
-      },
-      "actions": {
-        "view": "Ver encuesta",
-        "vote": "Votar ahora"
-      }
-    },
-    "categories": {
-      "general": "General",
-      "business": "Negocios",
-      "education": "Educación",
-      "technology": "Tecnología",
-      "health": "Salud",
-      "finance": "Finanzas",
-      "environment": "Medio ambiente",
-      "social": "Social"
-    },
-    "page": {
-      "title": "Encuestas",
-      "subtitle": "Descubre y participa en encuestas de la comunidad",
-      "descriptionFallback": "Sin descripción disponible",
-      "trendingBadge": "Tendencia #{position}",
-      "metadata": {
-        "votes": "{formattedCount} {count, plural, one {voto} other {votos}}",
-        "created": "Creada el {date}"
-      },
-      "empty": {
-        "title": "No se encontraron encuestas",
-        "filters": "Prueba ajustando tus filtros o términos de búsqueda",
-        "ctaMessage": "¡Sé la primera persona en crear una encuesta!"
-      },
-      "cta": {
-        "create": "Crear encuesta",
-        "view": "Ver encuesta",
-        "results": "Ver resultados"
-      },
-      "pagination": {
-        "showing": "Mostrando {start}\u2013{end} de {total} encuestas",
-        "previous": "Anterior",
-        "next": "Siguiente",
-        "pageLabel": "Página {current} de {total}"
-      },
-      "results": {
-        "heading": "Resultados",
-        "refreshing": "Actualizando resultados de la encuesta.",
-        "refresh": "Actualizar Resultados",
-        "refreshLabel": "Actualizar resultados de la encuesta",
-        "summary": "{totalVotes} votos totales. {topOption} lidera con {topVotes} votos ({topPercentage}%).",
-        "optionVotes": "{votes} votos ({percentage}%)",
-        "optionSummary": "{option}: {votes} votos ({percentage}%), {uniqueVoters} votantes únicos.",
-        "uniqueVoters": "{count, plural, one {# votante único} other {# votantes únicos}}"
-      }
-    },
-    "create": {
-      "form": {
-        "title": "Crear Nueva Encuesta",
-        "closeAria": "Cerrar formulario de crear encuesta",
-        "fields": {
-          "title": {
-            "label": "Título de la Encuesta",
-            "placeholder": "Ingresa tu pregunta de encuesta...",
-            "counter": "{current}/{max} caracteres"
-          },
-          "description": {
-            "label": "Descripción",
-            "placeholder": "Agrega más contexto a tu encuesta...",
-            "counter": "{current}/{max} caracteres"
-          },
-          "category": {
-            "label": "Categoría",
-            "placeholder": "p. ej., Política, Tecnología, Entretenimiento..."
-          },
-          "privacy": {
-            "label": "Nivel de Privacidad",
-            "getRecommendation": "Obtener Recomendación"
-          },
-          "options": {
-            "label": "Opciones de la Encuesta",
-            "optionPlaceholder": "Opción {number}",
-            "counter": "{current}/{max} opciones",
-            "optionCounter": "{current}/{max} caracteres",
-            "approachingLimit": "Acercándose al límite",
-            "add": "Agregar Opción"
-          },
-          "tags": {
-            "label": "Etiquetas",
-            "placeholder": "Agrega una etiqueta...",
-            "counter": "{current}/{max} seleccionadas",
-            "add": "Agregar"
-          }
-        },
-        "buttons": {
-          "create": "Crear Encuesta",
-          "creating": "Creando..."
-        }
-      },
-      "privacy": {
-        "public": "Público – cualquiera puede descubrir y votar",
-        "private": "Privado – solo las personas con el enlace pueden participar",
-        "unlisted": "No listado – oculto de la búsqueda pero abierto a cualquiera con el enlace"
-      },
-      "votingMethod": {
-        "single": "Selección única",
-        "multiple": "Selección múltiple",
-        "approval": "Votación por aprobación",
-        "ranked": "Voto preferencial"
-      },
-      "notifications": {
-        "tooManyTags": {
-          "title": "Demasiadas etiquetas",
-          "message": "Puedes agregar hasta {max} etiquetas."
-        },
-        "signInRequired": {
-          "title": "Inicio de sesión requerido",
-          "message": "Inicia sesión para publicar tu encuesta."
-        },
-        "accessDenied": {
-          "title": "Acceso denegado",
-          "message": "No tienes permiso para crear encuestas en esta cuenta."
-        },
-        "rateLimit": {
-          "title": "Más despacio",
-          "message": "Estás creando encuestas demasiado rápido. Espera un momento e inténtalo de nuevo."
-        },
-        "validationErrors": {
-          "title": "Revisa los campos resaltados"
-        },
-        "creationFailed": {
-          "title": "No se pudo crear la encuesta",
-          "message": "Inténtalo de nuevo en un momento."
-        },
-        "pollCreated": {
-          "title": "Encuesta creada",
-          "message": "Comparte tu encuesta para comenzar a recopilar votos."
-        }
-      },
-      "share": {
-        "dialog": {
-          "liveOpen": "Diálogo de compartir abierto para {title}.",
-          "liveOpenFallback": "Diálogo de compartir abierto."
-        },
-        "notifications": {
-          "linkCopied": {
-            "title": "Enlace copiado",
-            "message": "Comparte el enlace con tu audiencia para comenzar a recopilar votos."
-          },
-          "copyFailed": {
-            "title": "No se pudo copiar el enlace",
-            "message": "Copia el enlace manualmente."
-          }
-        }
-      },
-      "wizard": {
-        "details": {
-          "title": {
-            "label": "Título de la encuesta",
-            "placeholder": "¿En qué deberíamos enfocarnos el próximo trimestre?",
-            "hint": "Manténlo corto, orientado a la acción y fácil de escanear."
-          },
-          "description": {
-            "label": "Descripción",
-            "placeholder": "Explica el contexto, las apuestas o los antecedentes para que los votantes puedan tomar una decisión informada.",
-            "hint": "Ayuda a los votantes a entender por qué esta encuesta importa. Incluye contexto relevante y objetivos."
-          }
-        },
-        "options": {
-          "label": "Opciones de la encuesta",
-          "hint": "Proporciona al menos dos opciones claras y distintas para que los votantes puedan diferenciarlas de un vistazo.",
-          "optionPlaceholder": "Opción {number}",
-          "optionAria": "Opción {number}",
-          "removeAria": "Eliminar opción {number}",
-          "maxHint": "Puedes agregar hasta {max} opciones.",
-          "add": "Agregar opción"
-        },
-        "audience": {
-          "category": {
-            "label": "Categoría",
-            "hint": "Categoriza tu encuesta para que las personas adecuadas puedan descubrirla."
-          },
-          "tags": {
-            "label": "Etiquetas",
-            "hint": "Agrega palabras clave para que tu encuesta aparezca en búsquedas relevantes.",
-            "placeholder": "Agrega una etiqueta",
-            "add": "Agregar",
-            "maxHint": "Puedes agregar hasta {max} etiquetas.",
-            "removeAria": "Eliminar etiqueta {tag}"
-          },
-          "settings": {
-            "legend": "Participación y privacidad",
-            "allowMultipleVotes": {
-              "label": "Permitir múltiples votos",
-              "description": "Habilita si los votantes deben poder apoyar más de una opción."
-            },
-            "allowAnonymousVotes": {
-              "label": "Permitir votos anónimos",
-              "description": "Deshabilita esto si necesitas saber exactamente quién participó."
-            },
-            "requireAuthentication": {
-              "label": "Requerir inicio de sesión para votar",
-              "description": "Asegura que los votantes estén autenticados antes de enviar una respuesta."
-            },
-            "showResults": {
-              "label": "Mostrar resultados en tiempo real",
-              "description": "Deshabilita para ocultar los resultados hasta que la encuesta se cierre."
-            },
-            "allowComments": {
-              "label": "Permitir comentarios",
-              "description": "Recopila comentarios cualitativos junto con votos cuantitativos."
-            },
-            "preventDuplicateVotes": {
-              "label": "Prevenir votos duplicados",
-              "description": "Bloquea a los usuarios para que no voten múltiples veces en la misma encuesta."
-            }
-          },
-          "privacy": {
-            "label": "Nivel de privacidad",
-            "hint": "Cambia quién puede descubrir y participar en esta encuesta."
-          },
-          "votingMethod": {
-            "label": "Método de votación",
-            "hint": "Elige la mecánica que mejor se adapte a cómo quieres evaluar las respuestas."
-          }
-        },
-        "review": {
-          "title": "Vista previa de tu encuesta",
-          "description": "Revisa todo lo que los votantes verán antes de publicar.",
-          "untitled": "Encuesta sin título",
-          "noDescription": "Agrega una descripción para ayudar a los votantes a entender el contexto.",
-          "optionsHeading": "Opciones",
-          "privacy": "Privacidad",
-          "votingMethod": "Método de votación",
-          "multipleVotes": "Votos múltiples",
-          "anonymousVotes": "Votos anónimos",
-          "requireSignIn": "Requerir inicio de sesión",
-          "comments": "Comentarios",
-          "enabled": "Habilitado",
-          "disabled": "Deshabilitado",
-          "allowed": "Permitido",
-          "yes": "Sí",
-          "no": "No"
-        },
-        "progress": {
-          "ariaLabel": "Progreso de creación de encuesta"
-        }
-      },
-      "page": {
-        "title": "Crear una nueva encuesta",
-        "subtitle": "Guía a tu audiencia a través de una decisión clara. Completa cada paso para describir la encuesta, agregar opciones y establecer reglas de participación.",
-        "errorSummary": {
-          "title": "Resuelve estos elementos antes de continuar"
-        },
-        "buttons": {
-          "previous": "Anterior",
-          "next": "Siguiente",
-          "publish": "Publicar encuesta",
-          "creating": "Creando…"
-        }
-      },
-      "share": {
-        "dialog": {
-          "title": "Comparte tu encuesta",
-          "description": "Ayuda a los votantes a descubrir \"{title}\" compartiendo el enlace a continuación.",
-          "yourPoll": "tu encuesta",
-          "pollTitle": "Título de la encuesta",
-          "privacy": "Privacidad",
-          "votingMethod": "Método de votación",
-          "category": "Categoría",
-          "nextMilestone": "Próximo hito",
-          "milestoneVotes": "{count, plural, one {# voto} other {# votos}}",
-          "pollLink": "Enlace de la encuesta",
-          "copied": "Copiado",
-          "copyLink": "Copiar enlace",
-          "linkCopiedAria": "Enlace de compartir copiado al portapapeles.",
-          "linkCopyHintAria": "Presiona copiar para colocar el enlace de compartir en tu portapapeles.",
-          "buttons": {
-            "viewPoll": "Ver encuesta",
-            "viewAnalytics": "Ver análisis",
-            "emailLink": "Enlace por correo",
-            "shareOnX": "Compartir en X",
-            "createAnother": "Crear otra encuesta",
-            "done": "Hecho"
-          },
-          "email": {
-            "subject": "Mira esta encuesta"
-          },
-          "x": {
-            "tweet": "Vota ahora: {title} {url}"
-          },
-          "milestones": {
-            "title": "Alertas de hitos",
-            "description": "Recibe alertas en la aplicación cuando tu encuesta alcance conteos clave de votos.",
-            "enabled": "{current}/{total} habilitadas",
-            "notifyAt": "Notificarme a {count, plural, one {# voto} other {# votos}}",
-            "itemDescription": "Envía una alerta cuando la encuesta cruce {count, plural, one {# voto} other {# votos}} para que puedas celebrar o compartir de nuevo."
-          }
-        }
-      },
-      "view": {
-        "privacy": {
-          "public": "Público",
-          "private": "Privado",
-          "unlisted": "No listado"
-        },
-        "votingMethod": {
-          "single": "Selección única",
-          "multiple": "Selección múltiple",
-          "approval": "Votación por aprobación",
-          "ranked": "Voto preferencial",
-          "quadratic": "Votación cuadrática"
-        },
-        "breadcrumbs": {
-          "home": "Inicio",
-          "dashboard": "Panel",
-          "polls": "Encuestas",
-          "pollDetail": "Detalle de Encuesta"
-        },
-        "errors": {
-          "loadResultsFailed": "No se pudieron cargar los resultados de la encuesta. Inténtalo de nuevo más tarde.",
-          "loadDataFailed": "No se pudieron cargar los datos de la encuesta",
-          "voteFailed": "No se pudo votar"
-        },
-        "status": {
-          "closed": {
-            "title": "La encuesta ha cerrado",
-            "description": "Los resultados son de solo lectura. Contacta al propietario de la encuesta si crees que esta encuesta debería reabrirse.",
-            "label": "Cerrada"
-          },
-          "notOpen": {
-            "title": "La encuesta aún no está abierta",
-            "description": "Esta encuesta está en modo borrador o programada. El propietario puede publicarla para comenzar a recopilar votos."
-          },
-          "active": {
-            "label": "Activa"
-          },
-          "draft": {
-            "label": "Borrador"
-          },
-          "signInRequired": {
-            "title": "Inicia sesión para votar",
-            "description": "Necesitamos verificar tu cuenta antes de registrar un voto. Inicia sesión y luego regresa para participar."
-          },
-          "votingRestricted": {
-            "title": "Votación restringida",
-            "description": "Esta encuesta está limitada a una audiencia específica. Si deberías tener acceso, pide al propietario de la encuesta que te agregue o ajuste la privacidad."
-          }
-        },
-        "options": {
-          "fallback": "Opción {number}",
-          "voteCount": "{votes, number} votos ({percentage}%)"
-        },
-        "notifications": {
-          "voteRecorded": {
-            "title": "Voto registrado",
-            "message": "¡Gracias por participar!"
-          },
-          "voteFailed": {
-            "title": "No se pudo votar"
-          },
-          "linkCopied": {
-            "title": "Enlace copiado",
-            "message": "Comparte el enlace para atraer más votantes."
-          },
-          "copyFailed": {
-            "title": "No se pudo copiar el enlace",
-            "message": "Copia el enlace manualmente."
-          }
-        },
-        "buttons": {
-          "share": "Compartir",
-          "analytics": "Análisis",
-          "printSummary": "Imprimir resumen",
-          "vote": "Votar",
-          "voting": "Votando…",
-          "voted": "Votado",
-          "compareToVote": "Comparar con el voto del representante"
-        },
-        "loading": "Actualizando resultados…",
-        "leadingOption": {
-          "label": "Opción líder",
-          "votes": "{votes, number} votos ({percentage}% de {total, number} total)"
-        },
-        "stats": {
-          "totalVotes": "Total de votos",
-          "participation": "Participación",
-          "status": "Estado"
-        },
-        "milestones": {
-          "label": "Alertas de hitos",
-          "empty": "Elige los conteos de votos sobre los que quieres ser notificado. Te alertaremos cuando tu encuesta alcance esos hitos.",
-          "tracking": "Rastreando {milestones} votos.",
-          "nextUp": "Próximo: {count, number} votos. ¡Anima a tu audiencia a participar!",
-          "achieved": "Ya logrado",
-          "votesBadge": "{count, plural, one {# voto} other {# votos}}",
-          "itemLabel": "{count, plural, one {# voto} other {# votos}}",
-          "itemDescription": "Notificarme cuando esta encuesta alcance {count, plural, one {# voto} other {# votos}}.",
-          "toggleAria": "Alternar notificación de hito para {count, plural, one {# voto} other {# votos}}"
-        },
-        "created": "Creada {date}"
-      },
-      "postCloseBanner": {
-        "status": {
-          "closed": {
-            "title": "Encuesta Cerrada",
-            "description": "Esta encuesta ha sido cerrada y ya no acepta votos.",
-            "badge": "Cerrada"
-          },
-          "locked": {
-            "title": "Encuesta Bloqueada",
-            "description": "Esta encuesta ha sido bloqueada y los resultados son finales.",
-            "badge": "Bloqueada"
-          },
-          "postClose": {
-            "title": "Votación Post-Cierre Activa",
-            "description": "Esta encuesta está en modo post-cierre. Los votos se están rastreando por separado.",
-            "badge": "Post-Cierre"
-          }
-        },
-        "baselineEstablished": "Línea base establecida: {date}",
-        "lockedAt": "Bloqueada en: {date}",
-        "postCloseAvailable": "La votación post-cierre está disponible",
-        "buttons": {
-          "enablePostClose": "Habilitar Post-Cierre",
-          "lockPoll": "Bloquear Encuesta"
-        }
-      },
-      "share": {
-        "title": "Comparte Esta Encuesta",
-        "defaultTitle": "¡Mira esta encuesta!",
-        "nativeShareText": "¡Mira esta encuesta!",
-        "nativeShare": "Compartir vía Sistema",
-        "directLink": {
-          "label": "Enlace Directo"
-        },
-        "copy": "Copiar",
-        "copied": "¡Copiado!",
-        "social": {
-          "twitter": "Twitter",
-          "facebook": "Facebook",
-          "linkedin": "Linkedin",
-          "email": "Correo"
-        },
-        "emailBody": "Mira esta encuesta: {url}",
-        "qrCode": {
-          "title": "Código QR",
-          "show": "Mostrar Código QR",
-          "hide": "Ocultar Código QR",
-          "alt": "Código QR para la encuesta",
-          "generating": "Generando Código QR...",
-          "scanHint": "Escanear para abrir la encuesta en dispositivo móvil",
-          "download": "Descargar QR",
-          "copyLink": "Copiar Enlace"
-        },
-        "embed": {
-          "title": "Insertar Encuesta",
-          "codeLabel": "Código de Inserción",
-          "copyCode": "Copiar Código de Inserción"
-        }
-      },
-      "results": {
-        "heading": "Resultados",
-        "refreshing": "Actualizando resultados de la encuesta...",
-        "summary": "Resultados de la encuesta: {totalVotes, number} votos totales. Opción líder: {topOption} con {topVotes, number} votos ({topPercentage}%).",
-        "status": {
-          "ended": "Encuesta Finalizada",
-          "active": "Activa",
-          "ongoing": "En Curso"
-        },
-        "error": {
-          "title": "Error al cargar los resultados de la encuesta",
-          "retry": "Intentar de Nuevo"
-        },
-        "empty": "No hay resultados de encuesta disponibles",
-        "type": "Tipo: {type}",
-        "totalVotes": "{count, plural, one {# voto total} other {# votos totales}}",
-        "uniqueVoters": "{count, plural, one {# votante único} other {# votantes únicos}}",
-        "performance": {
-          "title": "Métricas de Rendimiento",
-          "loadTime": "Tiempo de Carga",
-          "cacheHit": "Acierto de Caché",
-          "yes": "Sí",
-          "no": "No",
-          "cacheSize": "Tamaño de Caché",
-          "items": "{count, plural, one {# elemento} other {# elementos}}",
-          "cacheKeys": "Claves de Caché"
-        },
-        "privacy": {
-          "title": "Protección de Privacidad",
-          "kAnonymity": "K-Anonimato: {status}",
-          "satisfied": "Satisfecho",
-          "notMet": "No Cumplido",
-          "budget": "Presupuesto: {value} ε"
-        },
-        "votingStatus": {
-          "title": "Estado de Votación",
-          "canVote": "Puede Votar",
-          "cannotVote": "No Puede Votar",
-          "hasVoted": "Ha Votado",
-          "notVoted": "No Ha Votado"
-        }
-      },
-      "card": {
-        "untitled": "Encuesta Sin Título",
-        "unknownCreator": "Desconocido",
-        "createdBy": "Creada por {name}",
-        "createdOn": "Creada el {date}",
-        "endsOn": "Termina el {date} a las {time}",
-        "optionsHeading": "Opciones",
-        "optionItem": "{index}. {option}",
-        "moreOptions": "+{count, plural, one {# opción más} other {# opciones más}}",
-        "votes": "{count, plural, one {# voto} other {# votos}}",
-        "participation": "{count, plural, one {# participante} other {# participantes}}",
-        "votingMethod": {
-          "single": "Selección única",
-          "approval": "Votación por aprobación",
-          "ranked": "Voto preferencial",
-          "quadratic": "Votación cuadrática",
-          "range": "Votación por rango",
-          "multiple": "Selección múltiple",
-          "unknown": "Desconocido"
-        },
-        "status": {
-          "active": "Activa",
-          "closed": "Cerrada",
-          "draft": "Borrador",
-          "archived": "Archivada"
-        },
-        "actions": {
-          "view": "Ver",
-          "vote": "Votar"
-        }
-      },
-      "page": {
-        "title": "Encuestas",
-        "subtitle": "Descubre y participa en encuestas de la comunidad",
-        "breadcrumbs": {
-          "home": "Inicio",
-          "dashboard": "Panel",
-          "polls": "Encuestas"
-        },
-        "empty": {
-          "title": "No se encontraron encuestas",
-          "filters": "No hay encuestas que coincidan con tu búsqueda o criterios de filtro. Intenta ajustar tus filtros.",
-          "ctaMessage": "¡Comienza creando tu primera encuesta!"
-        },
-        "cta": {
-          "create": "Crear Encuesta",
-          "view": "Ver",
-          "results": "Resultados"
-        },
-        "metadata": {
-          "votes": "{count, plural, one {# voto} other {# votos}}"
-        },
-        "pagination": {
-          "showing": "Mostrando {start} a {end} de {total} encuestas",
-          "pageLabel": "Página {current} de {total}",
-          "previous": "Anterior",
-          "next": "Siguiente"
-        }
-      },
-      "filters": {
-        "search": {
-          "placeholder": "Buscar encuestas...",
-          "ariaLabel": "Buscar encuestas"
-        },
-        "hashtags": {
-          "label": "Filtrar por etiquetas",
-          "addPlaceholder": "Agregar etiqueta...",
-          "addAria": "Agregar filtro de etiqueta",
-          "remove": "Eliminar etiqueta {hashtag}"
-        },
-        "status": {
-          "all": "Todas",
-          "active": "Activas",
-          "closed": "Cerradas",
-          "trending": "Tendencias"
-        },
-        "trending": {
-          "heading": "Tendencias",
-          "headingWithCount": "Tendencias ({count})",
-          "count": "{count, plural, one {# tendencia} other {# tendencias}}"
-        },
-        "categories": {
-          "label": "Categorías"
-        }
-      },
-      "templates": {
-        "title": "Plantillas de Encuestas",
-        "subtitle": "Elige de nuestra colección de plantillas de encuestas preconstruidas para comenzar rápidamente",
-        "search": {
-          "placeholder": "Buscar plantillas..."
-        },
-        "categories": {
-          "all": "Todas las Categorías",
-          "allTemplates": "Todas las Plantillas"
-        },
-        "sort": {
-          "popular": "Más Populares",
-          "recent": "Agregadas Recientemente",
-          "rating": "Mejor Calificadas",
-          "name": "Nombre A-Z"
-        },
-        "difficulty": {
-          "beginner": "Principiante",
-          "intermediate": "Intermedio",
-          "advanced": "Avanzado"
-        },
-        "metadata": {
-          "estimatedTime": "{minutes} min",
-          "usageCount": "{count, number} usos"
-        },
-        "resultsCount": "Mostrando {showing} de {total} plantillas",
-        "actions": {
-          "use": "Usar Plantilla",
-          "preview": "Vista previa de la plantilla"
-        },
-        "empty": {
-          "title": "No se encontraron plantillas",
-          "message": "Intenta ajustar tu búsqueda o criterios de filtro",
-          "clearFilters": "Limpiar Filtros"
-        }
-      },
-      "community": {
-        "title": "Selección de Encuestas de la Comunidad",
-        "subtitle": "Ve qué encuestas quiere la comunidad y cómo seleccionamos las encuestas destacadas",
-        "week": {
-          "select": "Seleccionar Semana",
-          "current": "Semana Actual",
-          "last": "Semana Pasada",
-          "twoWeeksAgo": "Hace Dos Semanas",
-          "threeWeeksAgo": "Hace Tres Semanas"
-        },
-        "tabs": {
-          "trending": "Sugerencias en Tendencia",
-          "selected": "Encuestas Seleccionadas",
-          "analytics": "Análisis"
-        },
-        "selection": {
-          "title": "Cómo Seleccionamos las Encuestas Destacadas",
-          "engagement": {
-            "title": "Participación de la Comunidad",
-            "highVotes": "Alto número de votos (500+ votos)",
-            "strongScore": "Puntuación de tendencia fuerte (70+)",
-            "activeDiscussion": "Discusión y compartir activos"
-          },
-          "platform": {
-            "title": "Consideraciones de la Plataforma",
-            "costEffective": "Económico de implementar",
-            "broadAppeal": "Atractivo demográfico amplio",
-            "timelyContent": "Contenido oportuno y relevante"
-          }
-        },
-        "trending": {
-          "title": "Sugerencias de Encuestas en Tendencia"
-        },
-        "suggestion": {
-          "suggestedBy": "Sugerida por {name}",
-          "votes": "{count, plural, one {# voto} other {# votos}}",
-          "cost": "costo {level}",
-          "engagement": "participación {level}"
-        },
-        "actions": {
-          "vote": "Votar",
-          "approve": "Aprobar"
-        },
-        "selected": {
-          "weekOf": "Semana del {week}",
-          "totalVotes": "{count, plural, one {# voto total} other {# votos totales}}",
-          "criteria": {
-            "title": "Criterios de Selección"
-          },
-          "polls": {
-            "title": "Encuestas Seleccionadas",
-            "votes": "{count, plural, one {# voto} other {# votos}}",
-            "featured": "Destacada",
-            "liveNow": "En Vivo Ahora"
-          }
-        },
-        "analytics": {
-          "totalSuggestions": "Total de Sugerencias",
-          "currentlyPublished": "Actualmente publicadas",
-          "communityVotes": "Votos de la Comunidad",
-          "acrossFeatured": "En encuestas destacadas",
-          "featuredPolls": "Encuestas Destacadas",
-          "thisWeek": "Esta semana",
-          "categoryBreakdown": "Desglose por Categoría"
-        }
-      }
-    }
-  },
-  "contact": {
-    "representatives": {
-      "featureDisabled": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto.",
-      "authRequired": "Inicia sesión para contactar a tus representantes.",
-      "header": {
-        "title": "Contacta a tus representantes",
-        "subtitle": "Envía mensajes directamente a tus funcionarios electos",
-        "count": "{formattedCount} {count, plural, one {representante} other {representantes}}"
-      },
-      "elections": {
-        "title": "Próximas elecciones en tus distritos",
-        "loading": "Cargando calendario electoral…",
-        "error": "No se pudieron cargar las elecciones en este momento.",
-        "date": "({date})",
-        "more": "+{count} elecciones adicionales registradas",
-        "countdown": {
-          "today": "¡La próxima elección es hoy!",
-          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
-        }
-      },
-      "actions": {
-        "message": "Enviar mensaje"
-      },
-      "threads": {
-        "loading": "Cargando conversaciones recientes…",
-        "title": "Mensajes recientes",
-        "count": "{formattedCount} {count, plural, one {mensaje} other {mensajes}}",
-        "noMessages": "Aún no hay mensajes"
-      }
-    },
-    "modal": {
-      "a11y": {
-        "liveOpen": "Se abrió el diálogo para contactar a {name}.",
-        "liveUnavailable": "Se abrió el diálogo de contacto no disponible."
-      },
-      "disabled": {
-        "title": "Sistema de contacto deshabilitado",
-        "description": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto."
-      },
-      "header": {
-        "title": "Contactar a {name}",
-        "subtitle": "{office}"
-      },
-      "elections": {
-        "title": "Próximas elecciones vinculadas a este representante",
-        "loading": "Consultando el calendario electoral…",
-        "error": "No se pudieron cargar las elecciones en este momento.",
-        "date": "({date})",
-        "more": "+{count} elecciones adicionales registradas",
-        "countdown": {
-          "today": "¡La próxima elección es hoy!",
-          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
-        }
-      },
-      "templates": {
-        "toggle": {
-          "inactive": "Usar una plantilla",
-          "active": "Usando: {title}"
-        },
-        "ariaLabel": "Plantillas de mensajes",
-        "instructions": "Selecciona una plantilla:",
-        "clear": "Borrar plantilla",
-        "fillLabel": "Completa los detalles de la plantilla:",
-        "validation": {
-          "missing": "Faltan campos obligatorios: {fields}"
-        }
-      },
-      "form": {
-        "subject": {
-          "label": "Asunto",
-          "placeholder": "¿De qué trata este mensaje?",
-          "required": "El asunto es obligatorio"
-        },
-        "message": {
-          "label": "Mensaje",
-          "placeholder": "Escribe tu mensaje aquí...",
-          "required": "El mensaje es obligatorio",
-          "count": "{current} / {max} caracteres"
-        }
-      },
-      "errors": {
-        "missingFields": "Completa el asunto y el mensaje.",
-        "sendFailed": "No se pudo enviar el mensaje."
-      },
-      "success": "¡Mensaje enviado correctamente!",
-      "footer": {
-        "responseTime": "Las respuestas suelen llegar en 2 a 3 días hábiles."
-      },
-      "actions": {
-        "close": "Cerrar",
-        "closeAria": "Cerrar modal de contacto",
-        "send": "Enviar mensaje",
-        "sending": "Enviando...",
-        "sendAria": "Enviar mensaje",
-        "sendingAria": "Enviando mensaje..."
-      }
-    },
-    "bulkModal": {
-      "a11y": {
-        "liveOpen": "Se abrió el diálogo de contacto masivo. {count} seleccionados.",
-        "liveUnavailable": "Se abrió el diálogo de contacto no disponible."
-      },
-      "disabled": {
-        "title": "Sistema de contacto deshabilitado",
-        "description": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto."
-      },
-      "header": {
-        "title": "Contacta a múltiples representantes",
-        "description": "Envía el mismo mensaje a {formattedCount} {count, plural, one {representante} other {representantes}}."
-      },
-      "selection": {
-        "heading": "Selecciona representantes ({formattedCount} seleccionados)"
-      },
-      "elections": {
-        "title": "Próximas elecciones para las divisiones seleccionadas",
-        "loading": "Cargando calendario electoral…",
-        "error": "No se pudieron cargar las elecciones en este momento.",
-        "date": "({date})",
-        "more": "+{count} elección(es) adicional(es)",
-        "countdown": {
-          "today": "¡La próxima elección es hoy!",
-          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
-        }
-      },
-      "templates": {
-        "toggle": {
-          "inactive": "Usar una plantilla",
-          "active": "Usando: {title}"
-        },
-        "ariaLabel": "Plantillas de mensajes",
-        "instructions": "Selecciona una plantilla:",
-        "clear": "Borrar plantilla",
-        "fillLabel": "Completa los detalles de la plantilla:",
-        "validation": {
-          "missing": "Faltan campos obligatorios: {fields}"
-        }
-      },
-      "form": {
-        "subject": {
-          "label": "Asunto",
-          "placeholder": "¿De qué trata este mensaje?",
-          "required": "El asunto es obligatorio"
-        },
-        "message": {
-          "label": "Mensaje",
-          "placeholder": "Escribe tu mensaje aquí...",
-          "required": "El mensaje es obligatorio",
-          "count": "{current} / {max} caracteres"
-        }
-      },
-      "errors": {
-        "missingFields": "Completa el asunto y el mensaje.",
-        "noRepresentatives": "Selecciona al menos un representante.",
-        "partial": "Se envió a {successCount} de {total} representantes. Algunos fallaron.",
-        "allFailed": "No se pudo enviar a ningún representante.",
-        "sendFailed": "No se pudieron enviar los mensajes."
-      },
-      "success": "¡Mensajes enviados correctamente a los {formattedCount} representantes seleccionados!",
-      "results": {
-        "title": "Resultados del envío",
-        "failureFallback": "Error desconocido"
-      },
-      "footer": {
-        "selection": "{formattedCount} {count, plural, one {representante} other {representantes}} seleccionados"
-      },
-      "actions": {
-        "close": "Cerrar diálogo",
-        "closeAria": "Cerrar modal de contacto masivo",
-        "send": "Enviar",
-        "sendLabel": "Enviar a todos ({formattedCount})",
-        "sendingLabel": "Enviando…",
-        "sendAria": "Enviar mensaje a {formattedCount} {count, plural, one {representante} other {representantes}}",
-        "sendingAria": "Enviando mensajes a {formattedCount} {count, plural, one {representante} other {representantes}}"
-      }
-    }
-  },
-  "auth": {
-    "loadingOptions": "Cargando opciones de autenticación...",
-    "heading": {
-      "signIn": "Inicia sesión en tu cuenta",
-      "signUp": "Crea tu cuenta"
-    },
-    "subheading": {
-      "signIn": "Bienvenido de nuevo a Choices",
-      "signUp": "Únete a Choices hoy"
-    },
-    "toggle": {
-      "toSignIn": "¿Ya tienes una cuenta? Inicia sesión",
-      "toSignUp": "¿No tienes una cuenta? Regístrate"
-    },
-    "errors": {
-      "emailRequired": "El correo electrónico es obligatorio",
-      "passwordRequired": "La contraseña es obligatoria",
-      "displayNameRequired": "El nombre visible es obligatorio",
-      "passwordsMismatch": "Las contraseñas no coinciden",
-      "registrationFailed": "El registro falló",
-      "loginFailed": "El inicio de sesión falló",
-      "unexpected": "Ocurrió un error inesperado"
-    },
-    "success": {
-      "accountCreated": "La cuenta se creó correctamente",
-      "login": "Inicio de sesión exitoso"
-    },
-    "passkey": {
-      "create": "Crear llave de acceso",
-      "signIn": "Iniciar sesión con llave de acceso",
-      "advancedOptions": "Opciones avanzadas",
-      "registerAdditional": "Registrar otra llave de acceso",
-      "viewCredentials": "Ver credenciales",
-      "manageCredentials": "Gestionar credenciales",
-      "loading": "Cargando…",
-      "noCredentials": "No se encontraron credenciales",
-      "remove": "Eliminar",
-      "removing": "Eliminando…",
-      "close": "Cerrar",
-      "registrationSuccess": "¡Registro exitoso!",
-      "registrationSuccessBody": "Tu llave de acceso se creó y guardó correctamente.",
-      "loginSuccess": "¡Inicio de sesión exitoso!",
-      "loginSuccessBody": "Has iniciado sesión correctamente.",
-      "hint": "Usa la huella, Face ID o llave de seguridad de tu dispositivo para una autenticación segura sin contraseña.",
-      "signInFirstForPasskey": "Para usar una llave de acceso de Choices, inicia sesión primero con correo y contraseña y luego crea una llave desde esta página mientras estés conectado. Las llaves que solo guarda tu navegador o gestor para esta URL no están registradas en Choices hasta que las añadas.",
-      "yourPasskeys": "Tus llaves de acceso",
-      "loadingPasskeys": "Cargando llaves de acceso...",
-      "noPasskeysYet": "Aún no hay llaves. Añade una desde este dispositivo; la biometría se queda en tu dispositivo.",
-      "addPasskey": "Añadir llave de acceso",
-      "addAnother": "+ Añadir otra llave de acceso",
-      "unnamedDevice": "Dispositivo sin nombre",
-      "lastUsed": "Último uso",
-      "added": "Añadida",
-      "neverUsed": "Nunca usada",
-      "rename": "Renombrar",
-      "revoke": "Revocar",
-      "save": "Guardar",
-      "cancel": "Cancelar",
-      "notSupported": "WebAuthn no compatible",
-      "notSupportedDescription": "Tu navegador no soporta WebAuthn. Usa un navegador moderno u otro método de autenticación.",
-      "loginTitle": "Iniciar sesión con llave de acceso",
-      "loginDescription": "Usa tu llave de acceso registrada para iniciar sesión de forma segura",
-      "authSuccessful": "¡Autenticación exitosa!",
-      "signedIn": "Has iniciado sesión correctamente.",
-      "redirecting": "Redirigiendo al panel...",
-      "deviceAuth": "Autenticación del dispositivo",
-      "deviceAuthDesc": "Tu dispositivo te pedirá usar biometría o la contraseña del dispositivo",
-      "registeredPasskeys": "Llaves de acceso registradas",
-      "registeredPasskeysDesc": "Detectaremos y usaremos automáticamente tus llaves registradas",
-      "errorHint": "Si el problema continúa, prueba con correo y contraseña.",
-      "useEmailInstead": "Usar correo en su lugar",
-      "authenticating": "Autenticando...",
-      "followPrompt": "Sigue las instrucciones del dispositivo",
-      "verifiedOnDevice": "Tu llave se verifica en tu dispositivo",
-      "noPasswordsTransmitted": "No se transmiten contraseñas ni datos personales",
-      "worksWith": "Compatible con Touch ID, Face ID, Windows Hello y llaves de seguridad",
-      "registerTitle": "Registrar llave de acceso",
-      "registerDescription": "Crea una llave segura con biometría o llave de seguridad de tu dispositivo",
-      "createdAndCanSignIn": "Tu llave se creó correctamente. Ya puedes usarla para iniciar sesión.",
-      "closeAndUseNextTime": "Puedes cerrar y usar tu llave la próxima vez.",
-      "showAdvanced": "Mostrar opciones avanzadas",
-      "hideAdvanced": "Ocultar opciones avanzadas",
-      "usernameOptional": "Usuario (opcional)",
-      "usernamePlaceholder": "Introduce un usuario",
-      "usernamelessHint": "Deja vacío para autenticación sin usuario",
-      "displayNameOptional": "Nombre visible (opcional)",
-      "displayNamePlaceholder": "Introduce un nombre visible",
-      "displayNameSignInHint": "Se mostrará al iniciar sesión",
-      "creatingPasskey": "Creando llave de acceso...",
-      "storedSecurely": "Tu llave se guarda de forma segura en tu dispositivo",
-      "trustScoreLabel": "Puntuación de confianza: {score}/100",
-      "backupPrompt": "Añade una llave de respaldo para no perder el acceso si pierdes este dispositivo",
-      "operationCancelled": "Operación cancelada",
-      "operationTimeout": "Tiempo de espera agotado",
-      "operationTimeoutHelp": "Inténtalo de nuevo o usa correo y contraseña.",
-      "authenticationError": "No se encontraron credenciales",
-      "authenticationErrorHelp": "Registra primero una llave de acceso o usa correo y contraseña.",
-      "networkError": "Error de red",
-      "networkErrorHelp": "Comprueba tu conexión e inténtalo de nuevo.",
-      "serverError": "Error del servidor",
-      "serverErrorHelp": "Inténtalo más tarde o usa correo y contraseña.",
-      "biometricNotSupported": "Biometría no compatible",
-      "biometricNotSupportedDesc": "Tu dispositivo o navegador no soporta biometría. Puedes seguir usando correo y contraseña.",
-      "backToProfile": "Volver al perfil",
-      "checkingDeviceSupport": "Comprobando compatibilidad del dispositivo...",
-      "setUpBiometricTitle": "Configurar autenticación biométrica",
-      "setUpBiometricDesc": "Usa tu huella, rostro u otra biometría para iniciar sesión de forma segura",
-      "trustAndSecurity": "Confianza y seguridad:",
-      "trustBenefit": "Añadir una llave sube tu nivel de confianza a Confiable y refuerza la prueba de identidad",
-      "howItWorks": "Cómo funciona:",
-      "howItWorksTouch": "Toca el sensor de huella o usa reconocimiento facial",
-      "howItWorksStays": "Tus datos biométricos se quedan en tu dispositivo",
-      "howItWorksNoPasswords": "No necesitas contraseñas para futuros inicios de sesión",
-      "howItWorksDevices": "Funciona en dispositivos compatibles",
-      "passkeyAddedSuccess": "Llave añadida. Tu nivel de confianza es ahora Confiable. Redirigiendo…",
-      "alreadyHavePasskey": "Ya tienes una llave registrada. Registrar otra añadirá otra credencial.",
-      "skipForNow": "Omitir por ahora"
-    },
-    "form": {
-      "errorSummaryTitle": "Corrige los siguientes errores:",
-      "errorSummaryCount": "{count, plural, one {Queda # error} other {Quedan # errores}}",
-      "rateLimited": "Demasiados intentos. Inténtalo de nuevo más tarde.",
-      "displayNameLabel": "Nombre visible",
-      "displayNamePlaceholder": "Tu nombre visible",
-      "displayNameAria": "Nombre visible",
-      "displayNameValidation": "✓ El nombre visible está disponible",
-      "displayNameError": "El nombre visible es obligatorio",
-      "emailLabel": "Correo electrónico",
-      "emailPlaceholder": "tu@email.com",
-      "emailAria": "Dirección de correo electrónico",
-      "emailValidation": "✓ Formato de correo válido",
-      "emailError": "El correo electrónico es obligatorio",
-      "passwordLabel": "Contraseña",
-      "passwordPlaceholder": "••••••••",
-      "passwordAria": "Contraseña",
-      "hidePassword": "Ocultar contraseña",
-      "showPassword": "Mostrar contraseña",
-      "passwordStrength": "Segura",
-      "passwordSecurity": "La contraseña es segura",
-      "confirmPasswordLabel": "Confirmar contraseña",
-      "confirmPasswordAria": "Confirmar contraseña",
-      "passwordsMatch": "✓ Las contraseñas coinciden",
-      "working": "Trabajando...",
-      "submit": {
-        "signUp": "Registrarse",
-        "signIn": "Iniciar sesión"
-      },
-      "altSignInDivider": "O usa una llave de acceso",
-      "passkeySectionSummary": "Iniciar sesión con llave de acceso"
-    }
-  },
-  "pwa": {
-    "installer": {
-      "prompt": {
-        "title": "Instala Choices",
-        "subtitle": "Obtén la app para una experiencia rápida y disponible sin conexión.",
-        "dismiss": "Después",
-        "install": "Instalar",
-        "installAria": "Instalar la aplicación Choices"
-      },
-      "benefits": {
-        "homeScreen": "Abre Choices directamente desde tu pantalla de inicio",
-        "performance": "Disfruta de un rendimiento más rápido y fluido",
-        "offline": "Vota sin conexión; las acciones se sincronizan al reconectarte",
-        "notifications": "Recibe notificaciones sobre nuevas encuestas y resultados",
-        "native": "Experimenta controles y navegación tipo aplicación nativa"
-      },
-      "offlineStatus": {
-        "titleOnline": "Votos listos para sincronizar",
-        "titleOffline": "Votos sin conexión guardados",
-        "description": "{count, plural, one {# voto esperando a enviarse} other {# votos esperando a enviarse}}",
-        "syncButton": "Sincronizar ahora"
-      },
-      "offlineBanner": "Estás sin conexión. Los votos se guardan y se sincronizan cuando regreses.",
-      "live": {
-        "installPrompt": "Instala Choices para usarlo cuando quieras.",
-        "installSuccess": "Choices se instaló correctamente. Ya puedes usarlo sin conexión.",
-        "installError": "No se pudo instalar. Inténtalo más tarde.",
-        "offlineVotesPending": "{count, plural, one {# voto sin conexión pendiente.} other {# votos sin conexión pendientes.}}",
-        "offline": "Estás sin conexión. Los votos se sincronizarán cuando vuelvas a conectarte."
-      },
-      "notifications": {
-        "syncSuccess": {
-          "title": "¡Votos sincronizados! 📤",
-          "message": "{count, plural, one {Se envió # voto sin conexión.} other {Se enviaron # votos sin conexión.}}"
-        },
-        "syncError": {
-          "title": "La sincronización falló",
-          "message": "Inténtalo de nuevo cuando tengas una conexión estable."
-        },
-        "installSuccess": {
-          "title": "¡Choices se instaló correctamente! 🎉",
-          "message": "Ahora puedes usar Choices sin conexión y recibir notificaciones."
-        },
-        "installError": {
-          "title": "La instalación falló",
-          "message": "Inténtalo de nuevo más tarde o revisa tu conexión."
-        }
-      }
-    }
-  },
-  "polls": {
     "view": {
       "privacy": {
         "public": "Público",
@@ -3971,6 +2987,681 @@
           "message": "No se pudo enviar el voto"
         }
       }
+    },
+    "categories": {
+      "general": "General",
+      "business": "Business",
+      "education": "Education",
+      "technology": "Technology",
+      "health": "Health",
+      "finance": "Finance",
+      "environment": "Environment",
+      "social": "Social"
+    }
+  },
+  "contact": {
+    "representatives": {
+      "featureDisabled": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto.",
+      "authRequired": "Inicia sesión para contactar a tus representantes.",
+      "header": {
+        "title": "Contacta a tus representantes",
+        "subtitle": "Envía mensajes directamente a tus funcionarios electos",
+        "count": "{formattedCount} {count, plural, one {representante} other {representantes}}"
+      },
+      "elections": {
+        "title": "Próximas elecciones en tus distritos",
+        "loading": "Cargando calendario electoral…",
+        "error": "No se pudieron cargar las elecciones en este momento.",
+        "date": "({date})",
+        "more": "+{count} elecciones adicionales registradas",
+        "countdown": {
+          "today": "¡La próxima elección es hoy!",
+          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "actions": {
+        "message": "Enviar mensaje"
+      },
+      "threads": {
+        "loading": "Cargando conversaciones recientes…",
+        "title": "Mensajes recientes",
+        "count": "{formattedCount} {count, plural, one {mensaje} other {mensajes}}",
+        "noMessages": "Aún no hay mensajes"
+      }
+    },
+    "modal": {
+      "a11y": {
+        "liveOpen": "Se abrió el diálogo para contactar a {name}.",
+        "liveUnavailable": "Se abrió el diálogo de contacto no disponible."
+      },
+      "disabled": {
+        "title": "Sistema de contacto deshabilitado",
+        "description": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto."
+      },
+      "header": {
+        "title": "Contactar a {name}",
+        "subtitle": "{office}"
+      },
+      "elections": {
+        "title": "Próximas elecciones vinculadas a este representante",
+        "loading": "Consultando el calendario electoral…",
+        "error": "No se pudieron cargar las elecciones en este momento.",
+        "date": "({date})",
+        "more": "+{count} elecciones adicionales registradas",
+        "countdown": {
+          "today": "¡La próxima elección es hoy!",
+          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "templates": {
+        "toggle": {
+          "inactive": "Usar una plantilla",
+          "active": "Usando: {title}"
+        },
+        "ariaLabel": "Plantillas de mensajes",
+        "instructions": "Selecciona una plantilla:",
+        "clear": "Borrar plantilla",
+        "fillLabel": "Completa los detalles de la plantilla:",
+        "validation": {
+          "missing": "Faltan campos obligatorios: {fields}"
+        }
+      },
+      "form": {
+        "subject": {
+          "label": "Asunto",
+          "placeholder": "¿De qué trata este mensaje?",
+          "required": "El asunto es obligatorio"
+        },
+        "message": {
+          "label": "Mensaje",
+          "placeholder": "Escribe tu mensaje aquí...",
+          "required": "El mensaje es obligatorio",
+          "count": "{current} / {max} caracteres"
+        }
+      },
+      "errors": {
+        "missingFields": "Completa el asunto y el mensaje.",
+        "sendFailed": "No se pudo enviar el mensaje."
+      },
+      "success": "¡Mensaje enviado correctamente!",
+      "footer": {
+        "responseTime": "Las respuestas suelen llegar en 2 a 3 días hábiles."
+      },
+      "actions": {
+        "close": "Cerrar",
+        "closeAria": "Cerrar modal de contacto",
+        "send": "Enviar mensaje",
+        "sending": "Enviando...",
+        "sendAria": "Enviar mensaje",
+        "sendingAria": "Enviando mensaje..."
+      }
+    },
+    "bulkModal": {
+      "a11y": {
+        "liveOpen": "Se abrió el diálogo de contacto masivo. {count} seleccionados.",
+        "liveUnavailable": "Se abrió el diálogo de contacto no disponible."
+      },
+      "disabled": {
+        "title": "Sistema de contacto deshabilitado",
+        "description": "El sistema de contactos está deshabilitado. Esta función estará disponible pronto."
+      },
+      "header": {
+        "title": "Contacta a múltiples representantes",
+        "description": "Envía el mismo mensaje a {formattedCount} {count, plural, one {representante} other {representantes}}."
+      },
+      "selection": {
+        "heading": "Selecciona representantes ({formattedCount} seleccionados)"
+      },
+      "elections": {
+        "title": "Próximas elecciones para las divisiones seleccionadas",
+        "loading": "Cargando calendario electoral…",
+        "error": "No se pudieron cargar las elecciones en este momento.",
+        "date": "({date})",
+        "more": "+{count} elección(es) adicional(es)",
+        "countdown": {
+          "today": "¡La próxima elección es hoy!",
+          "inDays": "Próxima elección en {formattedCount} {count, plural, one {día} other {días}}."
+        }
+      },
+      "templates": {
+        "toggle": {
+          "inactive": "Usar una plantilla",
+          "active": "Usando: {title}"
+        },
+        "ariaLabel": "Plantillas de mensajes",
+        "instructions": "Selecciona una plantilla:",
+        "clear": "Borrar plantilla",
+        "fillLabel": "Completa los detalles de la plantilla:",
+        "validation": {
+          "missing": "Faltan campos obligatorios: {fields}"
+        }
+      },
+      "form": {
+        "subject": {
+          "label": "Asunto",
+          "placeholder": "¿De qué trata este mensaje?",
+          "required": "El asunto es obligatorio"
+        },
+        "message": {
+          "label": "Mensaje",
+          "placeholder": "Escribe tu mensaje aquí...",
+          "required": "El mensaje es obligatorio",
+          "count": "{current} / {max} caracteres"
+        }
+      },
+      "errors": {
+        "missingFields": "Completa el asunto y el mensaje.",
+        "noRepresentatives": "Selecciona al menos un representante.",
+        "partial": "Se envió a {successCount} de {total} representantes. Algunos fallaron.",
+        "allFailed": "No se pudo enviar a ningún representante.",
+        "sendFailed": "No se pudieron enviar los mensajes."
+      },
+      "success": "¡Mensajes enviados correctamente a los {formattedCount} representantes seleccionados!",
+      "results": {
+        "title": "Resultados del envío",
+        "failureFallback": "Error desconocido"
+      },
+      "footer": {
+        "selection": "{formattedCount} {count, plural, one {representante} other {representantes}} seleccionados"
+      },
+      "actions": {
+        "close": "Cerrar diálogo",
+        "closeAria": "Cerrar modal de contacto masivo",
+        "send": "Enviar",
+        "sendLabel": "Enviar a todos ({formattedCount})",
+        "sendingLabel": "Enviando…",
+        "sendAria": "Enviar mensaje a {formattedCount} {count, plural, one {representante} other {representantes}}",
+        "sendingAria": "Enviando mensajes a {formattedCount} {count, plural, one {representante} other {representantes}}"
+      }
+    },
+    "templates": {
+      "support-bill": {
+        "title": "Support for Legislation",
+        "description": "Express support for a specific bill or policy proposal",
+        "placeholders": {
+          "billName": {
+            "label": "Bill Name",
+            "example": "Climate Action Act"
+          },
+          "billNumber": {
+            "label": "Bill Number",
+            "example": "H.R. 1234"
+          },
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "personalStatement": {
+            "label": "Personal Statement",
+            "example": "As a concerned citizen, I believe..."
+          },
+          "reason1": {
+            "label": "Reason 1",
+            "example": "It addresses climate change"
+          },
+          "reason2": {
+            "label": "Reason 2",
+            "example": "It creates jobs"
+          },
+          "reason3": {
+            "label": "Reason 3",
+            "example": "It protects the environment"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userAddress": {
+            "label": "Your Address",
+            "example": "123 Main St, City, State ZIP"
+          }
+        }
+      },
+      "oppose-bill": {
+        "title": "Opposition to Legislation",
+        "description": "Express opposition to a specific bill or policy proposal",
+        "placeholders": {
+          "billName": {
+            "label": "Bill Name",
+            "example": "Regulatory Reform Act"
+          },
+          "billNumber": {
+            "label": "Bill Number",
+            "example": "H.R. 5678"
+          },
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "personalStatement": {
+            "label": "Personal Statement",
+            "example": "I am concerned that..."
+          },
+          "concern1": {
+            "label": "Concern 1",
+            "example": "It may harm the environment"
+          },
+          "concern2": {
+            "label": "Concern 2",
+            "example": "It lacks sufficient safeguards"
+          },
+          "concern3": {
+            "label": "Concern 3",
+            "example": "It may impact vulnerable communities"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userAddress": {
+            "label": "Your Address",
+            "example": "123 Main St, City, State ZIP"
+          }
+        }
+      },
+      "general-question": {
+        "title": "General Question",
+        "description": "Ask a general question about policy or representation",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "topic": {
+            "label": "Topic",
+            "example": "Healthcare Reform"
+          },
+          "question": {
+            "label": "Your Question",
+            "example": "What is your position on..."
+          },
+          "additionalContext": {
+            "label": "Additional Context",
+            "example": "This is important to me because..."
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userEmail": {
+            "label": "Your Email",
+            "example": "john@example.com"
+          }
+        }
+      },
+      "constituent-service": {
+        "title": "Constituent Service Request",
+        "description": "Request help with a government service or issue",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "issue": {
+            "label": "Issue Summary",
+            "example": "Social Security Benefits"
+          },
+          "issueDescription": {
+            "label": "Issue Description",
+            "example": "I have been waiting for..."
+          },
+          "attempt1": {
+            "label": "Attempt 1",
+            "example": "Contacted the agency directly"
+          },
+          "attempt2": {
+            "label": "Attempt 2",
+            "example": "Submitted required documentation"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          },
+          "userContactInfo": {
+            "label": "Contact Information",
+            "example": "Phone: 555-1234, Email: john@example.com"
+          }
+        }
+      },
+      "thank-you": {
+        "title": "Thank You Message",
+        "description": "Thank your representative for their work or vote",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "action": {
+            "label": "Action",
+            "example": "voting in favor of the Climate Action Act"
+          },
+          "reason": {
+            "label": "Why You're Thankful",
+            "example": "This legislation is important to our community..."
+          },
+          "actionType": {
+            "label": "Action Type",
+            "example": "vote"
+          },
+          "value": {
+            "label": "Value",
+            "example": "environmental protection"
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          }
+        }
+      },
+      "policy-feedback": {
+        "title": "Policy Feedback",
+        "description": "Provide feedback on a specific policy or issue",
+        "placeholders": {
+          "representativeTitle": {
+            "label": "Representative Title",
+            "example": "Representative"
+          },
+          "representativeLastName": {
+            "label": "Representative Last Name",
+            "example": "Smith"
+          },
+          "policyTopic": {
+            "label": "Policy Topic",
+            "example": "Healthcare Reform"
+          },
+          "feedback": {
+            "label": "Your Feedback",
+            "example": "I support this approach because..."
+          },
+          "recommendation": {
+            "label": "Your Recommendation",
+            "example": "we should prioritize..."
+          },
+          "additionalThoughts": {
+            "label": "Additional Thoughts",
+            "example": "I also wanted to mention..."
+          },
+          "userName": {
+            "label": "Your Name",
+            "example": "John Doe"
+          }
+        }
+      }
+    }
+  },
+  "auth": {
+    "loadingOptions": "Cargando opciones de autenticación...",
+    "heading": {
+      "signIn": "Inicia sesión en tu cuenta",
+      "signUp": "Crea tu cuenta"
+    },
+    "subheading": {
+      "signIn": "Bienvenido de nuevo a Choices",
+      "signUp": "Únete a Choices hoy"
+    },
+    "toggle": {
+      "toSignIn": "¿Ya tienes una cuenta? Inicia sesión",
+      "toSignUp": "¿No tienes una cuenta? Regístrate"
+    },
+    "errors": {
+      "emailRequired": "El correo electrónico es obligatorio",
+      "passwordRequired": "La contraseña es obligatoria",
+      "displayNameRequired": "El nombre visible es obligatorio",
+      "passwordsMismatch": "Las contraseñas no coinciden",
+      "registrationFailed": "El registro falló",
+      "loginFailed": "El inicio de sesión falló",
+      "unexpected": "Ocurrió un error inesperado",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "displayNameInvalid": "Display name must include at least 3 letters or numbers",
+      "serviceUnavailable": "Authentication service not available"
+    },
+    "success": {
+      "accountCreated": "La cuenta se creó correctamente",
+      "login": "Inicio de sesión exitoso"
+    },
+    "passkey": {
+      "create": "Crear llave de acceso",
+      "signIn": "Iniciar sesión con llave de acceso",
+      "advancedOptions": "Opciones avanzadas",
+      "registerAdditional": "Registrar otra llave de acceso",
+      "viewCredentials": "Ver credenciales",
+      "manageCredentials": "Gestionar credenciales",
+      "loading": "Cargando…",
+      "noCredentials": "No se encontraron credenciales",
+      "remove": "Eliminar",
+      "removing": "Eliminando…",
+      "close": "Cerrar",
+      "registrationSuccess": "¡Registro exitoso!",
+      "registrationSuccessBody": "Tu llave de acceso se creó y guardó correctamente.",
+      "loginSuccess": "¡Inicio de sesión exitoso!",
+      "loginSuccessBody": "Has iniciado sesión correctamente.",
+      "hint": "Usa la huella, Face ID o llave de seguridad de tu dispositivo para una autenticación segura sin contraseña.",
+      "signInFirstForPasskey": "Para usar una llave de acceso de Choices, inicia sesión primero con correo y contraseña y luego crea una llave desde esta página mientras estés conectado. Las llaves que solo guarda tu navegador o gestor para esta URL no están registradas en Choices hasta que las añadas.",
+      "yourPasskeys": "Tus llaves de acceso",
+      "loadingPasskeys": "Cargando llaves de acceso...",
+      "noPasskeysYet": "Aún no hay llaves. Añade una desde este dispositivo; la biometría se queda en tu dispositivo.",
+      "addPasskey": "Añadir llave de acceso",
+      "addAnother": "+ Añadir otra llave de acceso",
+      "unnamedDevice": "Dispositivo sin nombre",
+      "lastUsed": "Último uso",
+      "added": "Añadida",
+      "neverUsed": "Nunca usada",
+      "rename": "Renombrar",
+      "revoke": "Revocar",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "notSupported": "WebAuthn no compatible",
+      "notSupportedDescription": "Tu navegador no soporta WebAuthn. Usa un navegador moderno u otro método de autenticación.",
+      "loginTitle": "Iniciar sesión con llave de acceso",
+      "loginDescription": "Usa tu llave de acceso registrada para iniciar sesión de forma segura",
+      "authSuccessful": "¡Autenticación exitosa!",
+      "signedIn": "Has iniciado sesión correctamente.",
+      "redirecting": "Redirigiendo al panel...",
+      "deviceAuth": "Autenticación del dispositivo",
+      "deviceAuthDesc": "Tu dispositivo te pedirá usar biometría o la contraseña del dispositivo",
+      "registeredPasskeys": "Llaves de acceso registradas",
+      "registeredPasskeysDesc": "Detectaremos y usaremos automáticamente tus llaves registradas",
+      "errorHint": "Si el problema continúa, prueba con correo y contraseña.",
+      "useEmailInstead": "Usar correo en su lugar",
+      "authenticating": "Autenticando...",
+      "followPrompt": "Sigue las instrucciones del dispositivo",
+      "verifiedOnDevice": "Tu llave se verifica en tu dispositivo",
+      "noPasswordsTransmitted": "No se transmiten contraseñas ni datos personales",
+      "worksWith": "Compatible con Touch ID, Face ID, Windows Hello y llaves de seguridad",
+      "registerTitle": "Registrar llave de acceso",
+      "registerDescription": "Crea una llave segura con biometría o llave de seguridad de tu dispositivo",
+      "createdAndCanSignIn": "Tu llave se creó correctamente. Ya puedes usarla para iniciar sesión.",
+      "closeAndUseNextTime": "Puedes cerrar y usar tu llave la próxima vez.",
+      "showAdvanced": "Mostrar opciones avanzadas",
+      "hideAdvanced": "Ocultar opciones avanzadas",
+      "usernameOptional": "Usuario (opcional)",
+      "usernamePlaceholder": "Introduce un usuario",
+      "usernamelessHint": "Deja vacío para autenticación sin usuario",
+      "displayNameOptional": "Nombre visible (opcional)",
+      "displayNamePlaceholder": "Introduce un nombre visible",
+      "displayNameSignInHint": "Se mostrará al iniciar sesión",
+      "creatingPasskey": "Creando llave de acceso...",
+      "storedSecurely": "Tu llave se guarda de forma segura en tu dispositivo",
+      "trustScoreLabel": "Puntuación de confianza: {score}/100",
+      "backupPrompt": "Añade una llave de respaldo para no perder el acceso si pierdes este dispositivo",
+      "operationCancelled": "Operación cancelada",
+      "operationTimeout": "Tiempo de espera agotado",
+      "operationTimeoutHelp": "Inténtalo de nuevo o usa correo y contraseña.",
+      "authenticationError": "No se encontraron credenciales",
+      "authenticationErrorHelp": "Registra primero una llave de acceso o usa correo y contraseña.",
+      "networkError": "Error de red",
+      "networkErrorHelp": "Comprueba tu conexión e inténtalo de nuevo.",
+      "serverError": "Error del servidor",
+      "serverErrorHelp": "Inténtalo más tarde o usa correo y contraseña.",
+      "biometricNotSupported": "Biometría no compatible",
+      "biometricNotSupportedDesc": "Tu dispositivo o navegador no soporta biometría. Puedes seguir usando correo y contraseña.",
+      "backToProfile": "Volver al perfil",
+      "checkingDeviceSupport": "Comprobando compatibilidad del dispositivo...",
+      "setUpBiometricTitle": "Configurar autenticación biométrica",
+      "setUpBiometricDesc": "Usa tu huella, rostro u otra biometría para iniciar sesión de forma segura",
+      "trustAndSecurity": "Confianza y seguridad:",
+      "trustBenefit": "Añadir una llave sube tu nivel de confianza a Confiable y refuerza la prueba de identidad",
+      "howItWorks": "Cómo funciona:",
+      "howItWorksTouch": "Toca el sensor de huella o usa reconocimiento facial",
+      "howItWorksStays": "Tus datos biométricos se quedan en tu dispositivo",
+      "howItWorksNoPasswords": "No necesitas contraseñas para futuros inicios de sesión",
+      "howItWorksDevices": "Funciona en dispositivos compatibles",
+      "passkeyAddedSuccess": "Llave añadida. Tu nivel de confianza es ahora Confiable. Redirigiendo…",
+      "alreadyHavePasskey": "Ya tienes una llave registrada. Registrar otra añadirá otra credencial.",
+      "skipForNow": "Omitir por ahora"
+    },
+    "form": {
+      "errorSummaryTitle": "Corrige los siguientes errores:",
+      "errorSummaryCount": "{count, plural, one {Queda # error} other {Quedan # errores}}",
+      "rateLimited": "Demasiados intentos. Inténtalo de nuevo más tarde.",
+      "displayNameLabel": "Nombre visible",
+      "displayNamePlaceholder": "Tu nombre visible",
+      "displayNameAria": "Nombre visible",
+      "displayNameValidation": "✓ El nombre visible está disponible",
+      "displayNameError": "El nombre visible es obligatorio",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "emailAria": "Dirección de correo electrónico",
+      "emailValidation": "✓ Formato de correo válido",
+      "emailError": "El correo electrónico es obligatorio",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "••••••••",
+      "passwordAria": "Contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "showPassword": "Mostrar contraseña",
+      "passwordStrength": "Segura",
+      "passwordSecurity": "La contraseña es segura",
+      "confirmPasswordLabel": "Confirmar contraseña",
+      "confirmPasswordAria": "Confirmar contraseña",
+      "passwordsMatch": "✓ Las contraseñas coinciden",
+      "working": "Trabajando...",
+      "submit": {
+        "signUp": "Registrarse",
+        "signIn": "Iniciar sesión"
+      },
+      "altSignInDivider": "O usa una llave de acceso",
+      "passkeySectionSummary": "Iniciar sesión con llave de acceso",
+      "rateLimitedHelp": "Please wait a moment before trying again. This helps us prevent abuse and ensure service availability for all users.",
+      "completeFields": "Please complete all required fields.",
+      "forgotPassword": "Forgot password?",
+      "passwordLengthError": "Password must be at least {length} characters",
+      "passwordValidation": "✓ Password meets minimum length",
+      "orContinueWith": "Or continue with"
+    },
+    "loading": "Loading authentication...",
+    "reset": {
+      "heading": "Reset your password",
+      "subheading": "We’ll email you a secure reset link.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send reset link",
+      "working": "Sending...",
+      "successTitle": "Check your inbox",
+      "successBody": "If an account exists for that email, we sent a reset link.",
+      "error": "We couldn’t send that reset link. Please try again.",
+      "backToSignIn": "Back to sign in",
+      "confirm": {
+        "heading": "Choose a new password",
+        "subheading": "Make sure it’s at least 8 characters.",
+        "newPasswordLabel": "New password",
+        "newPasswordPlaceholder": "Enter a new password",
+        "confirmPasswordLabel": "Confirm new password",
+        "updateButton": "Update password",
+        "working": "Updating...",
+        "loading": "Preparing reset...",
+        "successTitle": "Password updated",
+        "successBody": "You can now sign in with your new password.",
+        "invalidLink": "This reset link is invalid or has expired.",
+        "requestNewLink": "Request a new reset link"
+      }
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Join Choices and start making better decisions",
+      "email": "Email",
+      "username": "Username",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Create account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "or": "Or",
+      "passkey": {
+        "title": "Sign up with Passkey",
+        "description": "Secure, passwordless authentication with biometrics",
+        "hasAccount": "Already have an account?",
+        "signIn": "Sign in"
+      }
+    }
+  },
+  "pwa": {
+    "installer": {
+      "prompt": {
+        "title": "Instala Choices",
+        "subtitle": "Obtén la app para una experiencia rápida y disponible sin conexión.",
+        "dismiss": "Después",
+        "install": "Instalar",
+        "installAria": "Instalar la aplicación Choices"
+      },
+      "benefits": {
+        "homeScreen": "Abre Choices directamente desde tu pantalla de inicio",
+        "performance": "Disfruta de un rendimiento más rápido y fluido",
+        "offline": "Vota sin conexión; las acciones se sincronizan al reconectarte",
+        "notifications": "Recibe notificaciones sobre nuevas encuestas y resultados",
+        "native": "Experimenta controles y navegación tipo aplicación nativa"
+      },
+      "offlineStatus": {
+        "titleOnline": "Votos listos para sincronizar",
+        "titleOffline": "Votos sin conexión guardados",
+        "description": "{count, plural, one {# voto esperando a enviarse} other {# votos esperando a enviarse}}",
+        "syncButton": "Sincronizar ahora"
+      },
+      "offlineBanner": "Estás sin conexión. Los votos se guardan y se sincronizan cuando regreses.",
+      "live": {
+        "installPrompt": "Instala Choices para usarlo cuando quieras.",
+        "installSuccess": "Choices se instaló correctamente. Ya puedes usarlo sin conexión.",
+        "installError": "No se pudo instalar. Inténtalo más tarde.",
+        "offlineVotesPending": "{count, plural, one {# voto sin conexión pendiente.} other {# votos sin conexión pendientes.}}",
+        "offline": "Estás sin conexión. Los votos se sincronizarán cuando vuelvas a conectarte."
+      },
+      "notifications": {
+        "syncSuccess": {
+          "title": "¡Votos sincronizados! 📤",
+          "message": "{count, plural, one {Se envió # voto sin conexión.} other {Se enviaron # votos sin conexión.}}"
+        },
+        "syncError": {
+          "title": "La sincronización falló",
+          "message": "Inténtalo de nuevo cuando tengas una conexión estable."
+        },
+        "installSuccess": {
+          "title": "¡Choices se instaló correctamente! 🎉",
+          "message": "Ahora puedes usar Choices sin conexión y recibir notificaciones."
+        },
+        "installError": {
+          "title": "La instalación falló",
+          "message": "Inténtalo de nuevo más tarde o revisa tu conexión."
+        }
+      }
     }
   },
   "harness": {
@@ -4051,6 +3742,11 @@
     "terms": "Términos de Servicio",
     "privacy": "Política de Privacidad",
     "legalNav": "Avisos legales"
+  },
+  "pages": {
+    "default": "Page",
+    "pollDetails": "Poll details",
+    "representative": "Representative",
+    "civicAction": "Civic action"
   }
 }
-

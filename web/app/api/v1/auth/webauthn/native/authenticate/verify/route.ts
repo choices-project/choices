@@ -11,11 +11,14 @@
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, resolveExpectedWebauthnOrigin } from '@/features/auth/lib/webauthn/config';
-
 
 import { withErrorHandling, forbiddenError, errorResponse, validationError, successResponse, rateLimitError } from '@/lib/api';
 import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS, WEBAUTHN_CREDENTIAL_SELECT_COLUMNS } from '@/lib/api/response-builders';
@@ -33,6 +36,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     // Disable during build time
     if (process.env.NODE_ENV === 'production' && !env.VERCEL) {
       return errorResponse('WebAuthn routes disabled during build', 503);
+    }
+
+    if (!(await validateCsrfProtection(req))) {
+      return createCsrfErrorResponse();
     }
 
     const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);

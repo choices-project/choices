@@ -13,6 +13,8 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '@/lib/utils/logger';
 
 import { createBaseStoreActions } from './baseStoreActions';
@@ -117,6 +119,69 @@ const createInitialHashtagModerationState = (): HashtagModerationState => ({
   selectedModeration: null,
   isLoading: false,
 });
+
+type ModerationQueueApiItem = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  moderation: {
+    status: string;
+    flags?: Array<{
+      id: string;
+      hashtag_id: string;
+      user_id: string;
+      flag_type: string;
+      reason: string;
+      status: string;
+      created_at: string;
+    }>;
+  };
+};
+
+function mapFlagStatusForStore(raw: string): HashtagModerationStatus {
+  if (raw === 'pending') return 'pending';
+  if (raw === 'rejected') return 'rejected';
+  if (raw === 'resolved' || raw === 'approved') return 'approved';
+  return 'under_review';
+}
+
+function mapApiQueueItemToStoreModeration(item: ModerationQueueApiItem): HashtagModeration {
+  const modStatus = item.moderation.status;
+  const status: HashtagModerationStatus =
+    modStatus === 'approved'
+      ? 'approved'
+      : modStatus === 'rejected'
+        ? 'rejected'
+        : modStatus === 'pending'
+          ? 'pending'
+          : 'under_review';
+
+  const allowed: HashtagFlagType[] = ['inappropriate', 'spam', 'misleading', 'harassment', 'other'];
+
+  const flags: HashtagFlag[] = (item.moderation.flags ?? []).map((f) => {
+    const ft = allowed.includes(f.flag_type as HashtagFlagType)
+      ? (f.flag_type as HashtagFlagType)
+      : 'other';
+    return {
+      id: f.id,
+      hashtagId: f.hashtag_id,
+      flagType: ft,
+      reason: f.reason,
+      userId: f.user_id,
+      timestamp: f.created_at,
+      status: mapFlagStatusForStore(f.status),
+    };
+  });
+
+  return {
+    id: item.id,
+    hashtagId: item.id,
+    status,
+    flags,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  };
+}
 
 const createHashtagModerationActions = (
   set: Parameters<HashtagModerationStoreCreator>[0],
@@ -227,10 +292,16 @@ const createHashtagModerationActions = (
           status: 'pending',
         };
 
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch('/api/hashtags?action=flag', {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
           },
           body: JSON.stringify(flag),
         });
@@ -261,10 +332,16 @@ const createHashtagModerationActions = (
       baseActions.setLoading(true);
 
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch(`/api/hashtags?action=approve&flagId=${flagId}`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
           },
         });
 
@@ -294,10 +371,16 @@ const createHashtagModerationActions = (
       baseActions.setLoading(true);
 
       try {
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+        }
         const response = await fetch(`/api/hashtags?action=reject&flagId=${flagId}`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
           },
         });
 
@@ -329,6 +412,7 @@ const createHashtagModerationActions = (
       try {
         const response = await fetch('/api/hashtags?action=moderation-queue', {
           method: 'GET',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -338,12 +422,18 @@ const createHashtagModerationActions = (
           throw new Error(`Failed to load moderation queue: ${response.statusText}`);
         }
 
-        const moderationQueue = await response.json();
+        const body = (await response.json()) as {
+          success?: boolean;
+          data?: ModerationQueueApiItem[];
+        };
+
+        const queueItems = body.success && Array.isArray(body.data) ? body.data : null;
+        if (!queueItems) {
+          throw new Error('Invalid moderation queue response');
+        }
 
         setState((state) => {
-          state.moderationQueue = Array.isArray(moderationQueue)
-            ? (moderationQueue as HashtagModeration[])
-            : [];
+          state.moderationQueue = queueItems.map(mapApiQueueItemToStoreModeration);
         });
       } catch (error) {
         const errorMessage =

@@ -2,6 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
+
+import {
   withErrorHandling,
   successResponse,
   validationError,
@@ -19,6 +24,10 @@ const linkVotesSchema = z.object({
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 

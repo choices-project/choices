@@ -1,3 +1,7 @@
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, validationError, notFoundError, errorResponse } from '@/lib/api';
@@ -11,9 +15,13 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const representativeId = parseInt(params.id);
 
   if (isNaN(representativeId)) {
@@ -105,9 +113,13 @@ export const POST = withErrorHandling(async (
 });
 
 export const DELETE = withErrorHandling(async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const representativeId = parseInt(params.id);
 
   if (isNaN(representativeId)) {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
 import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
 import ReportModal from '@/features/moderation/components/ReportModal';
 import { IntegrityBadge } from '@/features/polls/components/IntegrityBadge';
@@ -676,10 +677,16 @@ export default function PollClient({ poll }: PollClientProps) {
         throw new Error('Invalid voting method');
       }
 
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error(t('polls.view.errors.voteFailed'));
+      }
+
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
         },
         credentials: 'include',
         body: JSON.stringify(requestBody),
@@ -912,8 +919,16 @@ export default function PollClient({ poll }: PollClientProps) {
 
     setIsDeleting(true);
     try {
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch(`/api/polls/${poll.id}`, {
         method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': csrf,
+        },
       });
 
       if (!response.ok) {
@@ -954,7 +969,17 @@ export default function PollClient({ poll }: PollClientProps) {
     if (!canClosePoll || !poll.id || pollStatus !== 'active') return;
     setIsClosing(true);
     try {
-      const response = await fetch(`/api/polls/${poll.id}/close`, { method: 'POST', credentials: 'include' });
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
+      const response = await fetch(`/api/polls/${poll.id}/close`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': csrf,
+        },
+      });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData?.error ?? `Failed to close poll (${response.status})`);

@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
 import type {
   AuthSetupStepData,
   ProfileData as FeatureProfileData,
@@ -566,9 +567,17 @@ export const createOnboardingActions = (
       setError(null);
 
       const state = get();
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch('/api/profile?action=onboarding-progress', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         body: JSON.stringify({
           currentStep: state.currentStep,
           progress: state.progress,
@@ -604,7 +613,9 @@ export const createOnboardingActions = (
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/profile?action=onboarding-progress');
+      const response = await fetch('/api/profile?action=onboarding-progress', {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error('Failed to load onboarding progress');
@@ -643,9 +654,17 @@ export const createOnboardingActions = (
       setError(null);
 
       const state = get();
+      const csrf = await fetchAuthCsrfToken();
+      if (!csrf) {
+        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
+      }
       const response = await fetch('/api/profile?action=complete-onboarding', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
         body: JSON.stringify({
           authData: state.authData,
           profileData: state.profileData,

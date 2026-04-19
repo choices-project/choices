@@ -6,6 +6,8 @@
  * Created: November 03, 2025
  */
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -25,11 +27,17 @@ export async function notifyHashtagTrending(
   usageCount: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const csrf = await fetchAuthCsrfToken();
+    if (!csrf) {
+      return { success: false, error: 'Unable to obtain CSRF token. Please refresh and try again.' };
+    }
     // Call notification API to create the notification
     const response = await fetch('/api/notifications', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf,
       },
       body: JSON.stringify({
         user_id: userId,
@@ -81,7 +89,9 @@ export async function shouldNotifyHashtagTrending(
 ): Promise<boolean> {
   try {
     // Check for recent notifications (last 24 hours) for this user
-    const response = await fetch(`/api/notifications?unread_only=false&limit=100&user_id=${userId}`);
+    const response = await fetch(`/api/notifications?unread_only=false&limit=100&user_id=${userId}`, {
+      credentials: 'include',
+    });
     
     if (!response.ok) {
       return true;  // If can't check, allow notification

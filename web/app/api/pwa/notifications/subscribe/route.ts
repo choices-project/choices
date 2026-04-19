@@ -5,6 +5,10 @@
  * This enables users to receive notifications for new polls, results, etc.
  */
 
+import {
+  validateCsrfProtection,
+  createCsrfErrorResponse,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import {
@@ -47,6 +51,10 @@ const normalizePreferences = (
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   if (!isFeatureEnabled('PWA')) {
     return forbiddenError('PWA feature is disabled');
   }
@@ -136,6 +144,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 });
 
 export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   if (!isFeatureEnabled('PWA')) {
     return forbiddenError('PWA feature is disabled');
   }
@@ -189,6 +201,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 });
 
 export const PUT = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   if (!isFeatureEnabled('PWA')) {
     return forbiddenError('PWA feature is disabled');
   }

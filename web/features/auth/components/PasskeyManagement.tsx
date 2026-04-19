@@ -5,6 +5,7 @@ import React from 'react';
 import { useI18n } from '@/hooks/useI18n';
 
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
+import { fetchAuthCsrfToken } from '../lib/csrf-token';
 import { useInitializeBiometricState, useUserActions } from '../lib/store';
 
 
@@ -79,11 +80,20 @@ export function PasskeyManagement() {
       try {
         setError(null);
         setBiometricError(null);
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          setError('Unable to obtain CSRF token. Please refresh and try again.');
+          return;
+        }
+        const trimmed = newLabel.trim();
         const res = await fetch(`/api/v1/auth/webauthn/credentials/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
+          },
           credentials: 'include',
-          body: JSON.stringify({ device_label: newLabel }),
+          body: JSON.stringify({ device_label: trimmed.length === 0 ? null : trimmed }),
         });
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
@@ -107,8 +117,14 @@ export function PasskeyManagement() {
       try {
         setError(null);
         setBiometricError(null);
+        const csrf = await fetchAuthCsrfToken();
+        if (!csrf) {
+          setError('Unable to obtain CSRF token. Please refresh and try again.');
+          return;
+        }
         const res = await fetch(`/api/v1/auth/webauthn/credentials/${id}`, {
           method: 'DELETE',
+          headers: { 'X-CSRF-Token': csrf },
           credentials: 'include',
         });
         if (!res.ok) {

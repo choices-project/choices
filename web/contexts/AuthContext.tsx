@@ -13,6 +13,8 @@ import React, {
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token'
+
 import { PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders'
 import { env } from '@/lib/config/env'
 import {
@@ -259,10 +261,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const timeoutId = setTimeout(() => controller.abort(), 5_000); // 5 second timeout
 
       try {
+        const csrf = await fetchAuthCsrfToken();
         const response = await fetch('/api/auth/logout', {
           method: 'POST',
           credentials: 'include',
           signal: controller.signal,
+          headers: csrf
+            ? {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrf,
+              }
+            : {
+                'Content-Type': 'application/json',
+              },
+          body: JSON.stringify({}),
         });
 
         clearTimeout(timeoutId);

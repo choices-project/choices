@@ -1,3 +1,5 @@
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '@/lib/utils/logger';
 /**
  * Offline Outbox System for PWA
@@ -177,9 +179,16 @@ export class OfflineOutbox {
         ? { optionId: vote.optionIds[0] }
         : { approvals: vote.optionIds };
 
+    const csrf = await fetchAuthCsrfToken();
+    if (!csrf) {
+      throw new Error('Unable to obtain CSRF token for vote sync. Please open the app online and try again.');
+    }
     const response = await fetch(`/api/polls/${vote.pollId}/vote`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf,
+      },
       credentials: 'include',
       body: JSON.stringify(body),
     });

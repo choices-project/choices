@@ -62,6 +62,10 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
   | `health.contract.test.ts` | `api/health/route`, `api/health/ingest/route` |
   | `feature-flags-public.contract.test.ts` | `api/feature-flags/public/route` |
   | `profile.contract.test.ts` | `api/profile/route` |
+  | `profile-data.contract.test.ts` | `api/profile/data/route` |
+  | `profile-avatar.contract.test.ts` | `api/profile/avatar/route` |
+  | `privacy-preferences.contract.test.ts` | `api/privacy/preferences/route` |
+  | `onboarding-session.contract.test.ts` | `api/onboarding/progress/route`, `api/onboarding/complete/route`, `api/user/complete-onboarding/route` |
   | `contact.contract.test.ts` | `api/contact/messages/route`, `api/contact/threads/route` |
   | `device-flow.contract.test.ts` | `api/auth/device-flow/route` |
   | `feeds.contract.test.ts` | `api/feeds/route` |
@@ -77,6 +81,12 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 
 See also: `docs/ROADMAP.md` for remaining test work.
 
+### Known Jest debt and CI strictness backlog
+
+Some Jest suites under `web/tests/integration/feeds/` and `web/tests/unit/supabase/` are known to fail on a clean checkout (see `AGENTS.md`). Triage each subtree: fix, quarantine with an explicit owner and expiry, or file a focused GitHub issue before expanding CI scope.
+
+**CI `continue-on-error`:** `.github/workflows/web-ci.yml` currently treats `types:strict` and default `lint` as non-blocking. When promoting those checks to blocking, update the workflow and this section together so local runbooks stay accurate.
+
 ### Pre-launch / expanded coverage (March 2026)
 
 Before go-live, run the full suite plus error-path and critical-journey E2E:
@@ -89,6 +99,8 @@ Before go-live, run the full suite plus error-path and critical-journey E2E:
 Run with: `npm run test` (Jest), `npm run test:e2e:critical` (error-paths + critical-journey only, ~1 min), or `npm run test:e2e` (full Playwright; includes error-paths and critical-journey). CI runs error-paths and critical-journey in the E2E job.
 
 ### Quick Runbook (Copy/Paste)
+
+**Weekly gate (repo root, matches CI doc + lint + i18n + build intent):** `npm run quality:weekly` — runs `npm run verify:docs`, then `web` `lint:strict`, `types:ci`, `lint:locale`, `i18n:validate`, `i18n:snapshot-check` (extract + clean `messages/en.snapshot.json`), and `next build`. Fix or commit snapshot drift before merging.
 
 ```bash
 # Types, lint, tests baseline (from web/)
@@ -115,6 +127,8 @@ NEXT_PUBLIC_ENABLE_E2E_HARNESS=1 npx playwright test --config=playwright.config.
 ### Production testing (optional)
 
 Use these only when you intentionally want to hit the live site (e.g. after a release or when preview usage is available). Day-to-day development should rely on local E2E above.
+
+After **service worker** or **PWA manifest** changes, do a quick manual pass: installability, offline shell, and that authenticated routes are not cached incorrectly (`web/public/service-worker.js`, `web/features/pwa/`).
 
 ```bash
 cd web && npm run test:e2e:production:smoke   # ~20s: API health, feature flags, ingest, core pages
