@@ -141,297 +141,50 @@ test.describe('Authentication Flow', () => {
     test('user can log in with valid credentials', async ({ page }) => {
       test.setTimeout(120_000);
 
-      // Diagnostic: Capture console messages and network requests
-      const consoleMessages: string[] = [];
-      const networkRequests: Array<{ url: string; status: number; method: string; headers: Record<string, string> }> = [];
-
-      page.on('console', (msg) => {
-        consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
-        // Capture diagnostic logs
-        if (msg.text().includes('[DIAGNOSTIC]') || msg.text().includes('🚨')) {
-          console.log(`[DIAGNOSTIC] ${msg.text()}`);
-        }
-      });
-
+      const loginResponses: Array<{ status: number; url: string }> = [];
       page.on('response', (response) => {
-        const headers: Record<string, string> = {};
-        const responseHeaders = response.headers();
-        Object.entries(responseHeaders).forEach(([key, value]) => {
-          headers[key] = value;
-        });
-        networkRequests.push({
-          url: response.url(),
-          status: response.status(),
-          method: response.request().method(),
-          headers,
-        });
-      });
-
-      // DIAGNOSTIC: Log initial state before navigation
-      console.log('[DIAGNOSTIC] About to navigate to /auth', {
-        baseUrl: BASE_URL,
-        timestamp: new Date().toISOString(),
-      });
-
-      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-
-      // DIAGNOSTIC: Log state after navigation
-      const postNavState = await page.evaluate(() => {
-        return {
-          url: window.location.href,
-          pathname: window.location.pathname,
-          search: window.location.search,
-        };
-      });
-      console.log('[DIAGNOSTIC] Post-navigation state:', JSON.stringify(postNavState, null, 2));
-
-      // Wait for auth page to be hydrated
-      await page.waitForSelector('[data-testid="auth-hydrated"]', { state: 'attached', timeout: 30_000 });
-
-      // Fill in login form - use data-testid selectors for reliability
-      const emailInput = page.locator('[data-testid="login-email"]');
-      const passwordInput = page.locator('[data-testid="login-password"]');
-
-      await emailInput.waitFor({ state: 'visible', timeout: 10_000 });
-      await passwordInput.waitFor({ state: 'visible', timeout: 10_000 });
-
-      await emailInput.fill(regularEmail!);
-      await passwordInput.fill(regularPassword!);
-
-      // Wait for sync mechanism to process (check every 100ms, so wait at least that long)
-      await page.waitForTimeout(200);
-
-      // Also trigger the sync manually by dispatching input events
-      await page.evaluate(() => {
-        const emailEl = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
-        const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-        if (emailEl) {
-          emailEl.dispatchEvent(new Event('input', { bubbles: true }));
-          emailEl.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        if (passwordEl) {
-          passwordEl.dispatchEvent(new Event('input', { bubbles: true }));
-          passwordEl.dispatchEvent(new Event('change', { bubbles: true }));
+        if (response.url().includes('/api/auth/login') && response.request().method() === 'POST') {
+          loginResponses.push({ status: response.status(), url: response.url() });
         }
       });
 
-      // Wait a moment more for React to process
-      await page.waitForTimeout(300);
-
-      // Comprehensive diagnostics for login form state
-      const formDiagnostics = await page.evaluate(() => {
-        const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
-        const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-        const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
-
-        return {
-          emailInput: {
-            exists: !!emailInput,
-            value: emailInput?.value || null,
-            valueLength: emailInput?.value?.length || 0,
-            hasAtSymbol: emailInput?.value?.includes('@') || false,
-          },
-          passwordInput: {
-            exists: !!passwordInput,
-            value: passwordInput?.value || null,
-            valueLength: passwordInput?.value?.length || 0,
-            meetsMinLength: (passwordInput?.value?.length || 0) >= 6,
-          },
-          submitButton: {
-            exists: !!submitButton,
-            disabled: submitButton?.disabled ?? null,
-            ariaBusy: submitButton?.getAttribute('aria-busy'),
-            className: submitButton?.className || null,
-            textContent: submitButton?.textContent?.trim() || null,
-          },
-          formValidation: {
-            emailValid: emailInput?.value?.includes('@') || false,
-            passwordValid: (passwordInput?.value?.length || 0) >= 8,
-            shouldBeEnabled: (emailInput?.value?.includes('@') || false) && ((passwordInput?.value?.length || 0) >= 6),
-          },
-        };
-      });
-      console.log('[DIAGNOSTIC] Login form state before submit:', JSON.stringify(formDiagnostics, null, 2));
-
-      // Wait for React to process the input and enable the button
-      // Increased timeout and added retry logic for production environment
-      await page.waitForFunction(
-        ({ expectedEmail, expectedPassword }: { expectedEmail: string; expectedPassword: string }) => {
-          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
-          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-          const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
-
-          const emailValid = emailInput?.value === expectedEmail && expectedEmail.includes('@');
-          // Password must be at least 8 characters (minPasswordLength = 8 in AuthPageClient)
-          const passwordValid = passwordInput?.value === expectedPassword && expectedPassword.length >= 8;
-          const isEnabled = !submitButton?.disabled;
-
-          return emailValid && passwordValid && isEnabled;
-        },
-        { expectedEmail: regularEmail!, expectedPassword: regularPassword! },
-        { timeout: 30_000 } // Increased timeout for production
-      ).catch(async () => {
-        // If button is still disabled, wait a bit more and check again (React state may be syncing)
-        await page.waitForTimeout(2_000);
-
-        const finalState = await page.evaluate(() => {
-          const emailInput = document.querySelector('[data-testid="login-email"]') as HTMLInputElement;
-          const passwordInput = document.querySelector('[data-testid="login-password"]') as HTMLInputElement;
-          const submitButton = document.querySelector('[data-testid="login-submit"]') as HTMLButtonElement;
-
-          return {
-            email: emailInput?.value || null,
-            password: passwordInput?.value || null,
-            buttonDisabled: submitButton?.disabled ?? null,
-            buttonAriaBusy: submitButton?.getAttribute('aria-busy'),
-            emailValid: emailInput?.value?.includes('@') || false,
-            passwordValid: (passwordInput?.value?.length || 0) >= 8,
-            // Check if sync effect is running
-            emailHasSyncedValue: emailInput?.getAttribute('data-synced-value') || null,
-            passwordHasSyncedValue: passwordInput?.getAttribute('data-synced-value') || null,
-          };
-        });
-        console.log('[DIAGNOSTIC] Login form final state (button still disabled):', JSON.stringify(finalState, null, 2));
-
-        // Production-only fallback: password field can be emptied by client-side sync/autofill churn.
-        if ((!finalState.passwordValid || finalState.password === null) && finalState.emailValid) {
-          await passwordInput.fill(regularPassword!);
-          await page.evaluate(({ password }: { password: string }) => {
-            const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement | null;
-            if (!passwordEl) return;
-            const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-            nativeSetter?.call(passwordEl, password);
-            passwordEl.dispatchEvent(new Event('input', { bubbles: true }));
-            passwordEl.dispatchEvent(new Event('change', { bubbles: true }));
-            passwordEl.dispatchEvent(new Event('blur', { bubbles: true }));
-          }, { password: regularPassword! });
-          await page.waitForTimeout(750);
-        }
-
-        // Final check - if inputs are valid but button is still disabled, throw error
-        if (finalState.emailValid && finalState.passwordValid && finalState.buttonDisabled) {
-          throw new Error('Login button remained disabled after form fill - React state sync may have failed');
-        }
+      await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await loginTestUser(page, {
+        email: regularEmail!,
+        password: regularPassword!,
+        username: regularEmail!.split('@')[0] ?? 'e2e-user',
       });
 
-      await page.click('[data-testid="login-submit"]');
+      await waitForPageReady(page, 60_000);
 
-      // Wait for navigation after login (production may take longer)
-      await page.waitForURL(/(dashboard|feed|onboarding|profile|\/auth)/, { timeout: 45_000 }).catch(() => undefined);
-      await page.waitForTimeout(2_000);
+      await page.goto(`${BASE_URL}/profile`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await waitForPageReady(page, 60_000);
 
-      // Diagnostic: Check cookies before polling
-      const cookiesBefore = await page.context().cookies();
-      const authCookiesBefore = cookiesBefore.filter(c =>
-        c.name.startsWith('sb-') &&
-        (c.name.includes('auth') || c.name.includes('session') || c.name.includes('access'))
-      );
-      console.log('[DIAGNOSTIC] Cookies before auth check:', {
-        total: cookiesBefore.length,
-        authCookies: authCookiesBefore.map(c => ({
-          name: c.name,
-          valueLength: c.value.length,
-          httpOnly: c.httpOnly,
-          secure: c.secure,
-        })),
-      });
-
-      // Check for authentication tokens/cookies
-      // Note: httpOnly cookies won't be accessible via document.cookie, so use Playwright's cookie API
-      let authCheckResult: { hasHttpOnlyCookie: boolean; hasNonHttpOnlyCookie: boolean; hasToken: boolean; cookies: any[] } | null = null;
-
-      await expect
-        .poll(
-          async () => {
-            // Check for httpOnly cookies using Playwright's cookie API
-            const cookies = await page.context().cookies();
-            const hasHttpOnlyCookie = cookies.some(c =>
-              c.name.startsWith('sb-') &&
-              (c.name.includes('auth') || c.name.includes('session')) &&
-              c.value &&
-              c.value.length > 0
-            );
-
-            // Also check for non-httpOnly cookies via document.cookie
-            const hasNonHttpOnlyCookie = await page.evaluate(() => document.cookie.includes('sb-'));
-
-            // Check localStorage (set by client-side code)
-            const hasToken = await page.evaluate(() => {
-              const token = localStorage.getItem('supabase.auth.token');
-              return token !== null && token !== 'null';
-            });
-
-            authCheckResult = {
-              hasHttpOnlyCookie,
-              hasNonHttpOnlyCookie,
-              hasToken,
-              cookies: cookies.filter(c => c.name.startsWith('sb-')),
-            };
-
-            return hasHttpOnlyCookie || hasNonHttpOnlyCookie || hasToken;
-          },
-          { timeout: 60_000, intervals: [2_000] },
-        )
-        .toBeTruthy();
-
-      // Diagnostic: Log auth check results
-      console.log('[DIAGNOSTIC] Auth check result:', authCheckResult);
-      console.log('[DIAGNOSTIC] Current URL:', page.url());
-
-      // Should redirect after login (to dashboard or feed)
-      const finalUrl = page.url();
-      await expect(page).toHaveURL(/(dashboard|feed|onboarding)/, { timeout: 60_000 });
-
-      // CRITICAL VERIFICATION: After login, verify profile is accessible
-      // This verifies the login RLS fix - profile auto-provision should work
-      // Wait for session to be fully established
-      await page.waitForTimeout(2_000);
-
-      await page.goto(`${BASE_URL}/profile`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-      await page.waitForTimeout(3_000); // Wait for potential redirects
-
-      // Check if we're still on profile or were redirected
       const profileUrl = page.url();
-
       if (profileUrl.includes('/auth')) {
         const cookies = await page.context().cookies();
-        const authCookies = cookies.filter(c => c.name.startsWith('sb-') && c.value);
-        console.log('[DIAGNOSTIC] Redirected to auth after login. Auth cookies:', authCookies.length);
-        throw new Error('Session did not persist to protected profile route after successful login');
+        const authCookies = cookies.filter((c) => c.name.startsWith('sb-') && c.value);
+        throw new Error(
+          `Session did not persist to protected profile route after successful login; sb-* cookies observed: ${authCookies.length}`,
+        );
       }
 
-      // Profile page should load successfully (no "profile not found" error)
       const profileError = page.locator('[data-testid="profile-error"]');
       const hasProfileError = await profileError.count();
       if (hasProfileError > 0) {
         const errorText = await profileError.first().textContent().catch(() => '');
-        // "Profile not found" indicates profile/session integrity issue.
         if (errorText?.toLowerCase().includes('profile not found')) {
-          throw new Error(`CRITICAL: Profile not found after login - RLS fix may not be working. Error: ${errorText}`);
+          throw new Error(`CRITICAL: Profile not found after login. Error: ${errorText}`);
         }
       }
 
-      // Diagnostic: Capture final state
-      const cookiesAfter = await page.context().cookies();
-      const authCookiesAfter = cookiesAfter.filter(c =>
-        c.name.startsWith('sb-') &&
-        (c.name.includes('auth') || c.name.includes('session') || c.name.includes('access'))
-      );
-
-      console.log('[DIAGNOSTIC] Final state:', {
-        finalUrl,
-        cookiesAfter: {
-          total: cookiesAfter.length,
-          authCookies: authCookiesAfter.map(c => ({
-            name: c.name,
-            valueLength: c.value.length,
-            httpOnly: c.httpOnly,
-            secure: c.secure,
-          })),
-        },
-        consoleErrors: consoleMessages.filter(m => m.includes('[error]')),
-        loginRequests: networkRequests.filter(r => r.url.includes('/api/auth/login')),
-      });
+      if (loginResponses.length === 0) {
+        throw new Error('Expected POST /api/auth/login during UI login, but no login response was observed');
+      }
+      const nonSuccessLogin = loginResponses.find((entry) => entry.status >= 400);
+      if (nonSuccessLogin) {
+        throw new Error(`Login API returned non-success status ${nonSuccessLogin.status}: ${nonSuccessLogin.url}`);
+      }
     });
 
     test('authenticated user visiting root redirects to /feed', async ({ page }) => {
