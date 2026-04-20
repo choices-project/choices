@@ -23,6 +23,21 @@ Use this table before deep-diving §4–§9. “✅” means the **default accep
 
 **Full topical index:** [`docs/README.md`](README.md) (operations, API, compliance, archive).
 
+### Premiere-quality program (April 2026)
+
+This roadmap is the SSOT for the release-quality upgrade program.
+
+| Phase | Window | Owner | Scope | Exit criteria |
+|------|--------|-------|-------|---------------|
+| **Phase 1: quality floor** | Immediate / current sprint | Core maintainers + CI owners | Enforce blocking release gates, remove CI signal masking, stabilize auth/account/critical-journey suites, normalize Playwright env determinism | Two consecutive green runs for: `verify:docs`, `lint:strict`, `types:ci`, `jest:ci`, `./scripts/vercel-build.sh`, `test:e2e:smoke`, `test:e2e:critical`, `test:e2e:axe` |
+| **Phase 2: quality ceiling** | Next 1-2 sprints after Phase 1 | Domain owners (auth/security/perf/accessibility) | Risk-weighted expansion across auth/admin/security APIs, flake governance with SLA, quarantine exit policy, performance/security regression coverage | Monthly audit report, named owners for flaky/quarantined suites, and CI jobs enforcing `@performance` + security-regression checks |
+
+#### Reliability governance policy
+
+- Flaky test triage SLA: classify within 24 hours, fix/quarantine owner assigned in 48 hours.
+- Quarantine policy: must include owner, linked issue, expiry date, and explicit promotion criteria back to required gates.
+- Retry policy: retry only after root-cause analysis shows diagnostic value; avoid hiding deterministic failures.
+
 ### Deploy / CI verification log (April 19, 2026)
 
 **Scope:** CSRF parity rollout on `main` (double-submit on mutating API routes + client `X-CSRF-Token` / `credentials: 'include'` alignment). Ground-truth for “did CI accept it?” is the Actions run linked below—not this paragraph alone.

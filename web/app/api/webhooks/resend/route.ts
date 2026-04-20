@@ -9,7 +9,7 @@
  * Security: Verifies webhook signatures using RESEND_WEBHOOK_SECRET
  */
 
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -48,8 +48,12 @@ function verifyWebhookSignature(
     const hmac = createHmac('sha256', secret);
     hmac.update(payload);
     const expectedSignature = hmac.digest('hex');
-    // Resend sends signature as hex string, compare securely
-    return signature.toLowerCase() === expectedSignature.toLowerCase();
+    const sigNorm = signature.toLowerCase();
+    const expNorm = expectedSignature.toLowerCase();
+    if (sigNorm.length !== expNorm.length) {
+      return false;
+    }
+    return timingSafeEqual(Buffer.from(sigNorm, 'utf8'), Buffer.from(expNorm, 'utf8'));
   } catch (error) {
     logger.error('Webhook signature verification failed', error);
     return false;

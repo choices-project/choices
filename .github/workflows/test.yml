@@ -72,12 +72,10 @@ jobs:
         run: git diff --exit-code -- package-lock.json
 
       - name: Type check (strict)
-        run: npm run types:strict || echo "Type check completed with errors (non-blocking)"
-        continue-on-error: true
+        run: npm run types:strict
 
       - name: Lint (strict mode)
-        run: npm run lint:strict || echo "Lint completed with warnings (non-blocking)"
-        continue-on-error: true
+        run: npm run lint:strict
 
       - name: Run unit tests
         if: matrix.test-type == 'unit'
@@ -444,16 +442,23 @@ jobs:
           fi
           which gtimeout || which timeout
 
+      - name: Clean workspace
+        run: rm -rf node_modules
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
       - name: Run performance tests
         run: |
-          # Since no performance test files exist, always skip this job
-          # No need to install dependencies or build since we're not running tests
-          echo "No performance test files exist; skipping performance tests."
-          exit 0
+          npx playwright test --project=chromium --grep @performance --reporter=line
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
+          PLAYWRIGHT_USE_MOCKS: '1'
 
       - name: Upload performance test results
         uses: actions/upload-artifact@v4
@@ -506,13 +511,15 @@ jobs:
       - name: Check for secrets
         run: npm run security-check
 
-      - name: Next.js security check
-        run: npm run check:next-security || echo "Security check script not found (non-blocking)"
-        continue-on-error: true
+      - name: Security regression tests
+        run: npm run test -- tests/unit/lib/security/deployment-bypass.test.ts
 
-      - name: Test security headers
-        run: npm run test:security-headers || echo "Security headers test script not found (non-blocking)"
-        continue-on-error: true
+      - name: Next.js security check
+        run: npm run check:next-security
+
+      - name: Verify security scripts declared
+        run: |
+          npm run check:next-security
 
       - name: Trivy vulnerability scan (CRITICAL/HIGH)
         uses: aquasecurity/trivy-action@v0.35.0

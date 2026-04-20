@@ -1,8 +1,9 @@
-import { randomBytes } from "crypto";
+import { randomBytes, timingSafeEqual } from "crypto";
 
 import { cookies } from "next/headers";
 
 import { errorResponse } from "@/lib/api";
+import { allowCsrfValidationBypass } from "@/lib/security/deployment-bypass";
 
 import { CSRF_COOKIE } from "./cookies";
 
@@ -71,12 +72,18 @@ export async function verifyCsrfToken(headerToken?: string): Promise<boolean> {
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get(CSRF_COOKIE)?.value;
 
-  if (!cookieToken) {
+  if (!cookieToken || headerToken.length !== cookieToken.length) {
     return false;
   }
 
-  // Use constant-time comparison to prevent timing attacks
-  return headerToken === cookieToken;
+  try {
+    return timingSafeEqual(
+      Buffer.from(headerToken, "utf8"),
+      Buffer.from(cookieToken, "utf8"),
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -104,12 +111,7 @@ export async function validateCsrfProtection(request: Request): Promise<boolean>
     return true;
   }
 
-  // Skip CSRF check for E2E tests and development
-  const isE2E = request.headers.get('x-e2e-bypass') === '1' ||
-                process.env.NODE_ENV === 'test' ||
-                process.env.E2E === '1';
-
-  if (isE2E) {
+  if (allowCsrfValidationBypass(request)) {
     return true;
   }
 

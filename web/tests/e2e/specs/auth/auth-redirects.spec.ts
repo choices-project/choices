@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 
-const BASE_URL = process.env.BASE_URL || 'https://www.choices-app.com';
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 const IS_HARNESS = process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
 /**

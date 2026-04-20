@@ -1,6 +1,7 @@
 import { withErrorHandling, successResponse } from '@/lib/api';
 import { SITE_MESSAGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { env } from '@/lib/config/env';
+import { allowHarnessEmptyPublicFallback } from '@/lib/security/deployment-bypass';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest} from 'next/server';
@@ -30,7 +31,9 @@ async function getActiveSiteMessages(includeExpired: boolean = false) {
     // This allows the app to build and run tests without real Supabase credentials
     const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
-    const isE2E = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || env.PLAYWRIGHT_USE_MOCKS === '1';
+    const harnessOrMocks =
+      env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || env.PLAYWRIGHT_USE_MOCKS === '1';
+    const isE2E = allowHarnessEmptyPublicFallback(harnessOrMocks);
     const isCI = env.CI === 'true' || process.env.NODE_ENV === 'test';
     const isFakeCredentials = supabaseUrl?.includes('example.supabase.co') || supabaseKey === 'dev-only-secret';
 

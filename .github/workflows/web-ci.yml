@@ -73,8 +73,7 @@ jobs:
         run: node -e "console.log('Next.js version:', require('next/package.json').version)"
 
       - name: Next.js security gate
-        run: npm run check:next-security || echo "Security check script not found (non-blocking)"
-        continue-on-error: true
+        run: npm run check:next-security
 
       - name: Security audit (fail on high/critical)
         run: npm run audit:high
@@ -95,12 +94,10 @@ jobs:
           echo "✅ No client-side PostgreSQL static imports found"
 
       - name: Type check (strict)
-        run: npm run types:strict || echo "Type check completed with errors (non-blocking)"
-        continue-on-error: true
+        run: npm run types:strict
 
-      - name: Lint (allow warnings for MVP)
-        run: npm run lint || echo "Lint completed with warnings (non-blocking)"
-        continue-on-error: true
+      - name: Lint (strict mode)
+        run: npm run lint:strict
 
       - name: Locale lint (blocking)
         run: npm run lint:locale

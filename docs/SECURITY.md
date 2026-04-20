@@ -25,6 +25,7 @@ The following security improvements were implemented across the application:
 - **Rate limiting** — **`apiRateLimiter`** is used in **30** `web/app/api/**/route.ts` files (snapshot in § Upstash API rate limits); covers polls (create/vote), feedback, profile mutations, poll close/lock, push notifications, CSP reports, health ingest, and more
 - **CSRF protection** — Double-submit token validation via `validateCsrfProtection` on state-changing auth and profile routes: `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`, `/api/auth/sync-user`, `/api/auth/delete-account`, `/api/auth/device-flow` (+ `verify`, `poll`), `/api/v1/auth/webauthn/native/*` POSTs, `PATCH`/`DELETE` `/api/v1/auth/webauthn/credentials/[id]`, mutating `/api/profile` (POST/PUT/PATCH/DELETE) plus `POST /api/profile/export`, `DELETE /api/profile/data`, `POST /api/profile/avatar`, `POST /api/privacy/preferences`, `POST /api/onboarding/progress`, `POST /api/onboarding/complete`, `POST /api/user/complete-onboarding`, `POST /api/user/link-votes`, `PATCH /api/feature-flags`, `POST`/`PUT` `/api/notifications`, `POST`/`DELETE` `/api/representatives/[id]/follow`, `POST`/`DELETE` `/api/analytics/dashboard/layout`, `POST`/`PUT`/`DELETE` `/api/pwa/notifications/subscribe`, `POST /api/feedback`, `POST /api/polls`, `POST /api/polls/[id]/vote`, `POST /api/polls/[id]/close`, `POST`/`DELETE` `/api/polls/[id]/lock`, `POST`/`DELETE` `/api/polls/[id]/post-close`, `DELETE /api/polls/[id]`, `POST /api/trending` (hashtag tracking), `POST /api/hashtags` (flag / approve / reject / moderate), `POST /api/civic-actions`, `PATCH`/`DELETE` `/api/civic-actions/[id]`, `POST /api/civic-actions/[id]/sign`, `POST /api/shared/vote`, `POST /api/contact/submit`, `POST /api/contact/messages`, `POST`/`PUT` `/api/contact/threads`, `PATCH`/`DELETE` `/api/contact/[id]`, `POST /api/moderation/reports`, `POST /api/moderation/appeals`, and `POST`/`PATCH` `/api/representatives/self/overrides`.
 - **E2E bypass hardening** — Test authentication bypasses are locked out when `NODE_ENV === 'production'`; debug headers (`X-Auth-Debug-*`) only set in non-production
+- **Deployment-aware bypasses (April 2026)** — [`web/lib/security/deployment-bypass.ts`](../web/lib/security/deployment-bypass.ts) centralizes rules: `VERCEL_ENV=production` or `CHOICES_DEPLOYMENT_ENV=production` disables test-only relaxations (CSRF skip via `x-e2e-bypass`, admin E2E harness, auth rate-limit skips, harness-only public fallbacks, feedback admin insert shortcut). CSRF compares tokens with `timingSafeEqual`; Resend webhook HMAC uses `timingSafeEqual`. Supabase SSR cookie `domain=.choices-app.com` is applied only when `NEXT_PUBLIC_BASE_URL` / site URL hostname is under `choices-app.com`. Never set `NEXT_PUBLIC_ENABLE_E2E_HARNESS` or `PLAYWRIGHT_USE_MOCKS` on production deployments.
 - **Input sanitization** — `sanitizeInput()` applied to all user-generated fields in poll creation (title, description, question, category, tags, options)
 - **UUID validation** — `UUID_REGEX` validation on OG image routes to prevent injection via poll IDs
 - **Webhook security** — Resend webhook endpoint rejects requests (403) when `RESEND_WEBHOOK_SECRET` is not configured
@@ -34,6 +35,15 @@ The following security improvements were implemented across the application:
 - **Environment validation** — Zod-based validation module (`lib/config/env.ts`) validates all required environment variables at startup with CI-safe fallbacks
 - **Console cleanup** — All `console.log`/`console.warn`/`console.error` in production code replaced with structured `logger` utility
 - **Alert/confirm replacement** — All `window.alert()` and `window.confirm()` calls replaced with toast notifications and shadcn AlertDialog components
+
+### Security regression checks (Phase 2)
+
+Security checks are part of release-quality CI, not ad-hoc validation:
+
+- Dependency and filesystem vulnerability scans: `npm run audit:high` + Trivy CRITICAL/HIGH scan.
+- Docs/code parity verification for security inventories: `npm run verify:docs` (includes SECURITY snapshots).
+- Timing-safe verification paths covered by tests and review checklist (CSRF token compare, webhook signature compare, deployment-bypass enforcement).
+- Production bypass lock policy remains mandatory: test harness and mock flags must never weaken production behavior.
 
 ---
 

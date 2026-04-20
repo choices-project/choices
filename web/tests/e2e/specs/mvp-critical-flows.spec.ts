@@ -17,8 +17,7 @@ import {
  * Status: In Progress
  */
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
-const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 const regularEmail = process.env.E2E_USER_EMAIL;
 const regularPassword = process.env.E2E_USER_PASSWORD;
 

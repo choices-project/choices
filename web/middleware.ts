@@ -524,6 +524,15 @@ export async function middleware(request: NextRequest) {
   ];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
+  // OAuth PKCE / magic-link flows set `sb-*` cookies before a real session exists.
+  // `checkAuthInMiddleware` treats substantial `sb-*` values as signed-in, so we must
+  // never short-circuit these routes (otherwise /auth/callback redirects to /feed
+  // before `exchangeCodeForSession` runs — Google OAuth appears "broken").
+  const isAuthSessionHandshakeRoute =
+    pathname === '/auth/callback' ||
+    pathname === '/auth/verify' ||
+    pathname.startsWith('/auth/device-flow/') ||
+    pathname.startsWith('/auth/reset/confirm')
 
   // Legacy marketing URL: consolidate to `/` (or `/feed` when signed in), including `/landing/*`
   if (pathname === '/landing' || pathname.startsWith('/landing/')) {
@@ -692,7 +701,7 @@ export async function middleware(request: NextRequest) {
 
   // SECURITY: Redirect authenticated users away from auth pages (except /auth itself)
   // This prevents authenticated users from accessing login/register pages
-  if (isAuthRoute && pathname !== '/auth') {
+  if (isAuthRoute && pathname !== '/auth' && !isAuthSessionHandshakeRoute) {
     // SECURITY: Verify authentication - cookies must be present and valid
     const { isAuthenticated } = checkAuthInMiddleware(request)
 

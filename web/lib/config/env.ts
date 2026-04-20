@@ -35,6 +35,10 @@ const serverSchema = z.object({
   GOVINFO_APIKEY: z.string().optional(),
   GOVINFO_KEY: z.string().optional(),
   GOOGLE_CIVIC_API_KEY: z.string().optional(),
+  /** Open States API (see also `OPENSTATES_API_KEY` alias) */
+  OPEN_STATES_API_KEY: z.string().optional(),
+  /** Vercel-style alias for Open States */
+  OPENSTATES_API_KEY: z.string().optional(),
   AUTH_RATE_LIMIT_ENABLED: z.string().optional(),
   ENABLE_PERFORMANCE_TRACKING: z.string().optional(),
   CRON_SECRET: z.string().optional(),
@@ -47,6 +51,11 @@ const serverSchema = z.object({
   VERCEL_URL: z.string().optional(),
   /** Vercel: `production` | `preview` | `development` */
   VERCEL_ENV: z.string().optional(),
+  /**
+   * Non-Vercel production marker. When `production`, test-only security bypasses
+   * (CSRF skip, admin harness, etc.) are disabled — same as `VERCEL_ENV=production`.
+   */
+  CHOICES_DEPLOYMENT_ENV: z.string().optional(),
   /** Playwright / local E2E toggles (server; not bundled to client) */
   PLAYWRIGHT_USE_MOCKS: z.string().optional(),
   E2E: z.string().optional(),

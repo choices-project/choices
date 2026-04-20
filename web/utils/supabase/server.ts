@@ -11,6 +11,22 @@ const assertRunningOnServer = (fnName: string) => {
   }
 }
 
+function isChoicesAppConfiguredHost(
+  cfg: ReturnType<typeof getValidatedEnv>,
+): boolean {
+  const raw =
+    cfg.NEXT_PUBLIC_BASE_URL ??
+    cfg.NEXT_PUBLIC_SITE_URL ??
+    cfg.NEXT_PUBLIC_APP_URL
+  if (!raw) return false
+  try {
+    const host = new URL(raw).hostname.toLowerCase()
+    return host === 'choices-app.com' || host.endsWith('.choices-app.com')
+  } catch {
+    return false
+  }
+}
+
 /**
  * SSR-safe factory. No top-level import of supabase-js, ssr, or next/headers.
  * We dynamically import only at call time in Node to avoid build-time errors.
@@ -71,10 +87,8 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
         // Add domain attribute for production to work across www and non-www
         // Only set domain if on actual production domain (not localhost/127.0.0.1)
         const isProduction = process.env.NODE_ENV === 'production'
-        // Extract domain from cookie options or check environment
-        const shouldSetDomain = isProduction &&
-          (typeof options.domain === 'string' ||
-           env.VERCEL_URL?.includes('choices-app.com'))
+        const shouldSetDomain =
+          isProduction && isChoicesAppConfiguredHost(env)
         const enhancedOptions = {
           ...options,
           ...(shouldSetDomain && { domain: '.choices-app.com' })

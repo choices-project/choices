@@ -20,8 +20,7 @@ import {
   getE2EAdminCredentials,
 } from '../../helpers/e2e-setup';
 
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://www.choices-app.com';
-const BASE_URL = process.env.BASE_URL || PRODUCTION_URL;
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
 
 test.describe('Poll Analytics Verification', () => {
   test('admin can access analytics dashboard', async ({ page }) => {

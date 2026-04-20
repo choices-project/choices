@@ -81,11 +81,18 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
 
 See also: `docs/ROADMAP.md` for remaining test work.
 
-### Known Jest debt and CI strictness backlog
+### Premiere-quality gate policy (Phase 1)
 
-Some Jest suites under `web/tests/integration/feeds/` and `web/tests/unit/supabase/` are known to fail on a clean checkout (see `AGENTS.md`). Triage each subtree: fix, quarantine with an explicit owner and expiry, or file a focused GitHub issue before expanding CI scope.
+- Required release gates (blocking): `npm run verify:docs` (repo root), `npm run lint:strict`, `npm run types:ci`, `npm run jest:ci`, `./scripts/vercel-build.sh`, `npm run test:e2e:smoke`, `npm run test:e2e:critical`, `npm run test:e2e:axe`.
+- All strict checks in CI are blocking; do not use `continue-on-error` on release-critical lint/type/security outcomes.
+- Playwright determinism baseline for local + CI: `BASE_URL=http://127.0.0.1:3000`, `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`, `PLAYWRIGHT_USE_MOCKS=1`, `ALLOWED_DEV_ORIGINS=http://127.0.0.1:3000`.
+- Local scripts (`test:e2e`, `test:e2e:critical`, `test:e2e:smoke`, `test:e2e:axe`) now pin those env vars by default.
 
-**CI `continue-on-error`:** `.github/workflows/web-ci.yml` currently treats `types:strict` and default `lint` as non-blocking. When promoting those checks to blocking, update the workflow and this section together so local runbooks stay accurate.
+### Known Jest debt and reliability governance
+
+- Legacy debt areas include `web/tests/integration/feeds/` and `web/tests/unit/supabase/`; triage each failure as fix vs quarantine.
+- Quarantine requires owner + linked issue + expiry date + promotion criteria.
+- Flake triage SLA: acknowledge within 24h, assign owner/plan within 48h, and remove quarantine on next stable cycle.
 
 ### Pre-launch / expanded coverage (March 2026)
 
@@ -96,7 +103,7 @@ Before go-live, run the full suite plus error-path and critical-journey E2E:
 - **Unit**: `tests/unit/lib/contact/contact-validation.test.ts` (email/phone/fax/address/edge cases), `tests/unit/lib/security/input-sanitization.test.ts` (validateRepresentativeId, sanitizeText, sanitizeSubject).
 - **Contract**: `tests/contracts/feature-flags-public.contract.test.ts` (GET /api/feature-flags/public shape).
 
-Run with: `npm run test` (Jest), `npm run test:e2e:critical` (error-paths + critical-journey only, ~1 min), or `npm run test:e2e` (full Playwright; includes error-paths and critical-journey). CI runs error-paths and critical-journey in the E2E job.
+Run with: `npm run test` (Jest), `npm run test:e2e:critical` (error-paths + critical-journey only, ~1 min), or `npm run test:e2e` (full Playwright; includes error-paths and critical-journey). CI runs error-paths and critical-journey in the required gate stack.
 
 ### Quick Runbook (Copy/Paste)
 

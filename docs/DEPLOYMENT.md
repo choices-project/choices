@@ -14,6 +14,7 @@ Use this guide as the single source of truth for shipping the Choices web applic
 - Install the Supabase CLI (`npm install -g supabase`) and authenticate against the target project.
 - Create or update `web/.env.local` with the values listed in `ENVIRONMENT_VARIABLES.md`.
 - Ensure production secrets (Supabase service role, Upstash Redis, Resend, Sentry, cron key) exist in your hosting provider before promoting the build.
+- **Security:** On Vercel production (`VERCEL_ENV=production`), do not set `NEXT_PUBLIC_ENABLE_E2E_HARNESS` or `PLAYWRIGHT_USE_MOCKS`. Self-hosted production should set `CHOICES_DEPLOYMENT_ENV=production` so the same bypass locks apply (see `docs/SECURITY.md`, deployment-aware bypasses).
 
 **CI/CD Consistency**: All GitHub Actions workflows (`.github/workflows/*.yml`) and the Dockerfile enforce npm 11.6.1 to match the `packageManager` field. This ensures local development, CI, and production builds use identical tooling versions.
 
@@ -27,6 +28,26 @@ npm run test:e2e
 npm run build
 ```
 - `npm run test:e2e` defaults to the mocked harness setup. Run `PLAYWRIGHT_USE_MOCKS=0 npm run test:e2e:staging` when validating against a staging backend.
+
+### Hard release evidence pack (required)
+
+Before production promotion, capture and link evidence for this exact command set:
+
+```bash
+# repo root
+npm run verify:docs
+
+# web/
+npm run lint:strict
+npm run types:ci
+npm run jest:ci
+./scripts/vercel-build.sh
+npm run test:e2e:smoke
+npm run test:e2e:critical
+npm run test:e2e:axe
+```
+
+Release approval requires all commands green in two consecutive runs (local+CI or CI+CI) with matching workflow enforcement.
 
 **Database & types**
 ```bash

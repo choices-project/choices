@@ -4,6 +4,24 @@ _Last updated: April 4, 2026_
 
 Single source of truth for all remaining work. The MVP is complete — this document tracks launch tasks, post-launch improvements, and future features.
 
+## Premiere-quality program (April 2026)
+
+### Phase 1 - Stabilize required release gates
+
+- Align CI workflows and docs to the same blocking gate set.
+- Keep strict lint/types/security checks blocking (no hidden signal masking).
+- Standardize deterministic E2E env defaults (`BASE_URL`, harness, mocks, allowed origin).
+- Stabilize high-impact suites first: auth flow/redirects, account settings, critical journey, and historical Jest debt clusters.
+
+### Phase 2 - Expand reliability and depth
+
+- Risk-weighted coverage for auth/admin/session boundaries and security-sensitive APIs.
+- Reliability governance: flake triage SLA, quarantine exit criteria, owner accountability.
+- Add premiere-quality regression controls: `@performance` budgets and recurring security regression checks.
+
+Primary SSOT for execution details, owners, and completion criteria:
+[`docs/DOCUMENTATION_AUDIT_ROADMAP.md`](DOCUMENTATION_AUDIT_ROADMAP.md).
+
 ---
 
 ## 1. Launch Checklist (P0)

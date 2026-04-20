@@ -9,6 +9,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError } from '@/lib/api';
 import { env } from '@/lib/config/env';
+import { allowAdminE2EHarness } from '@/lib/security/deployment-bypass';
 import logger from '@/lib/utils/logger';
 
 import type { NextResponse } from 'next/server';
@@ -37,19 +38,17 @@ export async function isAdmin(): Promise<boolean> {
 
 /** Non-throwing: great for APIs and guards */
 export async function getAdminUser(): Promise<{ id: string; email?: string } | null> {
-  // E2E harness bypass: In test mode with harness enabled, return mock admin user
-  // CRITICAL: NEXT_PUBLIC_ vars are available on the server at runtime.
   const harnessEnabled = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
-  logger.info('[getAdminUser] Checking admin access', {
-    harnessEnabled,
-    envVar: env.NEXT_PUBLIC_ENABLE_E2E_HARNESS,
-  });
-
-  if (harnessEnabled) {
-    logger.info('[getAdminUser] E2E harness bypass active - returning mock admin user', {
+  if (env.DEBUG_MIDDLEWARE === '1') {
+    logger.info('[getAdminUser] Checking admin access', {
       harnessEnabled,
+      envVar: env.NEXT_PUBLIC_ENABLE_E2E_HARNESS,
     });
+  }
+
+  if (allowAdminE2EHarness(harnessEnabled)) {
+    logger.debug('[getAdminUser] E2E harness bypass active - returning mock admin user');
     return {
       id: 'e2e-admin-user-id',
       email: 'admin@test.com',
@@ -96,13 +95,10 @@ export async function getAdminUser(): Promise<{ id: string; email?: string } | n
 
 /** Throwing variant: great for imperative flows & tests that expect throws */
 export async function requireAdminUser(): Promise<any> {
-  // E2E harness bypass: In test mode with harness enabled, return mock admin user
   const harnessEnabled = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
-  if (harnessEnabled) {
-    logger.info('[requireAdminUser] E2E harness bypass active - returning mock admin user', {
-      harnessEnabled,
-    });
+  if (allowAdminE2EHarness(harnessEnabled)) {
+    logger.debug('[requireAdminUser] E2E harness bypass active - returning mock admin user');
     return {
       id: 'e2e-admin-user-id',
       email: 'admin@test.com',
@@ -131,13 +127,10 @@ export async function requireAdmin(): Promise<void> {
 
 /** API helper that returns 401 response instead of throwing */
 export async function requireAdminOr401(): Promise<NextResponse | null> {
-  // E2E harness bypass: In test mode with harness enabled, allow access
   const harnessEnabled = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
-  if (harnessEnabled) {
-    logger.info('[requireAdminOr401] E2E harness bypass active - allowing admin access', {
-      harnessEnabled,
-    });
+  if (allowAdminE2EHarness(harnessEnabled)) {
+    logger.debug('[requireAdminOr401] E2E harness bypass active - allowing admin access');
     return null; // Allow access
   }
 

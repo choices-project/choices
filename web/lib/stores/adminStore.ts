@@ -13,8 +13,6 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
-import { env } from '@/lib/config/env';
-
 import type {
   ActivityItem,
   AdminNotification,
@@ -30,6 +28,7 @@ import type {
   TrendingTopic,
 } from '@/features/admin/types';
 
+import { env } from '@/lib/config/env';
 import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 

@@ -17,6 +17,7 @@ import {
 import { FEEDBACK_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
+import { isProductionDeploymentForBypasses } from '@/lib/security/deployment-bypass';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
 
@@ -327,6 +328,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     const e2ePlaywrightHarness =
+      !isProductionDeploymentForBypasses() &&
       process.env.PLAYWRIGHT_USE_MOCKS === '1' &&
       process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
