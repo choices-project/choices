@@ -1,19 +1,28 @@
 'use client'
 
+import { createBrowserClient } from '@supabase/ssr'
+
 import { env } from '@/lib/config/env'
 
 import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Import the complete, up-to-date Database types from the central source
-
+/**
+ * Browser Supabase client for Next.js App Router.
+ *
+ * Must use `@supabase/ssr` `createBrowserClient` (PKCE + cookie storage) so
+ * `signInWithOAuth` stores the code verifier where `exchangeCodeForSession` in
+ * `/auth/callback` can read it via `createServerClient` + `cookies()`.
+ * Plain `createClient` from `supabase-js` used localStorage only, which breaks
+ * server-side OAuth code exchange.
+ */
 let client: SupabaseClient<Database> | undefined
 
 export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Database>> {
   if (typeof window === 'undefined') {
     throw new Error('getSupabaseBrowserClient can only be used in client-side code')
   }
-  
+
   if (!client) {
     const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -22,14 +31,8 @@ export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Databas
       throw new Error('Missing Supabase environment variables')
     }
 
-    // Use supabase-js in the browser to persist sessions in localStorage
-    const { createClient } = await import('@supabase/supabase-js')
-    client = createClient<Database>(supabaseUrl, supabaseKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
+    client = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
+      isSingleton: true,
     })
   }
   return client

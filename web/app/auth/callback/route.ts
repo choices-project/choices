@@ -77,7 +77,7 @@ export async function GET(request: Request) {
         devLog('Successfully authenticated user:', { email: data.user.email })
 
         // Determine the appropriate redirect destination
-        const finalRedirect = await getRedirectDestination(supabase, data.user, redirectTo)
+        const finalRedirect = await getRedirectDestination(supabaseClient, data.user, redirectTo)
 
         devLog(`Redirecting user to: ${finalRedirect}`, { redirectTo: finalRedirect })
         return NextResponse.redirect(`${origin}${finalRedirect}`)
