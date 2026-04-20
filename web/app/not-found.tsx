@@ -23,12 +23,17 @@ const notFoundMetadata: Record<SupportedLocale, { title: string; description: st
 };
 
 export function generateMetadata(): Metadata {
-  const cookieStore = cookies();
-  const headerStore = headers();
-  const locale = resolveLocale(
-    cookieStore.get(LOCALE_COOKIE_NAME)?.value,
-    headerStore.get('accept-language'),
-  );
+  let locale: SupportedLocale = DEFAULT_LOCALE;
+  try {
+    const cookieStore = cookies();
+    const headerStore = headers();
+    locale = resolveLocale(
+      cookieStore.get(LOCALE_COOKIE_NAME)?.value,
+      headerStore.get('accept-language'),
+    );
+  } catch {
+    locale = DEFAULT_LOCALE;
+  }
   const meta = notFoundMetadata[locale] ?? notFoundMetadata[DEFAULT_LOCALE];
   return {
     title: meta.title,
