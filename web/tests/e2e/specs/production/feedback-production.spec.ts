@@ -3,7 +3,7 @@
  * Requires E2E_USER_* and E2E_ADMIN_* in the environment (see docs/TESTING.md).
  * Uses BASE_URL from playwright.production.config.ts (www.choices-app.com).
  */
-import { devices, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import {
   ensureLoggedOut,
@@ -13,11 +13,6 @@ import {
   loginTestUser,
   waitForPageReady,
 } from '../../helpers/e2e-setup';
-
-// playwright.production.config sets userAgent to ChoicesE2E — some edges return a blank /auth; use a real Chrome UA here.
-test.use({
-  userAgent: devices['Desktop Chrome'].userAgent,
-});
 
 test.describe('Production feedback (user + admin)', () => {
   test('widget submit on /feed, admin triage, optional GitHub generate', async ({ page }) => {
@@ -38,8 +33,31 @@ test.describe('Production feedback (user + admin)', () => {
 
     await ensureLoggedOut(page);
     await loginTestUser(page, user!);
-    // loginTestUser (production) already navigates / → /feed with load; avoid a second bare /feed goto that can miss cookie priming.
+    // loginTestUser (production) should leave us on an authenticated app route.
     await waitForPageReady(page);
+    let postLoginUrl = page.url();
+    if (postLoginUrl.includes('/auth')) {
+      // Production can occasionally race cookie/session propagation on the first redirect.
+      // Retry once before treating this as a hard auth failure.
+      await loginTestUser(page, user!);
+      await waitForPageReady(page);
+      postLoginUrl = page.url();
+    }
+
+    // Assert effective authentication by forcing a protected-route navigation.
+    // We care about session continuity, not whether the client-side redirect from /auth fired instantly.
+    await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await waitForPageReady(page);
+    if (page.url().includes('/auth')) {
+      const cookies = await page.context().cookies();
+      const authCookies = cookies.filter((cookie) => cookie.name.startsWith('sb-') && cookie.value);
+      throw new Error(
+        `Expected authenticated /feed, but redirected to auth. url=${page.url()}; sbCookies=${authCookies.length}; postLoginUrl=${postLoginUrl}`,
+      );
+    }
+    await expect(page.getByTestId('feed-content').or(page.getByLabel('Feed content'))).toBeVisible({
+      timeout: 60_000,
+    });
     // Next.js global-error replaces the root layout (no app shell). Prefer data-testid once deployed; fall back for older HTML.
     const hasAppShell = (await page.locator('[data-testid="app-shell"]').count()) > 0;
     const hasGlobalErrorTestId = await page
@@ -69,6 +87,18 @@ test.describe('Production feedback (user + admin)', () => {
         }),
     );
     await page.waitForTimeout(1000);
+    await page.goto('/feed', { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await waitForPageReady(page);
+    if (page.url().includes('/auth')) {
+      const cookies = await page.context().cookies();
+      const authCookies = cookies.filter((cookie) => cookie.name.startsWith('sb-') && cookie.value);
+      throw new Error(
+        `Session was lost before widget interaction: redirected to auth from feed. url=${page.url()}; sbCookies=${authCookies.length}`,
+      );
+    }
+    await expect(page.getByTestId('feed-content').or(page.getByLabel('Feed content'))).toBeVisible({
+      timeout: 60_000,
+    });
 
     const openBtn = page.getByTestId('feedback-widget-button');
     const widgetVisible = await openBtn.isVisible({ timeout: 30_000 }).catch(() => false);
@@ -78,9 +108,8 @@ test.describe('Production feedback (user + admin)', () => {
         .isVisible({ timeout: 2_000 })
         .catch(() => false);
       const pageUrl = page.url();
-      test.skip(
-        true,
-        `Feedback widget unavailable on production feed (url=${pageUrl}, widgetError=${hasWidgetError}).`,
+      throw new Error(
+        `Feedback widget button missing on authenticated feed. url=${pageUrl}; widgetError=${hasWidgetError}`,
       );
     }
     await openBtn.click();

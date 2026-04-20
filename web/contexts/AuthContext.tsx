@@ -163,13 +163,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!mounted) return undefined
 
-        // Get initial session with timeout to prevent hanging
+        // Never substitute a fake "null session" while getSession() is still pending.
+        // Promise.race with a timeout that resolved `{ session: null }` caused production
+        // false logouts: middleware/cookies looked valid but AuthGuard saw isAuthenticated=false
+        // until a full reload (and E2E could hit /feed in that window).
         const sessionPromise = supabase.auth.getSession()
-        const timeoutPromise = new Promise<{ data: { session: Session | null } }>((resolve) => {
-          setTimeout(() => resolve({ data: { session: null } }), 5000) // 5 second timeout
-        })
+        const slowMs = 8_000
+        const slowTimer =
+          typeof window !== 'undefined'
+            ? window.setTimeout(() => {
+                logger.warn(
+                  'AuthContext: getSession() still pending after 8s — waiting for real result (do not assume logged out)',
+                )
+              }, slowMs)
+            : null
 
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
+        let session: Session | null = null
+        try {
+          const { data } = await sessionPromise
+          session = data.session ?? null
+        } finally {
+          if (slowTimer !== null) {
+            window.clearTimeout(slowTimer)
+          }
+        }
 
         if (mounted) {
           setSession(session)

@@ -410,16 +410,21 @@ export async function loginTestUser(page: Page, user: TestUser): Promise<void> {
 
     await page.waitForURL((u) => !u.pathname.startsWith('/auth'), { timeout: 120_000 });
 
-    const afterAuthPath = new URL(page.url()).pathname;
-    if (afterAuthPath !== '/feed' && !afterAuthPath.startsWith('/feed/')) {
-      await page.goto(new URL('/feed', originBase).toString(), {
-        waitUntil: 'load',
-        timeout: 90_000,
-      });
-    }
+    // Always land on /feed and wait past AuthGuard's loading fallback; otherwise Playwright can
+    // observe "no Access Denied" while `Checking authentication...` is still shown, then `/feed`
+    // resolves to Access Denied after the helper returns.
+    await page.goto(new URL('/feed', originBase).toString(), {
+      waitUntil: 'domcontentloaded',
+      timeout: 90_000,
+    });
+    await waitForPageReady(page, 60_000);
 
     await page.locator('[data-testid="app-shell"]').waitFor({ state: 'visible', timeout: 60_000 });
     await assertSupabaseSessionCookies(page);
+    // Positive signal: `FeedContent` only mounts inside AuthGuard when the client store is authenticated.
+    // Do not use "Checking authentication…" alone — it disappears before "Access Denied" renders.
+    const feedReady = page.getByTestId('feed-content').or(page.getByLabel('Feed content'));
+    await expect(feedReady).toBeVisible({ timeout: 60_000 });
     return;
   }
 

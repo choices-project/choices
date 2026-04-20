@@ -131,7 +131,11 @@ export default function FeedContent() {
         }
       >
         {/* Root layout SkipNavTarget provides <main>; avoid nested main for a11y */}
-          <div className="container mx-auto px-4 py-8 bg-background min-h-screen" aria-label="Feed content">
+          <div
+            className="container mx-auto px-4 py-8 bg-background min-h-screen"
+            aria-label="Feed content"
+            data-testid="feed-content"
+          >
           <EngagementSummary />
           <Suspense fallback={loadingFallback}>
             <UnifiedFeedRefactored
