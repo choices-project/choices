@@ -519,7 +519,9 @@ export class OpenStatesClient {
  * imported during `next build`) do not throw; callers must handle null.
  */
 export function createOpenStatesClient(): OpenStatesClient | null {
-  const apiKey = process.env.OPEN_STATES_API_KEY;
+  // Underscore: preferred in web; no-underscore: matches Vercel/civics-backend (`OPENSTATES_API_KEY`).
+  const apiKey =
+    process.env.OPEN_STATES_API_KEY || process.env.OPENSTATES_API_KEY || undefined;
 
   if (!apiKey) {
     return null;
