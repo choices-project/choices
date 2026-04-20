@@ -49,6 +49,11 @@ npm run test:e2e:axe
 
 Release approval requires all commands green in two consecutive runs (local+CI or CI+CI) with matching workflow enforcement.
 
+Required workflow evidence mapping:
+- `.github/workflows/ci.yml` (`Code Quality`): `verify:docs`, `lint:strict`, `types:ci`
+- `.github/workflows/web-ci.yml` (`build-and-audit`): `types:ci`, `lint:strict`, `./scripts/vercel-build.sh`
+- `.github/workflows/test.yml` (`e2e-tests` + `nav-accessibility-tests`): `test:e2e:critical`, `test:e2e:axe` coverage
+
 **Database & types**
 ```bash
 supabase db push                # Apply pending migrations

@@ -151,6 +151,13 @@ export default function AuthPageClient() {
   // This ensures that when tests use page.fill(), the React state updates
   // Also triggers change events to ensure validation runs
   React.useEffect(() => {
+    // This synchronization is only needed for harness/test modes.
+    // Running it in production can race with normal input handling and clear
+    // password state, which leaves submit disabled even with valid credentials.
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1' && process.env.NODE_ENV !== 'test') {
+      return;
+    }
+
     // Use both ID and data-testid selectors for maximum compatibility
     const getEmailInput = (): HTMLInputElement | null => {
       return (document.getElementById('email') ||
@@ -295,7 +302,7 @@ export default function AuthPageClient() {
       // Periodic DOM sync for E2E tests only
       let interval: ReturnType<typeof setInterval> | undefined;
       let timeout: ReturnType<typeof setTimeout> | undefined;
-      if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
+      if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1' || process.env.NODE_ENV === 'test') {
         interval = setInterval(() => {
           syncEmail();
           syncPassword();
@@ -335,6 +342,9 @@ export default function AuthPageClient() {
   // CRITICAL: Redirect recovery for E2E tests - if bypass flag is set and we have redirectTo param, redirect immediately
   // This handles the case where middleware redirected to /auth but bypass flag is set
   React.useEffect(() => {
+    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS !== '1' && process.env.NODE_ENV !== 'test') {
+      return;
+    }
     if (typeof window === 'undefined') return;
 
     // Check if we have a redirectTo parameter and bypass flag is set
@@ -915,11 +925,14 @@ export default function AuthPageClient() {
           {/* Submit Button */}
           {/* Disable button if form is invalid or loading */}
           {(() => {
-            const hasEmail = Boolean(formData.email && formData.email.includes('@'));
-            const hasPassword = Boolean(formData.password && formData.password.length >= minPasswordLength);
+            const emailCandidate = (formData.email || emailRef.current?.value || '').trim();
+            const passwordCandidate = formData.password || passwordRef.current?.value || '';
+            const hasEmail = Boolean(emailCandidate && emailCandidate.includes('@'));
+            const hasPassword = Boolean(passwordCandidate && passwordCandidate.length >= minPasswordLength);
             const hasDisplayName = !isSignUp || Boolean(formData.displayName && normalizedDisplayName.length >= 3);
-            const confirmMatches = !isSignUp || formData.password === formData.confirmPassword;
-            const isDisabled = safeIsLoading || !hasEmail || !hasPassword || !hasDisplayName || !confirmMatches;
+            const confirmMatches = !isSignUp || passwordCandidate === formData.confirmPassword;
+            const isFormValid = hasEmail && hasPassword && hasDisplayName && confirmMatches;
+            const isDisabled = safeIsLoading;
 
             return (
               <Button
@@ -928,7 +941,7 @@ export default function AuthPageClient() {
                 data-testid="login-submit"
                 aria-busy={safeIsLoading}
                 disabled={isDisabled}
-                {...(isDisabled ? { 'aria-describedby': 'form-validation-hint' } : {})}
+                {...(!isFormValid ? { 'aria-describedby': 'form-validation-hint' } : {})}
                 onClick={(event) => handleSubmit(event)}
               >
                 {safeIsLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}

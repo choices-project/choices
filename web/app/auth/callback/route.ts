@@ -90,7 +90,7 @@ export async function GET(request: Request) {
     } catch (error) {
       devLog('Unexpected error in auth callback:', { error })
       return NextResponse.redirect(
-        `${origin}/login?error=${encodeURIComponent('Unexpected authentication error')}`
+        `${origin}/auth?error=${encodeURIComponent('Unexpected authentication error')}`
       )
     }
   }

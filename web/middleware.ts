@@ -228,7 +228,6 @@ function checkAuthInMiddleware(
   /** Verbose cookie/auth tracing (opt-in). Avoid logging on every request in dev/demo. */
   const verboseAuthMiddlewareLog = env.DEBUG_MIDDLEWARE === '1'
 
-  // Helper to extract project ref from Supabase URL for exact cookie name matching
   const getProjectRef = (): string | null => {
     const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL
     if (!supabaseUrl) return null
@@ -240,11 +239,53 @@ function checkAuthInMiddleware(
     }
   }
 
-  // Helper to check if a cookie name matches Supabase auth patterns
-  const isSupabaseAuthCookie = (cookieName: string): boolean => {
-    if (!cookieName.startsWith('sb-')) return false
-    const lowerName = cookieName.toLowerCase()
-    return lowerName.includes('auth') || lowerName.includes('session')
+  const isValidCookieValue = (value: string): boolean => {
+    const trimmed = value.trim()
+    return (
+      trimmed.length >= 20 &&
+      trimmed !== 'null' &&
+      trimmed !== 'undefined' &&
+      trimmed !== '{}' &&
+      trimmed !== '""' &&
+      trimmed !== "''"
+    )
+  }
+
+  const parseCookieHeader = (header: string): Array<{ name: string; value: string }> => {
+    if (!header) return []
+    const pairs = header.split(';')
+    const parsed: Array<{ name: string; value: string }> = []
+    for (const pair of pairs) {
+      const equalIndex = pair.indexOf('=')
+      if (equalIndex === -1) continue
+      const name = pair.slice(0, equalIndex).trim()
+      if (!name) continue
+      let value = pair.slice(equalIndex + 1).trim()
+      try {
+        value = decodeURIComponent(value)
+      } catch {
+        // Keep raw value if decode fails.
+      }
+      parsed.push({ name, value })
+    }
+    return parsed
+  }
+
+  const buildChunkedCookieValue = (
+    cookiesToInspect: Array<{ name: string; value: string }>,
+    cookieBaseName: string,
+  ): string | null => {
+    const chunkRegex = new RegExp(`^${cookieBaseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.(\\d+)$`)
+    const chunks = cookiesToInspect
+      .map((cookie) => {
+        const match = cookie.name.match(chunkRegex)
+        if (!match || !match[1]) return null
+        return { index: Number(match[1]), value: cookie.value }
+      })
+      .filter((chunk): chunk is { index: number; value: string } => chunk !== null)
+      .sort((a, b) => a.index - b.index)
+    if (chunks.length === 0) return null
+    return chunks.map((chunk) => chunk.value).join('')
   }
 
   // PRIORITY: Check Cookie header first (most reliable for httpOnly cookies in Edge Runtime)
@@ -270,7 +311,7 @@ function checkAuthInMiddleware(
     }
   }
 
-  // Find Supabase auth cookie - prioritize Cookie header parsing
+  // Find Supabase auth cookie with strict matching.
   let authCookie: { name: string; value: string } | null = null
   const projectRef = getProjectRef()
   const expectedCookieName = projectRef ? `sb-${projectRef}-auth-token` : null
@@ -282,7 +323,12 @@ function checkAuthInMiddleware(
   diagnostics.projectRef = projectRef
   diagnostics.expectedCookieName = expectedCookieName
 
-  const cookies = request.cookies.getAll()
+  const headerCookies = parseCookieHeader(cookieHeader)
+  const parsedCookies = request.cookies.getAll().map((cookie) => ({
+    name: cookie.name,
+    value: cookie.value,
+  }))
+  const cookies = [...headerCookies, ...parsedCookies]
   diagnostics.parsedCookiesCount = cookies.length
   diagnostics.parsedCookiesHasSb = cookies.some(c => c.name.startsWith('sb-'))
 
@@ -300,143 +346,32 @@ function checkAuthInMiddleware(
     console.warn('[checkAuthInMiddleware] Expected cookie name:', expectedCookieName)
   }
 
-  // SIMPLEST CHECK FIRST: If Cookie header contains "sb-" and has substantial content, trust it
-  // This is the most permissive check - if any sb- cookie exists with substantial value, authenticate
-  if (cookieHeader && cookieHeader.includes('sb-')) {
-    if (verboseAuthMiddlewareLog) {
-      console.warn('[checkAuthInMiddleware] Running simplest check: looking for any sb- cookie with >=100 chars')
-    }
-    // Find all sb- cookies and check for substantial values
-    const sbMatches = cookieHeader.matchAll(/(?:^|;\s*)(sb-[^=]+)=([^;]+)/g)
-    for (const match of sbMatches) {
-      if (match[1] && match[2]) {
-        const cookieName = match[1].trim()
-        let cookieValue = match[2].trim()
+  const exactCookie = expectedCookieName
+    ? cookies.find((cookie) => cookie.name === expectedCookieName && isValidCookieValue(cookie.value))
+    : undefined
+  if (exactCookie) {
+    authCookie = exactCookie
+  }
 
-        // Handle URL encoding
-        try {
-          cookieValue = decodeURIComponent(cookieValue)
-        } catch {
-          // If decoding fails, use original value
-        }
-
-        // If cookie value is substantial (>=100 chars), trust it as auth
-        // 2569 chars should definitely pass this check
-        if (cookieValue.length >= 100) {
-          if (verboseAuthMiddlewareLog) {
-            console.warn('[checkAuthInMiddleware] Found substantial sb- cookie:', {
-              name: cookieName,
-              valueLength: cookieValue.length,
-              method: 'simplest-check'
-            })
-          }
-          authCookie = { name: cookieName, value: cookieValue }
-          break
-        }
-      }
+  if (!authCookie && expectedCookieName) {
+    const assembled = buildChunkedCookieValue(cookies, expectedCookieName)
+    if (assembled && isValidCookieValue(assembled)) {
+      authCookie = { name: expectedCookieName, value: assembled }
     }
   }
 
-  // Method 0: FIRST check Cookie header directly for ANY sb- cookie with substantial value
-  // This is the most permissive and often most reliable for httpOnly cookies in Edge Runtime
-  if (!authCookie && cookieHeader && cookieHeader.includes('sb-')) {
-    const cookiePairs = cookieHeader.split(';').map(c => c.trim())
-    for (const cookiePair of cookiePairs) {
-      const equalIndex = cookiePair.indexOf('=')
-      if (equalIndex === -1) continue
-
-      const cookieName = cookiePair.substring(0, equalIndex).trim()
-      let cookieValue = cookiePair.substring(equalIndex + 1).trim()
-
-      try {
-        cookieValue = decodeURIComponent(cookieValue)
-      } catch { /* If decoding fails, use original value */ }
-
-      if (cookieName.startsWith('sb-')) {
-        const isChunked = cookieName.includes('.') && /\.\d+$/.test(cookieName)
-        const minLength = isChunked ? 5 : 10 // Lower threshold for chunked cookies
-
-        if (cookieValue.length >= minLength &&
-            cookieValue !== 'null' && cookieValue !== 'undefined' &&
-            cookieValue !== '{}' && cookieValue !== '""' && cookieValue !== "''") {
-          authCookie = { name: cookieName, value: cookieValue }
-          if (verboseAuthMiddlewareLog) {
-            console.warn('[checkAuthInMiddleware] Method 0 (Any sb- cookie in header) succeeded:', { name: cookieName, valueLength: cookieValue.length })
-          }
-          break
-        }
-      }
-    }
-  }
-
-  // Method 1: Try exact match in Cookie header if we have project ref
-  if (!authCookie && expectedCookieName && cookieHeader.includes(expectedCookieName + '=')) {
-    const cookieStart = cookieHeader.indexOf(expectedCookieName + '=')
-    if (cookieStart !== -1) {
-      const valueStart = cookieStart + expectedCookieName.length + 1
-      let valueEnd = cookieHeader.indexOf(';', valueStart)
-      if (valueEnd === -1) valueEnd = cookieHeader.length
-
-      let cookieValue = cookieHeader.substring(valueStart, valueEnd).trim()
-      try {
-        cookieValue = decodeURIComponent(cookieValue)
-      } catch { /* If decoding fails, use original value */ }
-
-      if (cookieValue.length >= 10) {
-        authCookie = { name: expectedCookieName, value: cookieValue }
-        if (verboseAuthMiddlewareLog) {
-          console.warn('[checkAuthInMiddleware] Method 1 (Exact match in header) succeeded:', { name: expectedCookieName, valueLength: cookieValue.length })
-        }
-      }
-    }
-  }
-
-  // Method 2: Pattern matching in Cookie header
-  if (!authCookie && cookieHeader && cookieHeader.length > 0) {
-    const cookiePairs = cookieHeader.split(';').map(c => c.trim())
-    for (const cookiePair of cookiePairs) {
-      const equalIndex = cookiePair.indexOf('=')
-      if (equalIndex === -1) continue
-
-      const cookieName = cookiePair.substring(0, equalIndex).trim()
-      let cookieValue = cookiePair.substring(equalIndex + 1).trim()
-      try {
-        cookieValue = decodeURIComponent(cookieValue)
-      } catch { /* If decoding fails, use original value */ }
-
-      if (isSupabaseAuthCookie(cookieName) && cookieValue.length >= 10) {
-        authCookie = { name: cookieName, value: cookieValue }
-        if (verboseAuthMiddlewareLog) {
-          console.warn('[checkAuthInMiddleware] Method 2 (Pattern match in header) succeeded:', { name: cookieName, valueLength: cookieValue.length })
-        }
-        break
-      }
-    }
-  }
-
-  // Method 3: Check parsed cookies (fallback if header methods failed)
   if (!authCookie) {
-    // Try exact match first
-    if (expectedCookieName) {
-      const exactCookie = cookies.find(c => c.name === expectedCookieName)
-      if (exactCookie && exactCookie.value && exactCookie.value.length >= 10) {
-        authCookie = { name: exactCookie.name, value: exactCookie.value }
-        if (verboseAuthMiddlewareLog) {
-          console.warn('[checkAuthInMiddleware] Method 3 (Exact match in parsed cookies) succeeded:', { name: exactCookie.name, valueLength: exactCookie.value.length })
-        }
-      }
-    }
-
-    // If exact match didn't work, try pattern matching
-    if (!authCookie) {
-      authCookie = cookies.find(cookie =>
-        isSupabaseAuthCookie(cookie.name) &&
-        cookie.value &&
-        cookie.value.length >= 10
-      ) || null
-      if (authCookie && verboseAuthMiddlewareLog) {
-        console.warn('[checkAuthInMiddleware] Method 3 (Pattern match in parsed cookies) succeeded:', { name: authCookie.name, valueLength: authCookie.value.length })
-      }
+    const fallbackCookie = cookies.find((cookie) => {
+      if (!cookie.name.startsWith('sb-')) return false
+      const lowerName = cookie.name.toLowerCase()
+      const isAuthTokenLike =
+        lowerName.endsWith('-auth-token') ||
+        lowerName.includes('-auth-token.') ||
+        lowerName === 'sb-access-token'
+      return isAuthTokenLike && isValidCookieValue(cookie.value)
+    })
+    if (fallbackCookie) {
+      authCookie = fallbackCookie
     }
   }
 
@@ -454,14 +389,7 @@ function checkAuthInMiddleware(
     return { isAuthenticated: false, diagnostics }
   }
 
-  // Check for invalid/empty cookie values
-  const trimmedValue = authCookie.value.trim()
-  if (trimmedValue.length < 10 ||
-      trimmedValue === 'null' ||
-      trimmedValue === 'undefined' ||
-      trimmedValue === '{}' ||
-      trimmedValue === '""' ||
-      trimmedValue === "''") {
+  if (!isValidCookieValue(authCookie.value)) {
     if (verboseAuthMiddlewareLog) {
       console.warn('[checkAuthInMiddleware] Auth cookie value is invalid - returning false')
     }

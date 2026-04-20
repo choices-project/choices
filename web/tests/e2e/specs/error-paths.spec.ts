@@ -42,7 +42,8 @@ test.describe('Error paths and edge cases', () => {
     await homeLink.click();
     await page.waitForLoadState('domcontentloaded');
     const path = new URL(page.url()).pathname.replace(/\/$/, '') || '/';
-    expect(['/', '/feed', '/auth', '/dashboard', '/landing'].includes(path)).toBeTruthy();
+    // In harness mode, app bootstrap may route to onboarding depending on profile/session state.
+    expect(['/', '/feed', '/auth', '/dashboard', '/landing', '/onboarding'].includes(path)).toBeTruthy();
   });
 
   test('404 page sign-in link goes to /auth', async ({ page }) => {

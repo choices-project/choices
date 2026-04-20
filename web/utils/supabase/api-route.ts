@@ -118,22 +118,28 @@ export async function getSupabaseApiRouteClient(
     },
     remove: (name: string, options: Record<string, unknown>) => {
       try {
+        const isProduction = process.env.NODE_ENV === 'production'
+        const host = request.headers.get('host') || ''
+        const isChoicesDomain = host.includes('choices-app.com')
+        const domain = isProduction && isChoicesDomain ? '.choices-app.com' : undefined
         const cookieOptions: {
           httpOnly?: boolean
           secure?: boolean
           sameSite?: 'strict' | 'lax' | 'none'
           path?: string
           maxAge?: number
+          domain?: string
         } = {
           maxAge: 0, // Expire immediately
+          secure: isProduction,
+          sameSite: 'lax',
+          path: typeof options.path === 'string' ? options.path : '/',
+          ...(domain ? { domain } : {}),
         }
 
-        if (typeof options.path === 'string') {
-          cookieOptions.path = options.path
-        }
-
-        // Remove cookie by setting maxAge to 0
-        response.cookies.set(name, '', cookieOptions)
+        // Remove both httpOnly and non-httpOnly variants defensively.
+        response.cookies.set(name, '', { ...cookieOptions, httpOnly: true })
+        response.cookies.set(name, '', { ...cookieOptions, httpOnly: false })
       } catch (error) {
         logger.warn('Failed to remove cookie in API route', { name, error })
       }

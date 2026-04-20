@@ -71,8 +71,8 @@ jobs:
       - name: Verify lockfile unchanged
         run: git diff --exit-code -- package-lock.json
 
-      - name: Type check (strict)
-        run: npm run types:strict
+      - name: Type check (CI config)
+        run: npm run types:ci
 
       - name: Lint (strict mode)
         run: npm run lint:strict
@@ -147,19 +147,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Run E2E tests
-        run: >-
-          npx playwright test
-          --project=${{ matrix.browser }}
-          --reporter=html,junit
-          --max-failures=1
-          tests/e2e/specs/dashboard/dashboard-journey.spec.ts
-          tests/e2e/specs/navigation-shell.spec.ts
-          tests/e2e/specs/admin-navigation.spec.ts
-          tests/e2e/specs/accessibility/critical-pages-a11y.spec.ts
-          tests/e2e/specs/accessibility/keyboard-navigation.spec.ts
-          tests/e2e/specs/error-paths.spec.ts
-          tests/e2e/specs/critical-journey.spec.ts
+      - name: Run critical E2E gate
+        run: npm run test:e2e:critical
         env:
           CI: true
           BASE_URL: http://127.0.0.1:3000

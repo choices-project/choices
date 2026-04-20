@@ -5,7 +5,7 @@
  * Verifies env vars and Supabase connection (service role) used by civics ingest.
  *
  * GET /api/health/ingest
- * Requires: Authorization: Bearer <ADMIN_MONITORING_KEY>
+ * Requires: Authorization: Bearer <ADMIN_MONITORING_KEY> or an authenticated admin session
  */
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 

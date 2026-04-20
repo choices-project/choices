@@ -1,6 +1,6 @@
 # Roadmap
 
-_Last updated: April 4, 2026_
+_Last updated: April 20, 2026_
 
 Single source of truth for all remaining work. The MVP is complete — this document tracks launch tasks, post-launch improvements, and future features.
 
@@ -12,6 +12,7 @@ Single source of truth for all remaining work. The MVP is complete — this docu
 - Keep strict lint/types/security checks blocking (no hidden signal masking).
 - Standardize deterministic E2E env defaults (`BASE_URL`, harness, mocks, allowed origin).
 - Stabilize high-impact suites first: auth flow/redirects, account settings, critical journey, and historical Jest debt clusters.
+- Enforce command/workflow parity across `.github/workflows/ci.yml`, `.github/workflows/web-ci.yml`, `.github/workflows/test.yml`, and `.github/workflows/types.yml` (`types:ci`, `./scripts/vercel-build.sh`, `test:e2e:critical`).
 
 ### Phase 2 - Expand reliability and depth
 
@@ -48,7 +49,7 @@ These items must be completed before or immediately after the first production d
 ### 1.3 CI Green
 
 - [x] **CI gates** — `types:ci`, `lint:strict`, Jest (357), contract tests (30), Playwright smoke (13) all pass green (verified locally March 2026)
-- [ ] **Production E2E** — Run `npm run test:e2e:production` post-deploy; triage remaining failures (auth timing, contact validation deploy, representative load time). Requires `E2E_USER_*` and `E2E_ADMIN_*` secrets.
+- [ ] **Production E2E** — Run `npm run test:e2e:production` post-deploy; close auth/session regressions confirmed on live site (`/auth` submit lockout under state desync and protected-route session continuity after login). Requires `E2E_USER_*` and `E2E_ADMIN_*` secrets plus evidence from two consecutive green runs.
 - [x] **Post-deploy gate** — `deploy.yml` runs `test:e2e:production:smoke` after Vercel deploy (workflow_dispatch only)
 
 ---

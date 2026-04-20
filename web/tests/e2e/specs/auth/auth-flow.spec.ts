@@ -293,6 +293,21 @@ test.describe('Authentication Flow', () => {
         });
         console.log('[DIAGNOSTIC] Login form final state (button still disabled):', JSON.stringify(finalState, null, 2));
 
+        // Production-only fallback: password field can be emptied by client-side sync/autofill churn.
+        if ((!finalState.passwordValid || finalState.password === null) && finalState.emailValid) {
+          await passwordInput.fill(regularPassword!);
+          await page.evaluate(({ password }: { password: string }) => {
+            const passwordEl = document.querySelector('[data-testid="login-password"]') as HTMLInputElement | null;
+            if (!passwordEl) return;
+            const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+            nativeSetter?.call(passwordEl, password);
+            passwordEl.dispatchEvent(new Event('input', { bubbles: true }));
+            passwordEl.dispatchEvent(new Event('change', { bubbles: true }));
+            passwordEl.dispatchEvent(new Event('blur', { bubbles: true }));
+          }, { password: regularPassword! });
+          await page.waitForTimeout(750);
+        }
+
         // Final check - if inputs are valid but button is still disabled, throw error
         if (finalState.emailValid && finalState.passwordValid && finalState.buttonDisabled) {
           throw new Error('Login button remained disabled after form fill - React state sync may have failed');
@@ -378,26 +393,21 @@ test.describe('Authentication Flow', () => {
       // Check if we're still on profile or were redirected
       const profileUrl = page.url();
 
-      // If redirected to auth, it might be a session issue or onboarding requirement
-      // Log for debugging but don't fail - login itself worked, which verifies the RLS fix
       if (profileUrl.includes('/auth')) {
-        // Check if we have auth cookies
         const cookies = await page.context().cookies();
         const authCookies = cookies.filter(c => c.name.startsWith('sb-') && c.value);
         console.log('[DIAGNOSTIC] Redirected to auth after login. Auth cookies:', authCookies.length);
+        throw new Error('Session did not persist to protected profile route after successful login');
+      }
 
-        // The RLS fix is verified if login succeeded and we got to /feed or /dashboard
-        // Profile access might require onboarding completion, which is acceptable
-      } else {
-        // Profile page should load successfully (no "profile not found" error)
-        const profileError = page.locator('[data-testid="profile-error"]');
-        const hasProfileError = await profileError.count();
-        if (hasProfileError > 0) {
-          const errorText = await profileError.first().textContent().catch(() => '');
-          // "Profile not found" would indicate the login RLS fix didn't work
-          if (errorText?.toLowerCase().includes('profile not found')) {
-            throw new Error(`CRITICAL: Profile not found after login - RLS fix may not be working. Error: ${errorText}`);
-          }
+      // Profile page should load successfully (no "profile not found" error)
+      const profileError = page.locator('[data-testid="profile-error"]');
+      const hasProfileError = await profileError.count();
+      if (hasProfileError > 0) {
+        const errorText = await profileError.first().textContent().catch(() => '');
+        // "Profile not found" indicates profile/session integrity issue.
+        if (errorText?.toLowerCase().includes('profile not found')) {
+          throw new Error(`CRITICAL: Profile not found after login - RLS fix may not be working. Error: ${errorText}`);
         }
       }
 
@@ -588,30 +598,7 @@ test.describe('Authentication Flow', () => {
         diagnosticHeaders,
       });
 
-      // Authenticated users should be redirected to /feed
-      // Note: SameSite=Lax cookies may not be sent on programmatic navigations,
-      // so middleware may leave the session on the marketing home (`/`), then /feed on the next navigation
-      // Wait for final redirect to /feed (handles two-step redirect)
-      let currentUrl = page.url();
-
-      // If we're on marketing home (`/` or legacy `/landing`), navigate to /feed so cookies are sent
-      const marketingPath = (() => {
-        try {
-          return new URL(currentUrl).pathname || '/';
-        } catch {
-          return '';
-        }
-      })();
-      if ((marketingPath === '/' || marketingPath === '/landing') && !currentUrl.includes('/feed')) {
-        // Wait a bit for any pending redirects
-        await page.waitForTimeout(1_000);
-
-        // Try navigating directly to /feed - cookies should be sent on this navigation
-        await page.goto(`${BASE_URL}/feed`, { waitUntil: 'networkidle', timeout: 30_000 });
-        currentUrl = page.url();
-      }
-
-      // Wait for final redirect to /feed
+      // Authenticated users should be redirected to /feed directly.
       await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/feed`), { timeout: 10_000 });
     });
   });
@@ -820,28 +807,8 @@ test.describe('Authentication Flow', () => {
         )
         .toBeTruthy();
 
-      // Visit root - should redirect to /feed (not /auth)
-      // Note: SameSite=Lax cookies may not be sent on programmatic navigations,
-      // so middleware may leave the session on the marketing home (`/`), then /feed on the next navigation
+      // Visit root - should redirect to /feed (not /auth and not marketing home fallback)
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 30_000 });
-
-      let currentUrl = page.url();
-
-      const marketingPathAfterRoot = (() => {
-        try {
-          return new URL(currentUrl).pathname || '/';
-        } catch {
-          return '';
-        }
-      })();
-      if ((marketingPathAfterRoot === '/' || marketingPathAfterRoot === '/landing') && !currentUrl.includes('/feed')) {
-        // Wait a bit for any pending redirects
-        await page.waitForTimeout(1_000);
-
-        // Try navigating directly to /feed - cookies should be sent on this navigation
-        await page.goto(`${BASE_URL}/feed`, { waitUntil: 'networkidle', timeout: 30_000 });
-        currentUrl = page.url();
-      }
 
       // Should redirect to /feed (authenticated)
       await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/feed`), { timeout: 10_000 });

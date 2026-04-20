@@ -32,6 +32,12 @@ This roadmap is the SSOT for the release-quality upgrade program.
 | **Phase 1: quality floor** | Immediate / current sprint | Core maintainers + CI owners | Enforce blocking release gates, remove CI signal masking, stabilize auth/account/critical-journey suites, normalize Playwright env determinism | Two consecutive green runs for: `verify:docs`, `lint:strict`, `types:ci`, `jest:ci`, `./scripts/vercel-build.sh`, `test:e2e:smoke`, `test:e2e:critical`, `test:e2e:axe` |
 | **Phase 2: quality ceiling** | Next 1-2 sprints after Phase 1 | Domain owners (auth/security/perf/accessibility) | Risk-weighted expansion across auth/admin/security APIs, flake governance with SLA, quarantine exit policy, performance/security regression coverage | Monthly audit report, named owners for flaky/quarantined suites, and CI jobs enforcing `@performance` + security-regression checks |
 
+Required workflow/job parity for release evidence:
+- `.github/workflows/ci.yml` (`Code Quality`): `verify:docs`, `lint:strict`, `types:ci`
+- `.github/workflows/web-ci.yml` (`build-and-audit`): `types:ci`, `lint:strict`, `./scripts/vercel-build.sh`
+- `.github/workflows/test.yml` (`e2e-tests`): `test:e2e:critical`
+- `.github/workflows/types.yml` (`types`): `types:ci`
+
 #### Reliability governance policy
 
 - Flaky test triage SLA: classify within 24 hours, fix/quarantine owner assigned in 48 hours.

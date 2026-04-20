@@ -36,13 +36,12 @@ test.describe('@production Production API smoke', () => {
     expect(body.data.flags.CIVIC_ENGAGEMENT_V2).toBe(true);
   });
 
-  test('GET /api/health/ingest returns healthy', async ({ request }) => {
+  test('GET /api/health/ingest requires auth', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/api/health/ingest`, {
       timeout: 15_000,
     });
-    expect(res.status()).toBe(200);
+    expect(res.status()).toBe(401);
     const body = await res.json();
-    expect(body.success).toBe(true);
-    expect(body.data?.status).toBe('healthy');
+    expect(body.success).toBe(false);
   });
 });

@@ -22,7 +22,12 @@ async function gotoCriticalPage(page: Page, path: string): Promise<void> {
     await gotoDashboardResolvingRedirect(page);
     return;
   }
+
   await page.goto(path);
+  await page.waitForURL((url) => !url.pathname.startsWith('/auth'), { timeout: 20_000 }).catch(() => undefined);
+  if (page.url().includes('/auth')) {
+    throw new Error(`Expected ${path} to be reachable for accessibility audit, but was redirected to auth`);
+  }
 }
 
 test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
@@ -39,17 +44,29 @@ test.describe('@axe Critical Pages Accessibility (WCAG 2.1 AA)', () => {
     const baseUrl = process.env.BASE_URL || 'https://www.choices-app.com';
     const url = new URL(baseUrl);
     const domain = url.hostname.startsWith('www.') ? url.hostname.substring(4) : url.hostname;
+    const isHttps = url.protocol === 'https:';
 
     try {
-      await page.context().addCookies([{
-        name: 'e2e-dashboard-bypass',
-        value: '1',
-        path: '/',
-        domain: `.${domain}`,
-        sameSite: 'None' as const,
-        secure: true,
-        httpOnly: false,
-      }]);
+      await page.context().addCookies([
+        {
+          name: 'e2e-dashboard-bypass',
+          value: '1',
+          path: '/',
+          domain: `.${domain}`,
+          sameSite: 'Lax' as const,
+          secure: isHttps,
+          httpOnly: false,
+        },
+        {
+          name: 'E2E',
+          value: '1',
+          path: '/',
+          domain: `.${domain}`,
+          sameSite: 'Lax' as const,
+          secure: isHttps,
+          httpOnly: false,
+        },
+      ]);
     } catch (error) {
       console.log('[critical-pages-a11y] Using localStorage only:', error);
     }

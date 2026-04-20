@@ -51,6 +51,19 @@ Consolidated health check endpoint supporting multiple check types.
 - Added graceful handling for missing Supabase credentials in CI/test
 - Database connection failures in CI/test are reported as warnings, not errors
 
+### GET /api/health/ingest
+
+Protected ingest pre-flight endpoint for monitoring civics ingest dependencies.
+
+**Authentication:**
+- `Authorization: Bearer <ADMIN_MONITORING_KEY>` **or**
+- Authenticated admin session
+
+**Response Codes:**
+- `401`: Missing/invalid monitoring key and no valid admin session
+- `200`: Env and ingest DB checks healthy
+- `503`: Ingest pre-flight unhealthy (missing env vars or Supabase connectivity failure)
+
 ### GET /api/site-messages
 
 Retrieves active site messages for display.

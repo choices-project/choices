@@ -88,6 +88,15 @@ See also: `docs/ROADMAP.md` for remaining test work.
 - Playwright determinism baseline for local + CI: `BASE_URL=http://127.0.0.1:3000`, `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`, `PLAYWRIGHT_USE_MOCKS=1`, `ALLOWED_DEV_ORIGINS=http://127.0.0.1:3000`.
 - Local scripts (`test:e2e`, `test:e2e:critical`, `test:e2e:smoke`, `test:e2e:axe`) now pin those env vars by default.
 
+Workflow parity map (required):
+- `verify:docs`, `lint:strict`, `types:ci` enforced in `.github/workflows/ci.yml` and `.github/workflows/types.yml`.
+- `types:ci`, `lint:strict`, `./scripts/vercel-build.sh` enforced in `.github/workflows/web-ci.yml`.
+- `test:e2e:critical` enforced in `.github/workflows/test.yml` (`e2e-tests` job).
+
+Release acceptance evidence:
+- Capture two consecutive green runs of the required gate stack.
+- Each evidence pack must include workflow run URLs and job names proving command-to-workflow parity.
+
 ### Known Jest debt and reliability governance
 
 - Legacy debt areas include `web/tests/integration/feeds/` and `web/tests/unit/supabase/`; triage each failure as fix vs quarantine.

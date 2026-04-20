@@ -40,6 +40,9 @@ The following security improvements were implemented across the application:
 
 Security checks are part of release-quality CI, not ad-hoc validation:
 
+- Blocking workflow enforcement lives in `.github/workflows/web-ci.yml` and `.github/workflows/test.yml` for `npm run check:next-security`, `npm run audit:high`, and the deployment bypass regression test.
+- Security evidence is valid only when attached to two consecutive green release-gate runs with workflow URLs.
+
 - Dependency and filesystem vulnerability scans: `npm run audit:high` + Trivy CRITICAL/HIGH scan.
 - Docs/code parity verification for security inventories: `npm run verify:docs` (includes SECURITY snapshots).
 - Timing-safe verification paths covered by tests and review checklist (CSRF token compare, webhook signature compare, deployment-bypass enforcement).
