@@ -3,7 +3,7 @@
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
@@ -12,9 +12,7 @@ import { Input } from '@/components/ui/input';
 
 import { useI18n } from '@/hooks/useI18n';
 
-export const dynamic = 'force-dynamic';
-
-export default function ResetPasswordConfirmPage() {
+function ResetPasswordConfirmPageInner() {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -235,5 +233,13 @@ export default function ResetPasswordConfirmPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordConfirmPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordConfirmPageInner />
+    </Suspense>
   );
 }

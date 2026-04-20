@@ -1,5 +1,13 @@
-'use client';
+import { Suspense } from 'react';
 
-export { default } from './AuthPageClient';
+import AuthPageClient from './AuthPageClient';
 
 export const dynamic = 'force-dynamic';
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthPageClient />
+    </Suspense>
+  );
+}

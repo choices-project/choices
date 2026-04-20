@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ type BillPackage = {
   packageLink?: string;
 };
 
-export default function CreateConstituentWillPollPage() {
+function CreateConstituentWillPollPageInner() {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -350,5 +350,13 @@ export default function CreateConstituentWillPollPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function CreateConstituentWillPollPage() {
+  return (
+    <Suspense fallback={null}>
+      <CreateConstituentWillPollPageInner />
+    </Suspense>
   );
 }

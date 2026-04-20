@@ -9,7 +9,7 @@
 import { CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 
 import { logger } from '@/lib/utils/logger';
 
-export default function DeviceFlowVerifyPage() {
+function DeviceFlowVerifyPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [userCode, setUserCode] = useState('');
@@ -279,3 +279,10 @@ export default function DeviceFlowVerifyPage() {
   );
 }
 
+export default function DeviceFlowVerifyPage() {
+  return (
+    <Suspense fallback={null}>
+      <DeviceFlowVerifyPageInner />
+    </Suspense>
+  );
+}
