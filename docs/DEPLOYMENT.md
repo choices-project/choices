@@ -1,6 +1,6 @@
 # Deployment Guide
 
-_Last updated: April 5, 2026_
+_Last updated: April 19, 2026_
 
 ## Purpose
 Use this guide as the single source of truth for shipping the Choices web application. It covers the required checks, how to move a release from local verification to production, and where to look if something goes wrong.
@@ -83,6 +83,21 @@ If you need to revert or disable a subsystem:
   - `operations/passkey-rollback-playbook.md` — Disable WebAuthn/passkey flows quickly.
   - `supabase-operations-guide.md` — Supabase management commands, credential rotation, and access policies.
 - Restore the previous database state if a migration misbehaved. Use Supabase point-in-time recovery or your last backup.
+
+### 5.1 Upstash Redis: inactive free database and restore
+
+On the **Upstash free tier**, Redis databases that stay **inactive for 14 days** can be **auto-deleted**. The console then shows the database under **INACTIVE** and a **“Database Deleted”** / **Restore or Delete** flow. Until credentials work again, the app logs **`Redis rate limit check failed: TypeError: fetch failed`** (rate limiter fail-open still allows traffic, but Redis-backed behavior is unreliable).
+
+**Restore from backup (follow Upstash’s modal exactly):**
+
+1. **Create a new empty Redis database** in the Upstash console (**+ Create Database**). Choose region and name (for example `choices-redis-prod`). This is the **target** Upstash warns must exist before restore.
+2. Open the **inactive** database entry → **Restore or Delete** → choose **Restore**. Point the restore at the **new** database you just created so the backup loads into that target.
+3. After restore completes, open the **active** database → **REST API** (or **Connect**) and copy **`UPSTASH_REDIS_REST_URL`** and **`UPSTASH_REDIS_REST_TOKEN`** (tokens can rotate; always use the values shown for the database that will receive traffic).
+4. In **Vercel** → your project → **Settings → Environment Variables**, set **`UPSTASH_REDIS_REST_URL`** and **`UPSTASH_REDIS_REST_TOKEN`** for every environment that should rate-limit (**Production**, and **Preview** if previews use Redis). Save.
+5. **Redeploy** the latest production deployment (or **Redeploy** from the deployment detail page) so new serverless instances pick up the variables.
+6. **Verify:** Vercel logs should stop showing repeated `fetch failed` for Redis; optional spot-check a rate-limited route (see `docs/SECURITY.md` for `apiRateLimiter` usage).
+
+**Prevention:** Use Upstash **paid** or **pay-as-you-go** for production-critical Redis, enable alerts, or schedule a trivial ping/cron so the database does not sit idle 14 days on free tier. Document the owner in your ops calendar.
 
 ---
 

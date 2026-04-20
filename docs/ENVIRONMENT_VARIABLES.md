@@ -63,6 +63,8 @@ This document lists environment variables for the Choices application. **Startup
   - Upstash Redis REST API token
   - Security: ⚠️ Server-only, never expose
 
+If Upstash marked the database **inactive** or **deleted** (free-tier inactivity), restore and re-point these variables using **[`docs/DEPLOYMENT.md`](DEPLOYMENT.md) §5.1**.
+
 ### Application Configuration
 - `NEXT_PUBLIC_BASE_URL` (optional)
   - Base URL for the application
