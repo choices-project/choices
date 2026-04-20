@@ -25,11 +25,17 @@ const notFoundMetadata: Record<SupportedLocale, { title: string; description: st
 export function generateMetadata(): Metadata {
   let locale: SupportedLocale = DEFAULT_LOCALE;
   try {
-    const cookieStore = cookies();
-    const headerStore = headers();
+    const cookieStore = cookies() as
+      | { get?: (name: string) => { value?: string } | undefined }
+      | undefined
+      | null;
+    const headerStore = headers() as
+      | { get?: (name: string) => string | null }
+      | undefined
+      | null;
     locale = resolveLocale(
-      cookieStore.get(LOCALE_COOKIE_NAME)?.value,
-      headerStore.get('accept-language'),
+      cookieStore?.get?.(LOCALE_COOKIE_NAME)?.value,
+      headerStore?.get?.('accept-language') ?? null,
     );
   } catch {
     locale = DEFAULT_LOCALE;

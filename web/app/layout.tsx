@@ -25,6 +25,9 @@ import type { Metadata } from 'next';
 import type { AbstractIntlMessages } from 'next-intl';
 import './globals.css';
 
+/** Locale + cookies()/headers() require a real request; avoids intermittent RSC 500s on `/`. */
+export const dynamic = 'force-dynamic';
+
 /** Canonical public site origin for metadata (Zod-validated when set). */
 const siteOrigin =
   env.NEXT_PUBLIC_BASE_URL ??
@@ -131,11 +134,17 @@ export default async function RootLayout({
 }) {
   let locale: SupportedLocale = DEFAULT_LOCALE;
   try {
-    const cookieStore = cookies();
-    const headerStore = headers();
+    const cookieStore = cookies() as
+      | { get?: (name: string) => { value?: string } | undefined }
+      | undefined
+      | null;
+    const headerStore = headers() as
+      | { get?: (name: string) => string | null }
+      | undefined
+      | null;
     locale = resolveLocale(
-      cookieStore.get(LOCALE_COOKIE_NAME)?.value,
-      headerStore.get('accept-language'),
+      cookieStore?.get?.(LOCALE_COOKIE_NAME)?.value,
+      headerStore?.get?.('accept-language') ?? null,
     );
   } catch {
     locale = DEFAULT_LOCALE;
