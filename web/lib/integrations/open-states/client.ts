@@ -514,13 +514,15 @@ export class OpenStatesClient {
 }
 
 /**
- * Create an Open States API client with default configuration
+ * Create an Open States API client with default configuration.
+ * Returns null when the API key is unset so server modules (e.g. API routes
+ * imported during `next build`) do not throw; callers must handle null.
  */
-export function createOpenStatesClient(): OpenStatesClient {
+export function createOpenStatesClient(): OpenStatesClient | null {
   const apiKey = process.env.OPEN_STATES_API_KEY;
-  
+
   if (!apiKey) {
-    throw new OpenStatesApiError('OPEN_STATES_API_KEY environment variable is required', 500);
+    return null;
   }
 
   return new OpenStatesClient({
