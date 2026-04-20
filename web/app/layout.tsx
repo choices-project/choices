@@ -129,11 +129,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = cookies();
-  const headerStore = headers();
-  const cookieLocale = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
-  const acceptLanguage = headerStore.get('accept-language');
-  const locale = resolveLocale(cookieLocale, acceptLanguage);
+  let locale: SupportedLocale = DEFAULT_LOCALE;
+  try {
+    const cookieStore = cookies();
+    const headerStore = headers();
+    locale = resolveLocale(
+      cookieStore.get(LOCALE_COOKIE_NAME)?.value,
+      headerStore.get('accept-language'),
+    );
+  } catch {
+    locale = DEFAULT_LOCALE;
+  }
 
   const messages = await loadMessages(locale);
   const textDirection = getTextDirection(locale ?? DEFAULT_LOCALE);
