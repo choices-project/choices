@@ -139,11 +139,26 @@ export class RedisClient {
         // Use Upstash REST API
         const { Redis } = await import('@upstash/redis')
 
-        this.client = Redis.fromEnv() as unknown as RedisClientInterface
+        const upstash = Redis.fromEnv() as unknown as RedisClientInterface
+        try {
+          // fromEnv() does not verify TLS/DNS/reachability; a bad URL or token
+          // used to leave isConnected=true and spam "fetch failed" on every rate-limit GET.
+          await upstash.get('__choices:redis:ping__')
+        } catch (err) {
+          this.client = null
+          this.isConnected = false
+          logger.warn(
+            'Upstash Redis REST unreachable (rate limit/cache fallbacks active). Check UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN on the deployment.',
+            err instanceof Error ? { message: err.message, name: err.name } : { detail: String(err) },
+          )
+          return
+        }
+
+        this.client = upstash
         this.isConnected = true
 
         logger.info('Upstash Redis client connected via REST API', {
-          url: env.UPSTASH_REDIS_REST_URL
+          url: env.UPSTASH_REDIS_REST_URL,
         })
         return
       }

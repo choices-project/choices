@@ -82,7 +82,7 @@ class ApiRateLimiter {
 
       return result;
     } catch (error) {
-      logger.error('Rate limiting check failed:', error);
+      logger.warn('Rate limiting check failed (allowing request):', error);
       
       // Fallback to allowing the request
       return {

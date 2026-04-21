@@ -162,7 +162,11 @@ class UpstashRateLimiter {
       if (isE2E) {
         logger.warn('Redis rate limit check failed in E2E mode (non-critical):', redisError instanceof Error ? redisError.message : String(redisError));
       } else {
-      logger.error('Redis rate limit check failed:', redisError);
+        // Request is still allowed below; avoid ERROR-level noise in production observability.
+        logger.warn(
+          'Redis rate limit check failed (allowing request):',
+          redisError instanceof Error ? redisError.message : String(redisError),
+        );
       }
       
       return {
