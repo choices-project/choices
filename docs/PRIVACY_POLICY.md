@@ -515,7 +515,7 @@ Our code is open source and auditable. You can review:
 - Data collection practices
 - Security measures
 
-**Repository:** https://github.com/choices-app/choices
+**Repository:** https://github.com/choices-project/choices
 
 ### Privacy Audits
 

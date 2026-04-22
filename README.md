@@ -11,7 +11,7 @@ Citizens engage with polls, representatives, and civic actions on transparent, o
 ## Quick Start
 
 ```bash
-git clone <repository-url> && cd Choices/web
+git clone https://github.com/choices-project/choices.git && cd choices/web
 npm install
 cp .env.local.example .env.local   # then edit — see docs/GETTING_STARTED.md
 npm run dev                         # http://localhost:3000

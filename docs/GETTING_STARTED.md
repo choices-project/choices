@@ -27,8 +27,8 @@ supabase --version  # Should be installed
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd Choices    # repo root: web/, supabase/, services/, docs/
+git clone https://github.com/choices-project/choices.git
+cd choices    # repo root: web/, supabase/, services/, docs/
 ```
 
 ### 2. Install Dependencies
