@@ -1,22 +1,85 @@
-# Choices
+<p align="center">
+  <a href="https://www.choices-app.com" title="Choices — production">
+    <img src="web/public/icons/icon-192x192.svg" alt="Choices logo" width="88" height="88" />
+  </a>
+</p>
 
-**Privacy-first participatory democracy platform** — polls, civic engagement, and representative data on open-source infrastructure.
+<h1 align="center">Choices</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE) [![Node.js](https://img.shields.io/badge/node.js-24.11.x-brightgreen)](./web/package.json) [![npm](https://img.shields.io/badge/npm-11.6.x-blue)](./web/package.json)
+<p align="center"><strong>Privacy-first participatory democracy platform</strong></p>
 
-[Overview](#overview) · [Repository layout](#repository-layout) · [Requirements](#requirements) · [Quick start](#quick-start) · [Development](#development) · [Documentation](#documentation) · [Contributing](#contributing)
+<p align="center">
+  Polls, civic engagement, and representative data on open-source infrastructure.
+</p>
+
+<p align="center">
+  <a href="https://www.choices-app.com"><strong>Live app</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./docs/GETTING_STARTED.md"><strong>Get started</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./docs/README.md"><strong>Documentation</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./CONTRIBUTING.md"><strong>Contributing</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./SECURITY.md"><strong>Security</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./CODE_OF_CONDUCT.md"><strong>Code of conduct</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/choices-project/choices/actions/workflows/ci.yml"><img src="https://github.com/choices-project/choices/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License" /></a>
+  <a href="./web/package.json"><img src="https://img.shields.io/badge/node.js-24.11.x-339933?logo=nodedotjs&logoColor=white" alt="Node.js version" /></a>
+  <a href="./web/package.json"><img src="https://img.shields.io/badge/npm-11.6.x-CB3837?logo=npm&logoColor=white" alt="npm version" /></a>
+</p>
+
+<p align="center">
+  <sub>Repository: <a href="https://github.com/choices-project/choices">choices-project/choices</a> · Default branch: <code>main</code></sub>
+</p>
+
+---
+
+## At a glance
+
+| | |
+|---|---|
+| **What it is** | A **Next.js 14** (App Router) web app backed by **Supabase** (PostgreSQL, RLS, Auth), deployed on **Vercel**, with **Jest**, **Playwright**, and **axe-core** in CI. |
+| **Who it is for** | Citizens and organizers using polls, feeds, and civic data—with **strong privacy defaults** and **equal-weight** poll tabulation where the product promises it. |
+| **Where the code lives** | Application source under **[`web/`](./web/)** · cross-cutting docs under **[`docs/`](./docs/)** · database migrations under **[`supabase/`](./supabase/)**. |
+| **How to run it locally** | Clone → `cd choices/web` → `npm install` → copy **`web/.env.local.example`** to **`.env.local`** → **`npm run dev`** → [http://localhost:3000](http://localhost:3000). Details: **[`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md)**. |
 
 ---
 
 ## Overview
 
-Choices is a web application for civic participation: users can create and vote in polls (several voting methods), browse representative and civic datasets, use personalized feeds, and manage strong privacy defaults. The product is built as a **Next.js** app with **Supabase** (PostgreSQL, Row Level Security, Auth) and ships to **Vercel**.
+Choices supports civic participation: **polls** (multiple voting methods), **representative and civic datasets**, **personalized feeds**, and **privacy controls** aligned with how the product describes collection and visibility.
 
-**Privacy and fairness (high level).** We do not sell personal or row-level data. Optional programs (such as aggregate research panels) are **opt-in**, use coarsened or aggregated outputs where applicable, and can be revoked in settings. Poll surfaces that promise equal participation use **equal tabulation** (one person, one counted vote in the tallies users see). **Trust tiers** (see [`docs/TRUST_LAYER.md`](./docs/TRUST_LAYER.md)) are optional signals for verification and abuse resistance — not a way to buy extra vote weight in those polls.
+**Privacy and fairness.** We do not sell personal or row-level data. Optional programs (such as aggregate research panels) are **opt-in**, use coarsened or aggregated outputs where applicable, and can be revoked in settings. Surfaces that promise equal participation use **equal tabulation** (one person, one counted vote in the tallies users see). **Trust tiers** are optional verification and abuse-resistance signals—not a way to buy extra vote weight in those polls. See **[`docs/TRUST_LAYER.md`](./docs/TRUST_LAYER.md)**.
 
-**Open source.** Source of truth for behavior is this repository; deeper policy and architecture notes live under [`docs/`](./docs/).
+**Production.** **[https://www.choices-app.com](https://www.choices-app.com)** · Release and hosting notes: **[`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)**.
 
-**Production.** The public deployment is **https://www.choices-app.com**. Configuration and release practices are described in [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
+---
+
+## Architecture (simplified)
+
+```mermaid
+flowchart LR
+  subgraph Clients["Clients"]
+    B[Browser / PWA]
+  end
+  subgraph Vercel["Vercel"]
+    N[Next.js app\nweb/]
+  end
+  subgraph Data["Data & services"]
+    S[(Supabase\nPostgres + Auth)]
+    R[(Upstash Redis)]
+    E[Resend email]
+  end
+  B --> N
+  N --> S
+  N --> R
+  N --> E
+```
 
 ---
 
@@ -25,11 +88,11 @@ Choices is a web application for civic participation: users can create and vote 
 | Path | Purpose |
 |------|--------|
 | [`web/`](./web/) | **Main application** — Next.js 14 (App Router), React, API routes, features, tests |
-| [`docs/`](./docs/) | Human-oriented documentation (setup, architecture, security, API inventories) |
+| [`docs/`](./docs/) | Documentation (setup, architecture, security, inventories) |
 | [`supabase/`](./supabase/) | Database migrations and Supabase-oriented assets |
-| [`services/`](./services/) | Supporting backends and tooling (for example civics ingest services) |
-| [`scripts/`](./scripts/) | Repo-root automation (`verify:docs`, inventories, governance checks) |
-| [`.github/`](./.github/) | CI workflows, issue and PR templates, security automation |
+| [`services/`](./services/) | Supporting backends and tooling (for example civics ingest) |
+| [`scripts/`](./scripts/) | Repo-root automation (`verify:docs`, inventories, governance) |
+| [`.github/`](./.github/) | CI workflows, issue/PR templates, security automation |
 
 Most day-to-day commands run from **`web/`**. Doc parity and cross-cutting checks run from the **repository root**.
 
@@ -39,10 +102,10 @@ Most day-to-day commands run from **`web/`**. Doc parity and cross-cutting check
 
 | Tool | Notes |
 |------|--------|
-| **Node.js** | **24.11.x** recommended; **Volta** pins in `web/package.json` and root `package.json`. `engines` allow **22.x–24.x** — see [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md). |
-| **npm** | **11.6.x** (see `packageManager` in `web/package.json`). CI uses the same pin. |
-| **Supabase** | Full product behavior needs a Supabase project and env vars. **CI-style** placeholders let you run the app and mocked E2E without a real backend — see [`AGENTS.md`](./AGENTS.md) and [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md). |
-| **Playwright** | For E2E locally: from `web/`, `npx playwright install --with-deps chromium` (see [`docs/TESTING.md`](./docs/TESTING.md)). |
+| **Node.js** | **24.11.x** recommended (**Volta** pins in `web/package.json` and root `package.json`). `engines` allow **22.x–24.x** — see [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md). |
+| **npm** | **11.6.x** (`packageManager` in `web/package.json`; CI matches). |
+| **Supabase** | Full behavior needs a project and env vars. Placeholder env supports local UI and mocked E2E — see [`AGENTS.md`](./AGENTS.md). |
+| **Playwright** | From `web/`: `npx playwright install --with-deps chromium` — [`docs/TESTING.md`](./docs/TESTING.md). |
 
 ---
 
@@ -56,44 +119,42 @@ cp .env.local.example .env.local   # edit values — see docs/GETTING_STARTED.md
 npm run dev                        # http://localhost:3000
 ```
 
-For Supabase linking, seed data, and troubleshooting, follow **[`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md)**.
-
 ---
 
 ## Development
 
-Run these from **`web/`** unless noted.
+Run from **`web/`** unless noted.
 
 | Command | Purpose |
 |---------|--------|
 | `npm run dev` | Dev server (port 3000, `TZ=UTC`) |
 | `npm run lint` | ESLint |
-| `npm run types:ci` | TypeScript check (CI config; excludes test-only noise — see [`AGENTS.md`](./AGENTS.md)) |
+| `npm run types:ci` | TypeScript (CI config — see [`AGENTS.md`](./AGENTS.md)) |
 | `npm run test` | Jest |
-| `npm run test:e2e` | Playwright (default harness + mocks) |
+| `npm run test:e2e` | Playwright (harness + mocks by default) |
 | `npm run build` | Production build |
 
-**Repository root** — required when you change API route inventories, `web/types/supabase.ts`, feature-flag docs, Zustand store docs, or canonical files under `docs/`:
+**Repository root** — after API route / schema / store-doc changes:
 
 ```bash
 npm run verify:docs
 ```
 
-This bundles link checks, store/cascade verification, architecture boundaries, and related audits (see [`docs/README.md`](./docs/README.md)). **Requires `ripgrep` (`rg`)** on your PATH.
+Bundles link checks, store cascade verification, architecture boundaries, and related audits ([`docs/README.md`](./docs/README.md)). Requires **`ripgrep` (`rg`)**.
 
 ---
 
 ## Capabilities (product)
 
-These are shipped or actively integrated in the web app; details and edge cases live in `docs/` and in-code contracts.
+Shipped or actively integrated in **`web/`**; edge cases live in `docs/` and server contracts.
 
-- **Polling** — Multiple poll types / voting methods (for example single, multiple, ranked, approval, quadratic, range) with results UX tied to server rules.
-- **Civic engagement** — Representative discovery, petitions, and civic workflows where the product exposes them; data is integrated from documented public sources (see civics and API docs).
-- **Feeds** — Personalized content, district context, and hashtag subscriptions where enabled.
+- **Polling** — Multiple voting methods (e.g. single, multiple, ranked, approval, quadratic, range) with results tied to server rules.
+- **Civic engagement** — Representative discovery, petitions, and civic workflows where exposed; public-source data integrations (see civics and API docs).
+- **Feeds** — Personalized content, district context, hashtag subscriptions where enabled.
 - **Analytics home** — Configurable dashboard widgets and layout presets.
-- **Authentication** — Supabase Auth, optional **WebAuthn / passkeys**, and social providers where configured.
-- **Trust and privacy** — Optional trust tiers (**T0–T3** progressive model per [`docs/TRUST_LAYER.md`](./docs/TRUST_LAYER.md)), granular **opt-in** privacy settings, profile export, and admin tooling for sensitive flows.
-- **Platform** — **PWA**-oriented behavior, push where supported, **i18n** (English / Spanish catalogues with CI validation per [`CONTRIBUTING.md`](./CONTRIBUTING.md)), candidate verification and contact submission paths with admin review where deployed.
+- **Authentication** — Supabase Auth; optional **WebAuthn / passkeys**; social providers when configured.
+- **Trust and privacy** — Optional trust tiers (**T0–T3** model in [`docs/TRUST_LAYER.md`](./docs/TRUST_LAYER.md)); granular **opt-in** privacy settings; profile export; admin paths for sensitive flows.
+- **Platform** — **PWA**-oriented behavior; push where supported; **i18n** (English / Spanish, CI-validated per [`CONTRIBUTING.md`](./CONTRIBUTING.md)); candidate verification and contact workflows with admin review where deployed.
 
 ---
 
@@ -101,16 +162,16 @@ These are shipped or actively integrated in the web app; details and edge cases 
 
 | Layer | Technology |
 |-------|------------|
-| App framework | **Next.js 14** (App Router), **React**, **TypeScript** (strict) |
+| App | **Next.js 14** (App Router), **React**, **TypeScript** (strict) |
 | UI | **Tailwind CSS**, **shadcn/ui**, **Framer Motion** |
-| Data & auth | **Supabase** (PostgreSQL, RLS, Auth); generated types in `web/types/` |
-| State | **Zustand** + **Immer** (~21 store modules; logout cascade resets dependent stores — see [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), [`docs/STATE_MANAGEMENT.md`](./docs/STATE_MANAGEMENT.md)) |
-| Caching / limits | **Upstash Redis** (rate limiting and related use cases) |
+| Data & auth | **Supabase** (PostgreSQL, RLS, Auth); types in `web/types/` |
+| State | **Zustand** + **Immer** (~21 store modules; logout cascade — [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), [`docs/STATE_MANAGEMENT.md`](./docs/STATE_MANAGEMENT.md)) |
+| Limits | **Upstash Redis** |
 | Email | **Resend** |
-| Hosting | **Vercel** (see [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)) |
-| Testing | **Jest**, **Playwright**, **axe-core** (accessibility) |
+| Hosting | **Vercel** ([`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)) |
+| Testing | **Jest**, **Playwright**, **axe-core** |
 
-After schema migrations: regenerate `web/types/supabase.ts` as your workflow requires, then run **`npm run verify:docs`** from the repo root so inventories and architecture counts stay aligned.
+After migrations: regenerate `web/types/supabase.ts` as needed, then **`npm run verify:docs`** from the repo root.
 
 ---
 
@@ -118,40 +179,40 @@ After schema migrations: regenerate `web/types/supabase.ts` as your workflow req
 
 | Topic | Link |
 |-------|------|
-| **Setup** | [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md) |
-| **Environment variables** | [`docs/ENVIRONMENT_VARIABLES.md`](./docs/ENVIRONMENT_VARIABLES.md) |
-| **Architecture** | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
-| **State management** | [`docs/STATE_MANAGEMENT.md`](./docs/STATE_MANAGEMENT.md) |
-| **Testing** | [`docs/TESTING.md`](./docs/TESTING.md) |
-| **Deployment** | [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) |
-| **Security** | [`docs/SECURITY.md`](./docs/SECURITY.md), **[`SECURITY.md`](./SECURITY.md)** (reporting) |
-| **Privacy policy (source)** | [`docs/PRIVACY_POLICY.md`](./docs/PRIVACY_POLICY.md) |
-| **Trust layer** | [`docs/TRUST_LAYER.md`](./docs/TRUST_LAYER.md) |
-| **Feedback vs GitHub Issues** | [`docs/FEEDBACK_AND_ISSUES.md`](./docs/FEEDBACK_AND_ISSUES.md) |
-| **Agents / MCP / Cursor** | [`docs/AGENT_SETUP.md`](./docs/AGENT_SETUP.md), [`AGENTS.md`](./AGENTS.md) |
-| **Full doc index** | [`docs/README.md`](./docs/README.md) |
+| Setup | [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md) |
+| Environment | [`docs/ENVIRONMENT_VARIABLES.md`](./docs/ENVIRONMENT_VARIABLES.md) |
+| Architecture | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
+| State | [`docs/STATE_MANAGEMENT.md`](./docs/STATE_MANAGEMENT.md) |
+| Testing | [`docs/TESTING.md`](./docs/TESTING.md) |
+| Deployment | [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) |
+| Security | [`docs/SECURITY.md`](./docs/SECURITY.md) · **[`SECURITY.md`](./SECURITY.md)** (reporting) |
+| Privacy (source) | [`docs/PRIVACY_POLICY.md`](./docs/PRIVACY_POLICY.md) |
+| Trust layer | [`docs/TRUST_LAYER.md`](./docs/TRUST_LAYER.md) |
+| Feedback vs Issues | [`docs/FEEDBACK_AND_ISSUES.md`](./docs/FEEDBACK_AND_ISSUES.md) |
+| Agents / tooling | [`docs/AGENT_SETUP.md`](./docs/AGENT_SETUP.md) · [`AGENTS.md`](./AGENTS.md) |
+| **Full index** | [`docs/README.md`](./docs/README.md) |
 
-**Contributing norms:** [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) · [`docs/COMMUNITY_GUIDELINES.md`](./docs/COMMUNITY_GUIDELINES.md)
+**Norms:** [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) · [`docs/COMMUNITY_GUIDELINES.md`](./docs/COMMUNITY_GUIDELINES.md)
 
 ---
 
 ## Contributing
 
-We welcome contributions. Use **GitHub Issues** (bug / feature / documentation templates) for work tracked with **`Closes #…`**, and the **in-app feedback widget** on deployed builds for user-facing product feedback when appropriate — see [`docs/FEEDBACK_AND_ISSUES.md`](./docs/FEEDBACK_AND_ISSUES.md).
+Use **GitHub Issues** for work that closes with **`Closes #…`**; use the **in-app feedback widget** on production for user-facing product feedback when appropriate ([`docs/FEEDBACK_AND_ISSUES.md`](./docs/FEEDBACK_AND_ISSUES.md)).
 
 ```bash
 cd web
 npm run lint && npm run types:ci && npm run test
 cd .. && npm run verify:docs    # when docs, routes, schema, or store inventories change
-git commit -s -m "feat: your change"   # DCO sign-off — see CONTRIBUTING.md
+git commit -s -m "feat: your change"   # DCO — see CONTRIBUTING.md
 ```
 
-**Principles:** privacy first, equal voting in public poll UX, open source, accessibility, performance.
+**Principles:** privacy first, equal voting where promised, open source, accessibility, performance.
 
 ---
 
 ## License
 
-Licensed under the **[MIT License](./LICENSE)**. Inbound contributions use the **Developer Certificate of Origin (DCO)** — see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+**[MIT License](./LICENSE)**. Inbound contributions use the **Developer Certificate of Origin (DCO)** — [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
-**Security:** do not file security issues publicly. See **[`SECURITY.md`](./SECURITY.md)** for responsible disclosure.
+**Security:** do not use public issues for vulnerabilities — **[`SECURITY.md`](./SECURITY.md)**.
