@@ -1,21 +1,41 @@
 # AI agents & Cursor setup (Choices)
 
-_Last updated: April 4, 2026_
+_Last updated: April 22, 2026_
 
 This guide is for **human developers** and **coding agents** (Cursor, Claude Code, Codex, etc.) working on the Choices repo. It complements [`AGENTS.md`](../AGENTS.md) (commands and env) and [`DOCUMENTATION_AUDIT_ROADMAP.md`](DOCUMENTATION_AUDIT_ROADMAP.md) (doc ↔ code parity).
 
 ---
 
-## 1. Two different “Vercel” integrations
+## 1. Vercel-related tooling (MCP, plugin, AI Gateway)
 
 | Integration | What it is | Use it for |
 |-------------|------------|------------|
 | **Vercel MCP** (`https://mcp.vercel.com`) | MCP server wired in [`.cursor/mcp.json`](../.cursor/mcp.json) | Project linkage, deployments, build/runtime logs, and **Vercel product docs** inside Cursor. Fits **repository work** and production debugging. |
+| **Vercel plugin for AI agents** ([docs](https://vercel.com/docs/agent-resources/vercel-plugin)) | Official **Cursor / Claude Code / Codex** plugin: skills, slash commands, hooks, and Vercel-focused context | On-demand help for **Next.js**, **env vars**, **deployments / CI**, **Vercel CLI**, **Upstash**, etc. Installed per machine; see below. |
 | **Vercel AI Gateway** (`https://ai-gateway.vercel.sh`) | Unified LLM API front door | **Terminal / CLI coding agents** (Claude Code, OpenAI Codex, OpenCode, etc.): one key, many models, spend and traces in the Vercel dashboard. See [Vercel: Coding agents](https://vercel.com/docs/agent-resources/coding-agents). |
 
-They solve different problems: **MCP** connects your editor to Vercel **platform data**; **AI Gateway** routes **model API traffic** for tools that call Anthropic/OpenAI-compatible APIs. You can use both; neither replaces the other.
+**MCP** and the **Vercel plugin** both help with the Vercel platform; they complement each other (MCP for live project data in-editor, plugin for packaged skills and slash commands). **AI Gateway** is separate: model traffic only.
 
 **Optional (per developer or team policy):** configure your terminal agent to use AI Gateway per Vercel’s docs above. Do **not** commit API keys; use environment variables or your OS secret store.
+
+### 1.1 Install the Vercel plugin (Cursor, project scope)
+
+From the **repository root** (after Node 18+ is available):
+
+```bash
+npm run plugins:vercel
+```
+
+That runs `npx plugins add vercel/vercel-plugin -y -s project -t cursor` as documented in the [Vercel plugin installation guide](https://vercel.com/docs/agent-resources/vercel-plugin#getting-started). Restart Cursor (or reload agent tools) so the plugin loads.
+
+Examples of what you get (see upstream docs for the full list):
+
+- Slash-style commands such as `/vercel-plugin:deploy`, `/vercel-plugin:env`, `/vercel-plugin:status`, `/vercel-plugin:bootstrap`, `/vercel-plugin:marketplace`
+- Skills such as `nextjs`, `env-vars`, `deployments-cicd`, `vercel-cli`, `vercel-storage` (Upstash Redis, etc.)
+
+**Deploy policy for this repo (unchanged):** production goes out via **git push to `main` → CI/CD → Vercel**. Do not use MCP **`deploy_to_vercel`** (keep it disabled). Treat plugin **deploy** commands the same way unless a maintainer explicitly asks for a one-off preview deploy.
+
+**Telemetry (optional):** to disable plugin telemetry in shells that launch your agent, use `VERCEL_PLUGIN_TELEMETRY=off` as described in the [Vercel plugin telemetry section](https://vercel.com/docs/agent-resources/vercel-plugin#telemetry). **Debug:** `VERCEL_PLUGIN_LOG_LEVEL=debug` or `npx vercel-plugin doctor` per upstream docs.
 
 ---
 
@@ -42,8 +62,9 @@ Configuration lives in **[`.cursor/mcp.json`](../.cursor/mcp.json)**.
 
 | Location | Purpose |
 |----------|---------|
-| **[`.cursor/rules/projectruleschoices.mdc`](../.cursor/rules/projectruleschoices.mdc)** | Always-on Cursor rules: which **skills** to apply, MCP preferences, **no `deploy_to_vercel`**. |
+| **[`.cursor/rules/projectruleschoices.mdc`](../.cursor/rules/projectruleschoices.mdc)** | Always-on Cursor rules: which **skills** to apply, MCP preferences, **no `deploy_to_vercel`**, and **Vercel plugin** usage. |
 | **[`.agents/skills/vercel-react-best-practices/`](../.agents/skills/vercel-react-best-practices/)** | Vercel’s React/Next performance rules for agents (`AGENTS.md` + `SKILL.md`). Use for **App Router, RSC, client/server splits, data fetching**. |
+| **[Vercel plugin](https://vercel.com/docs/agent-resources/vercel-plugin)** (install via `npm run plugins:vercel`) | Official Vercel skills and slash commands in Cursor; use with **Vercel MCP** for deployments/logs and **this repo’s** deploy policy. |
 | **[`.agents/skills/supabase-postgres-best-practices/`](../.agents/skills/supabase-postgres-best-practices/)** | Supabase/Postgres rules: RLS, indexes, queries, migrations. |
 
 **Cursor user skills** may also live under `~/.cursor/skills/` (global). This repo’s **canonical** copy for Choices is **`.agents/skills/`**; keep rules pointing there so clones behave the same.

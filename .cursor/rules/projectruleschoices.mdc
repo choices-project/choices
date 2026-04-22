@@ -26,3 +26,10 @@ When working in this codebase, use the following guidance so agents apply consis
 - **Do not use `deploy_to_vercel`.** Deployments are triggered by pushes to `main` (CI/CD). Keep the `deploy_to_vercel` tool disabled in Cursor Settings → Tools & MCP → Vercel.
 - **Vercel AI Gateway** (optional, for **terminal** agents such as Claude Code or Codex—not Cursor’s built-in chat) routes model traffic through `https://ai-gateway.vercel.sh` for unified spend and model choice; see [Vercel: Coding agents](https://vercel.com/docs/agent-resources/coding-agents). Do not commit API keys; this is separate from **Vercel MCP**.
 - See [AGENT_SETUP](docs/AGENT_SETUP.md) for MCP servers, skills paths, and operational habits
+
+## Vercel plugin for Cursor (official)
+
+- Install from repo root: **`npm run plugins:vercel`** (see [Vercel plugin](https://vercel.com/docs/agent-resources/vercel-plugin)); restart Cursor after install.
+- Use plugin **skills** and slash commands (e.g. `/vercel-plugin:env`, `/vercel-plugin:status`, `/vercel-plugin:nextjs`) for Vercel-specific workflows alongside **Vercel MCP** above.
+- **Production deploys:** still **git push → CI → Vercel**; do not use plugin or MCP flows to ship to production unless a maintainer explicitly requests a preview or one-off action.
+- Optional: **`VERCEL_PLUGIN_TELEMETRY=off`** to disable plugin telemetry (see Vercel plugin docs).

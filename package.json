@@ -36,7 +36,8 @@
     "docs:public-schema-index": "node scripts/generate-public-schema-index.mjs",
     "docs:surface-counts": "node scripts/doc-surface-counts.mjs",
     "test": "npm run test --prefix web",
-    "test:e2e": "npm run test:e2e --prefix web"
+    "test:e2e": "npm run test:e2e --prefix web",
+    "plugins:vercel": "npx plugins add vercel/vercel-plugin -y -s project -t cursor"
   },
   "dependencies": {
     "pg": "8.13.1",
