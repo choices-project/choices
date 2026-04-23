@@ -156,7 +156,7 @@ jobs:
           PLAYWRIGHT_USE_MOCKS: '1'
 
       - name: Upload E2E test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: playwright-report-${{ matrix.browser }}
@@ -164,7 +164,7 @@ jobs:
           retention-days: 7
 
       - name: Upload E2E test results (JUnit)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: playwright-results-${{ matrix.browser }}
@@ -229,7 +229,7 @@ jobs:
           NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
 
       - name: Upload nav test report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: playwright-report-nav
@@ -237,7 +237,7 @@ jobs:
           retention-days: 7
 
       - name: Upload nav test results (JUnit)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: playwright-results-nav
@@ -379,7 +379,7 @@ jobs:
 
       - name: Upload auth-production results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report-auth-production
           path: web/playwright-report/
@@ -387,7 +387,7 @@ jobs:
 
       - name: Upload auth-production junit
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-results-auth-production
           path: web/test-results/
@@ -450,7 +450,7 @@ jobs:
           PLAYWRIGHT_USE_MOCKS: '1'
 
       - name: Upload performance test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: performance-test-results
@@ -574,7 +574,7 @@ jobs:
           NEXT_PUBLIC_ENABLE_E2E_HARNESS: '1'
 
       - name: Upload load test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: load-test-results
@@ -630,7 +630,7 @@ jobs:
             });
 
       - name: Upload test summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-summary
           path: test-summary.md
