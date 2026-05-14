@@ -166,6 +166,18 @@ export const createPollWizardActions = (
   const runValidation = (step: number, data: PollWizardData) =>
     validatePollWizardStep(step, data);
 
+  // Update only `canProceed` from validation, without writing user-visible
+  // errors. Used when the wizard transitions to a new step so we don't show
+  // "fix the following errors" before the user has had a chance to interact
+  // with the new step's fields.
+  const refreshCanProceed = () => {
+    const state = get();
+    const stepErrors = runValidation(state.currentStep, state.data);
+    setState((draft) => {
+      draft.canProceed = Object.keys(stepErrors).length === 0;
+    });
+  };
+
   const applyRequestErrorReason = (
     status: number,
     fieldErrors: Record<string, string> | undefined,
@@ -348,16 +360,17 @@ export const createPollWizardActions = (
 
       const next = Math.min(state.currentStep + 1, state.totalSteps - 1);
       applyStepResult(next);
-      // Validate the new step to ensure canProceed is correctly set
-      get().validateCurrentStep();
+      // Refresh canProceed silently for the new step so the Next button
+      // accurately reflects validity, without flashing errors before the
+      // user has had a chance to fill in the new step's fields.
+      refreshCanProceed();
     },
 
     prevStep: () => {
       const state = get();
       const previous = Math.max(state.currentStep - 1, 0);
       applyStepResult(previous);
-      // Validate the new step to ensure canProceed is correctly set
-      get().validateCurrentStep();
+      refreshCanProceed();
     },
 
     goToStep: (step: number) => {
@@ -376,8 +389,7 @@ export const createPollWizardActions = (
       }
 
       applyStepResult(target);
-      // Validate the new step to ensure canProceed is correctly set
-      get().validateCurrentStep();
+      refreshCanProceed();
     },
 
     resetWizard: () =>

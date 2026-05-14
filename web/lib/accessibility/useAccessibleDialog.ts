@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import ScreenReaderSupport from './screen-reader';
 
@@ -41,6 +41,13 @@ export function useAccessibleDialog({
   liveMessage,
   ariaLabelId,
 }: UseAccessibleDialogOptions) {
+  // Pin callback in a ref so the focus-management effect doesn't re-run (and
+  // re-steal focus) every render when callers pass an inline arrow function.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -72,7 +79,7 @@ export function useAccessibleDialog({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
 
@@ -112,7 +119,9 @@ export function useAccessibleDialog({
         previousActive.focus({ preventScroll: true });
       }
     };
-  }, [ariaLabelId, dialogRef, initialFocusRef, isOpen, liveMessage, onClose]);
+    // `onClose` is intentionally read through `onCloseRef` so identity changes
+    // do not retrigger focus capture on every parent re-render.
+  }, [ariaLabelId, dialogRef, initialFocusRef, isOpen, liveMessage]);
 }
 
 
