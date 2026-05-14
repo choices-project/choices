@@ -3,19 +3,30 @@ import { expect, test } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 
+const isLiveProductionSmoke =
+  process.env.E2E_PRODUCTION === '1' ||
+  (typeof process.env.BASE_URL === 'string' && process.env.BASE_URL.includes('choices-app.com'));
+
+/** First matching selector becomes visible (better for slow production hydration than instant isVisible checks). */
 const assertAnyVisible = async (page: Page, selectors: string[]) => {
-  for (const selector of selectors) {
-    const locator = page.locator(selector);
-    if (await locator.count()) {
-      if (await locator.first().isVisible()) {
-        return;
-      }
-    }
+  const timeoutMs = isLiveProductionSmoke ? 28_000 : 12_000;
+  try {
+    await Promise.any(
+      selectors.map((selector) =>
+        page.locator(selector).first().waitFor({ state: 'visible', timeout: timeoutMs }),
+      ),
+    );
+  } catch {
+    throw new Error(
+      `None of the expected selectors became visible within ${timeoutMs}ms: ${selectors.join(', ')}`,
+    );
   }
-  throw new Error(`None of the expected selectors were visible: ${selectors.join(', ')}`);
 };
 
 test.describe('@smoke MVP core pages', () => {
+  if (isLiveProductionSmoke) {
+    test.describe.configure({ timeout: 90_000 });
+  }
   test('auth page renders @smoke', async ({ page }) => {
     await page.goto('/auth', { waitUntil: 'domcontentloaded' });
     await waitForPageReady(page);

@@ -15,6 +15,17 @@ _Documentation last reviewed: April 19, 2026._
 7. **Sign commits**: Use `git commit -s` (DCO requirement)
 8. **Open a PR**: Fill out the PR template checklist
 
+### Using the live app (collaborators & testers)
+
+Production is at **https://www.choices-app.com**. To sign in or create an account:
+
+1. **Confirm your email** — Supabase sends a confirmation link; you must click it before password login works (check spam).
+2. **Password trouble** — Use **Forgot password** on `/auth` so the reset email matches the production site URL.
+3. **Repository access** — Code collaboration needs a **GitHub invite** to `choices-project/choices` (separate from app login).
+4. **Still stuck?** — Ask a maintainer to confirm **Supabase → Authentication → URL configuration** lists `https://www.choices-app.com` (and `/auth/callback` if you use OAuth).
+
+Maintainers: after infra changes, run `cd web && npm run test:e2e:production:smoke` before announcing the site is healthy.
+
 ## Two directories, two `package.json` files
 
 | Where | Path | Typical commands |

@@ -157,7 +157,7 @@ Production tests run against the live site at `https://www.choices-app.com`. Use
 - **API smoke** (`production-api.spec.ts`): `/api/health`, `/api/feature-flags/public`, `/api/health/ingest`
 - **Page smoke** (`mvp-smoke.spec.ts`): auth, civics, representatives, civic-actions create, contact submissions, account pages
 
-**GitHub Actions** (`.github/workflows/production-tests.yml`): the **Production E2E** job sets `PLAYWRIGHT_PRODUCTION_CURATED=1` so only a **curated** list of specs runs against www (smoke/API jobs pass explicit file paths and do not set that flag). Workflow dispatch can enable **production_e2e_all_specs** to run the full production Playwright set.
+**GitHub Actions** (`.github/workflows/production-tests.yml`): **Production Smoke** runs `production-api.spec.ts` and `mvp-smoke.spec.ts` together (API checks are not duplicated in a second job). **Production E2E** sets `PLAYWRIGHT_PRODUCTION_CURATED=1` so only a **curated** list of specs runs against www. Scheduled runs are **once daily** (UTC); pushes still run when listed paths change. Workflow dispatch can enable **production_e2e_all_specs** for the full production Playwright set.
 
 The full `test:e2e:production` run still excludes harness-only specs (`testIgnore` in `playwright.production.config.ts`) because `/e2e/*` pages are not deployed to production.
 
