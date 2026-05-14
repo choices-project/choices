@@ -44,6 +44,11 @@ These CI-safe placeholder values allow the dev server and E2E smoke tests to run
 
 Refer to `web/package.json` scripts and `docs/TESTING.md` for the full list.
 
+### Prompting and agent defaults (Cursor)
+
+- **Cursor rules:** `.cursor/rules/projectruleschoices.mdc` (stack, MCP, deploy) and `.cursor/rules/choices-agent-defaults.mdc` (grounding, when to edit vs explain, concision, UI tone) both use **`alwaysApply: true`**, so new chats inherit them automatically.
+- **External reference:** [Anthropic — Prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) (clear goals, examples, structure, tool-use habits). The defaults file distills what matters for *this* repo without pasting the whole guide.
+
 ### Gotchas
 
 - The `npm run type-check` (which uses `tsconfig.json`) reports errors on test setup files (`tests/setup.ts`); use `npm run types:ci` instead, which uses `tsconfig.ci.json` and excludes test infrastructure.

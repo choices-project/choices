@@ -62,7 +62,8 @@ Configuration lives in **[`.cursor/mcp.json`](../.cursor/mcp.json)**.
 
 | Location | Purpose |
 |----------|---------|
-| **[`.cursor/rules/projectruleschoices.mdc`](../.cursor/rules/projectruleschoices.mdc)** | Always-on Cursor rules: which **skills** to apply, MCP preferences, **no `deploy_to_vercel`**, and **Vercel plugin** usage. |
+| **[`.cursor/rules/projectruleschoices.mdc`](../.cursor/rules/projectruleschoices.mdc)** | Always-on: stack (Next/Supabase), **skills** to use, MCP preferences, **no `deploy_to_vercel`**, Vercel plugin. YAML `alwaysApply: true`. |
+| **[`.cursor/rules/choices-agent-defaults.mdc`](../.cursor/rules/choices-agent-defaults.mdc)** | Always-on: **prompting / behavior** defaults (ground in repo, parallel reads, when to implement vs explain, concise prose, UI fit). Aligns with [Anthropic prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices). |
 | **[`.agents/skills/vercel-react-best-practices/`](../.agents/skills/vercel-react-best-practices/)** | Vercel’s React/Next performance rules for agents (`AGENTS.md` + `SKILL.md`). Use for **App Router, RSC, client/server splits, data fetching**. |
 | **[Vercel plugin](https://vercel.com/docs/agent-resources/vercel-plugin)** (install via `npm run plugins:vercel`) | Official Vercel skills and slash commands in Cursor; use with **Vercel MCP** for deployments/logs and **this repo’s** deploy policy. |
 | **[`.agents/skills/supabase-postgres-best-practices/`](../.agents/skills/supabase-postgres-best-practices/)** | Supabase/Postgres rules: RLS, indexes, queries, migrations. |

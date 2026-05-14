@@ -1,6 +1,11 @@
+---
+description: Choices stack — Next.js, Supabase, MCP, Vercel, deploy policy (always on)
+alwaysApply: true
+---
+
 # Choices project rules
 
-When working in this codebase, use the following guidance so agents apply consistent patterns.
+When working in this codebase, use the following guidance so agents apply consistent patterns. For **how to phrase tasks, grounding, and default agent behavior**, see **`choices-agent-defaults.mdc`** (also always applied).
 
 ## React / Next.js (UI, hooks, API routes)
 
