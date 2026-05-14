@@ -7,7 +7,11 @@
  * - IndexedDB-backed offline queue compatible with `background-sync.ts`
  */
 
-const SW_VERSION = 'v1.0.1';
+// v1.1.0: bumped so existing clients drop stale caches that were serving
+// pre-auth-redirect-fix bundles and middleware-redirected pages. The activate
+// handler below deletes every cache that is not in CACHE_NAMES, so bumping the
+// version is sufficient to evict all previous caches at install time.
+const SW_VERSION = 'v1.1.0';
 const CACHE_PREFIX = 'choices-pwa';
 const CACHE_NAMES = {
   static: `${CACHE_PREFIX}-${SW_VERSION}-static`,
@@ -15,6 +19,22 @@ const CACHE_NAMES = {
   api: `${CACHE_PREFIX}-${SW_VERSION}-api`,
   images: `${CACHE_PREFIX}-${SW_VERSION}-images`,
 };
+
+// Page paths whose response depends on the user's session cookie. The SW
+// cannot read httpOnly cookies, so a cached HTML response from one auth state
+// would otherwise be served to a user in a different auth state (e.g. a
+// middleware 307 redirect to /auth cached and replayed after login). Always
+// bypass the cache for these and go to the network.
+const AUTH_GATED_PAGE_PREFIXES = [
+  '/feed',
+  '/admin',
+  '/profile',
+  '/onboarding',
+  '/account',
+  '/settings',
+  '/dashboard',
+  '/auth',
+];
 
 const STATIC_ASSETS = [
   '/',
@@ -137,7 +157,19 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isPageRequest(request)) {
-    event.respondWith(staleWhileRevalidate(request, CACHE_NAMES.dynamic));
+    // Auth-gated pages must never be served from cache. The SW cannot see
+    // httpOnly session cookies, so a cached pre-login redirect to /auth would
+    // otherwise be replayed after a successful login and trap the user.
+    if (isAuthGatedPagePath(url.pathname)) {
+      event.respondWith(
+        fetch(request).catch(() => offlineResponse(request)),
+      );
+      return;
+    }
+    // Public pages: prefer fresh network response but fall back to cache for
+    // offline. Avoid stale-while-revalidate here so a stale shell never wins
+    // the race against an up-to-date middleware response.
+    event.respondWith(networkFirst(request, CACHE_NAMES.dynamic));
     return;
   }
 
@@ -525,6 +557,12 @@ function isImageRequest(request) {
 
 function isPageRequest(request) {
   return request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html');
+}
+
+function isAuthGatedPagePath(pathname) {
+  return AUTH_GATED_PAGE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 }
 
 function isAPIRequest(pathname) {

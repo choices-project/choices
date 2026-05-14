@@ -144,6 +144,23 @@ curl https://your-project.supabase.co/rest/v1/
 
 **Code reference:** The browser client reads `env.NEXT_PUBLIC_SUPABASE_URL` from `web/utils/supabase/client.ts`; OAuth uses `signInWithOAuth` against that host (`web/app/auth/AuthPageClient.tsx`).
 
+#### Login redirects intermittently, only the first attempt is stuck on `/auth`
+
+**Symptom:** Vercel runtime logs show `POST /api/auth/login` returning **200** with auth cookies set, but the **first** attempt after a new deploy never produces a follow-up `GET /feed`. A second login attempt works (`/api/feeds` is called, `/feed` renders). Only some users see this; clearing browser data fixes it for them.
+
+**Cause:** The PWA service worker (`web/public/service-worker.js`) controls navigations:
+
+- **`cacheFirst` for static assets** kept serving old `app/auth/page-*.js` chunks from the previous deploy. Old bundles used `router.replace` for the post-login redirect, which raced with the **httpOnly** session cookie write and let Edge middleware bounce the user back to `/auth`.
+- **`staleWhileRevalidate` for page navigations** could replay a previously cached middleware redirect (`/feed` → `/auth`) before the network response arrived, undoing the freshly-issued session.
+
+**Fix (already in repo, `web/public/service-worker.js`):**
+
+1. **Bump `SW_VERSION`** (e.g. `v1.1.0`) so the `activate` handler purges every prior `choices-pwa-*` cache and forces all clients to install the new service worker.
+2. **Route auth-gated navigations to network-only** via `AUTH_GATED_PAGE_PREFIXES` (`/feed`, `/admin`, `/profile`, `/onboarding`, `/account`, `/settings`, `/dashboard`, `/auth`). Page navigations into those prefixes never read from cache; they fall back to `/offline.html` only on a network failure.
+3. **Public page navigations use `networkFirst`** (not `staleWhileRevalidate`) so a fresh middleware response always wins over a stale shell.
+
+**Manual recovery for an affected user (no redeploy needed):** open **DevTools → Application → Service Workers** on `https://www.choices-app.com`, click **Unregister**, then **Application → Storage → Clear site data**, hard reload, and sign in. After the next deploy ships, returning visitors get the new SW automatically because `SW_VERSION` changed.
+
 ### Rate Limiting Issues
 
 **Problem:** Getting 429 errors or rate limit warnings.
