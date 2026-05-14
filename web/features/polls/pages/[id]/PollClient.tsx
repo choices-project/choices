@@ -45,6 +45,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 import { haptic } from '@/lib/haptics';
+import { selectPollTotalVotes } from '@/lib/polls/voting-methods';
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { useProfileDisplay } from '@/lib/stores/profileStore';
@@ -593,12 +594,12 @@ export default function PollClient({ poll }: PollClientProps) {
         : typeof poll.totalvotes === 'number'
           ? poll.totalvotes
           : undefined;
-    const fromOptions = initialVoteTotal;
-    // Take the largest available signal. The results endpoint can briefly
-    // return 0 (e.g. cold cache, voting-method mismatch fixed in a later
-    // deploy, or integrity-filtered count) while `polls.total_votes` already
-    // reflects the latest write. Using `??` would lock us to that stale 0.
-    return Math.max(fromResults ?? 0, fromPoll ?? 0, fromOptions ?? 0, totalRecordedVotes);
+    return selectPollTotalVotes({
+      fromResults,
+      fromPoll,
+      fromOptions: initialVoteTotal,
+      fromRecordedOptions: totalRecordedVotes,
+    });
   }, [poll.totalVotes, poll.totalvotes, results, initialVoteTotal, totalRecordedVotes]);
 
   const integrityInfo = results?.integrity;

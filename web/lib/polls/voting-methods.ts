@@ -58,3 +58,31 @@ export function normalizeVotingMethod(method: string | null | undefined): string
 export function isRankedVotingMethod(method: string | null | undefined): boolean {
   return normalizeVotingMethod(method) === 'ranked';
 }
+
+/**
+ * Pick the most trustworthy total-vote count across the three signals
+ * available on the poll detail page:
+ *   * `fromResults` – `/api/polls/[id]/results` returns the live tally.
+ *   * `fromPoll`    – the stored `polls.total_votes` from `/api/polls/[id]`.
+ *   * `fromOptions` – the sum of per-option vote counts.
+ *
+ * We deliberately do NOT use `??`: the results endpoint can briefly report 0
+ * (cold cache, integrity-filtered count, server bug fixed in a later deploy)
+ * while `polls.total_votes` already reflects the latest write. Taking the
+ * max preserves the highest known-good count from any source and never lets
+ * a stale 0 mask a real tally.
+ */
+export function selectPollTotalVotes(signals: {
+  fromResults?: number | null | undefined;
+  fromPoll?: number | null | undefined;
+  fromOptions?: number | null | undefined;
+  fromRecordedOptions?: number | null | undefined;
+}): number {
+  const values = [
+    signals.fromResults,
+    signals.fromPoll,
+    signals.fromOptions,
+    signals.fromRecordedOptions,
+  ].map((value) => (typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0));
+  return Math.max(0, ...values);
+}
