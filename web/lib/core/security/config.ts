@@ -175,6 +175,12 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
       'multipart/form-data',
       'text/plain',
       'text/x-component',
+      // Browser-issued CSP / Reporting API submissions to /api/csp-report.
+      // Without these, middleware blocks reports with 403 before our handler
+      // can persist them, and every violation surfaces as a console error in
+      // the PWA without anything reaching the logs.
+      'application/csp-report',
+      'application/reports+json',
     ],
     suspiciousPatterns: [
       /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, // Script tags
