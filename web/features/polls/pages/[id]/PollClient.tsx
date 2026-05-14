@@ -586,13 +586,19 @@ export default function PollClient({ poll }: PollClientProps) {
   );
 
   const computedTotalVotes = useMemo(() => {
-    const fromResults = results?.total_votes;
-    const fromPoll = typeof poll.totalVotes === 'number' ? poll.totalVotes : typeof poll.totalvotes === 'number' ? poll.totalvotes : undefined;
+    const fromResults = typeof results?.total_votes === 'number' ? results.total_votes : undefined;
+    const fromPoll =
+      typeof poll.totalVotes === 'number'
+        ? poll.totalVotes
+        : typeof poll.totalvotes === 'number'
+          ? poll.totalvotes
+          : undefined;
     const fromOptions = initialVoteTotal;
-    let total = fromResults ?? fromPoll ?? fromOptions;
-    // If we have option-level votes but total is 0, use the sum so votes always show when present
-    if (total === 0 && totalRecordedVotes > 0) total = totalRecordedVotes;
-    return total;
+    // Take the largest available signal. The results endpoint can briefly
+    // return 0 (e.g. cold cache, voting-method mismatch fixed in a later
+    // deploy, or integrity-filtered count) while `polls.total_votes` already
+    // reflects the latest write. Using `??` would lock us to that stale 0.
+    return Math.max(fromResults ?? 0, fromPoll ?? 0, fromOptions ?? 0, totalRecordedVotes);
   }, [poll.totalVotes, poll.totalvotes, results, initialVoteTotal, totalRecordedVotes]);
 
   const integrityInfo = results?.integrity;

@@ -17,6 +17,7 @@ import {
 } from '@/lib/api';
 import { getUser } from '@/lib/core/auth/middleware';
 import { recordIntegrityForVote } from '@/lib/integrity/vote-integrity';
+import { isRankedVotingMethod, normalizeVotingMethod } from '@/lib/polls/voting-methods';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { logger } from '@/lib/utils/logger';
@@ -72,24 +73,6 @@ type PollRecord = {
 const SUPPORTED_METHODS = new Set(['single', 'multiple', 'approval', 'ranked']);
 
 const MULTI_SELECT_METHODS = new Set(['multiple', 'approval']);
-
-const normalizeVotingMethod = (method: string): 'single' | 'multiple' | 'approval' | 'ranked' | string => {
-  switch (method) {
-    case 'single':
-    case 'single_choice':
-      return 'single';
-    case 'multiple':
-    case 'multiple_choice':
-      return 'multiple';
-    case 'ranked':
-    case 'ranked_choice':
-      return 'ranked';
-    case 'approval':
-      return 'approval';
-    default:
-      return method;
-  }
-};
 
 const normalizeOptions = (options: PollOptionRow[]) =>
   [...options]
@@ -886,9 +869,9 @@ export const HEAD = withErrorHandling(async (_request: NextRequest, { params }: 
     return new NextResponse(null, { status: 204 });
   }
 
-  const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+  const rawVotingMethod = (poll.voting_method ?? 'single').toLowerCase();
 
-  if (votingMethod === 'ranked') {
+  if (isRankedVotingMethod(rawVotingMethod)) {
     const { count, error } = await supabase
       .from('poll_rankings')
       .select('id', { head: true, count: 'exact' })
@@ -952,9 +935,9 @@ export const GET = withErrorHandling(async (_request: NextRequest, { params }: {
     return successResponse({ hasVoted: false });
   }
 
-  const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+  const rawVotingMethod = (poll.voting_method ?? 'single').toLowerCase();
 
-  if (votingMethod === 'ranked') {
+  if (isRankedVotingMethod(rawVotingMethod)) {
     const { count, error: rankedError } = await supabase
       .from('poll_rankings')
       .select('id', { head: true, count: 'exact' })

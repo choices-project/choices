@@ -11,6 +11,7 @@
 import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, notFoundError, successResponse, validationError } from '@/lib/api';
+import { isRankedVotingMethod } from '@/lib/polls/voting-methods';
 
 import type { NextRequest } from 'next/server';
 
@@ -44,10 +45,10 @@ export const GET = withErrorHandling(async (
     return notFoundError('Poll not found');
   }
 
-  const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+  const rawVotingMethod = (poll.voting_method ?? 'single').toLowerCase();
   const dailyCounts = new Map<string, number>();
 
-  if (votingMethod === 'ranked') {
+  if (isRankedVotingMethod(rawVotingMethod)) {
     const { data: rankings } = await supabase
       .from('poll_rankings')
       .select('created_at')

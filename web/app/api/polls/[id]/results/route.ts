@@ -2,6 +2,7 @@ import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, notFoundError, errorResponse, validationError } from '@/lib/api';
 import { getIntegrityThreshold } from '@/lib/integrity/vote-integrity';
+import { isRankedVotingMethod, normalizeVotingMethod } from '@/lib/polls/voting-methods';
 import { logger } from '@/lib/utils/logger';
 import { voteEngine } from '@/lib/vote/engine';
 import type { PollData, VoteData } from '@/lib/vote/types';
@@ -68,10 +69,11 @@ export const GET = withErrorHandling(async (
       return notFoundError('Poll not found');
     }
 
-    const votingMethod = (poll.voting_method ?? 'single').toLowerCase();
+    const rawVotingMethod = (poll.voting_method ?? 'single').toLowerCase();
+    const votingMethod = normalizeVotingMethod(rawVotingMethod);
     const normalizedOptions = normalizeOptions(poll.poll_options ?? []);
 
-    if (votingMethod === 'ranked') {
+    if (isRankedVotingMethod(rawVotingMethod)) {
       const { data: ballots, error: ballotsError } = await supabase
         .from('poll_rankings')
         .select('id, rankings, user_id, created_at')
