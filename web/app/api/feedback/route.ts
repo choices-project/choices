@@ -16,6 +16,7 @@ import {
 } from '@/lib/api';
 import { FEEDBACK_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { sanitizeInput } from '@/lib/core/auth/server-actions';
+import { validateFeedbackContent } from '@/lib/feedback/content-validation';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { isProductionDeploymentForBypasses } from '@/lib/security/deployment-bypass';
 import { stripUndefinedDeep } from '@/lib/util/clean';
@@ -44,32 +45,11 @@ const feedbackSchema = z.object({
 type FeedbackRequestBody = z.infer<typeof feedbackSchema>;
 
 // Security configuration for feedback API
+// NOTE: Content rules (spam wording, length) live in `lib/feedback/content-validation.ts`
+// so they can be unit-tested and shared. Keep this object focused on transport bounds.
 const securityConfig = {
-  maxContentLength: 1000,
-  maxTitleLength: 200,
   maxRequestSize: 1024 * 1024, // 1MB
-  suspiciousPatterns: [
-    /[A-Z]{5,}/,                                    // ALL CAPS
-    /!{3,}/,                                        // Multiple exclamation marks
-    /https?:\/\/[^\s]+/g,                           // URLs
-    /spam|scam|click here|buy now|free money/i      // Spam words
-  ]
-}
-
-// Content validation function
-function validateContent(content: string, fieldName: string): { valid: boolean; reason?: string } {
-  if (content.length > securityConfig.maxContentLength) {
-    return { valid: false, reason: `${fieldName} too long (max ${securityConfig.maxContentLength} characters)` }
-  }
-  
-  for (const pattern of securityConfig.suspiciousPatterns) {
-    if (pattern.test(content)) {
-      return { valid: false, reason: `Suspicious content detected in ${fieldName}` }
-    }
-  }
-  
-  return { valid: true }
-}
+};
 
 function stringifySupabaseError(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -150,13 +130,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     feedbackContext,
   } = validationResult.data;
 
-  // Additional content validation (spam detection, etc.)
-  const titleValidation = validateContent(title, 'title');
+  // Additional content validation (spam detection, length).
+  // Intentionally permissive: URLs, acronyms, and emphatic punctuation are
+  // common and useful in real bug reports — previous rules silently dropped
+  // legitimate feedback. See lib/feedback/content-validation.ts for the
+  // rationale and tests.
+  const titleValidation = validateFeedbackContent(title, 'title');
   if (!titleValidation.valid) {
     return validationError({ title: titleValidation.reason ?? 'Invalid title' });
   }
 
-  const descriptionValidation = validateContent(description, 'description');
+  const descriptionValidation = validateFeedbackContent(description, 'description');
   if (!descriptionValidation.valid) {
     return validationError({
       description: descriptionValidation.reason ?? 'Invalid description',
@@ -310,18 +294,26 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     devLog('Database error inserting feedback:', { error });
     const errorMessage = stringifySupabaseError(error);
 
-    // If the table is missing or schema cache is stale, fall back to a mock success
-    if (
-      errorMessage.includes('relation "feedback" does not exist') ||
-      errorMessage.includes('does not exist') ||
-      errorMessage.includes('schema cache')
-    ) {
-      devLog('Schema cache issue or table not ready - using mock response');
+    // Only treat *specific* "table missing / schema cache stale" failures as
+    // recoverable. The previous version matched any error containing the
+    // substring "does not exist" — including `column "x" does not exist` and
+    // `function ... does not exist` — and returned a fake success, silently
+    // dropping the feedback. That mistake caused five months of lost reports.
+    const isSchemaCacheRecoverable =
+      /relation\s+"?(?:public\.)?feedback"?\s+does not exist/i.test(errorMessage) ||
+      /schema cache/i.test(errorMessage) ||
+      errorMessage === 'PGRST205' ||
+      (error as { code?: string } | null)?.code === 'PGRST205';
+
+    if (isSchemaCacheRecoverable) {
+      logger.warn('Feedback insert hit schema-cache fallback — table may be missing', {
+        error: errorMessage,
+      });
       return successResponse(
         buildFeedbackResponse(
           `mock-${Date.now()}`,
           userJourney,
-          'Feedback submitted successfully (mock - schema cache issue)'
+          'Feedback received (schema cache recovering)'
         ),
         { source: 'mock', fallback: 'schema-cache' }
       );

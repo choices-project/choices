@@ -143,6 +143,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [capturingScreenshot, setCapturingScreenshot] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [feedbackTracker, setFeedbackTracker] = useState<ReturnType<typeof getFeedbackTracker> | null>(null)
@@ -242,6 +243,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const handleClose = () => {
     setIsOpen(false)
     setStep('closed')
+    setSubmitError(null)
     setFeedback({
       type: 'general',
       title: '',
@@ -470,6 +472,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
     if (isSubmitting || isProcessing) return // Prevent double submission
 
     setIsSubmitting(true)
+    setSubmitError(null)
     setAnalyticsLoading(true) // Track analytics loading state
 
     try {
@@ -547,10 +550,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
         }),
       })
 
-      const result = await response.json()
+      const result = await response.json().catch(() => ({ success: false, error: 'Server returned an invalid response.' }))
 
-      if (result.success) {
+      if (response.ok && result?.success) {
         setShowSuccess(true)
+        setSubmitError(null)
         setStep('success')
 
         // Track successful submission using analytics store
@@ -582,16 +586,33 @@ const EnhancedFeedbackWidget: React.FC = () => {
           setShowSuccess(false)
         }, 3000)
       } else {
-        throw new Error(result.error || 'Failed to submit feedback')
+        const fieldErrors = result?.fields ?? result?.metadata?.fields
+        let message: string = result?.error || `Failed to submit feedback (HTTP ${response.status}).`
+        if (fieldErrors && typeof fieldErrors === 'object') {
+          const firstField = Object.values(fieldErrors).find(
+            (v): v is string => typeof v === 'string' && v.length > 0,
+          )
+          if (firstField) message = firstField
+        }
+        throw new Error(message)
       }
     } catch (error) {
       devLog('Error submitting feedback:', error)
       // Ensure we don't show success state if there was an error
       setShowSuccess(false)
-      setStep('sentiment') // Go back to previous step
+
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to submit feedback'
+
+      // Surface the error inline in the dialog so the user sees what
+      // happened. We keep them on the current step (details/sentiment)
+      // so they can fix the input rather than starting over.
+      setSubmitError(errorMessage)
+      if (step === 'screenshot' || step === 'success') {
+        setStep('sentiment')
+      }
 
       // Set error in analytics store
-      const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback'
       setAnalyticsError(errorMessage)
 
       // Track error event
@@ -714,6 +735,20 @@ const EnhancedFeedbackWidget: React.FC = () => {
 
               {/* Content */}
               <div className="p-6">
+                {submitError && step !== 'success' && (
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    data-testid="feedback-widget-error-banner"
+                    className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200"
+                  >
+                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                    <div className="flex-1">
+                      <p className="font-medium">Couldn&apos;t submit feedback</p>
+                      <p className="mt-0.5 text-red-700 dark:text-red-300">{submitError}</p>
+                    </div>
+                  </div>
+                )}
                 <AnimatePresence mode="wait">
                   {step === 'type' && (
                     <motion.div
