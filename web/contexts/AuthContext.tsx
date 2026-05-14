@@ -105,14 +105,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const applySession = useCallback(
-    async (
+    (
       supabaseClient: Awaited<ReturnType<typeof getSupabaseBrowserClient>>,
       nextSession: Session | null,
     ) => {
       if (nextSession?.user) {
         initializeAuthRef.current(nextSession.user, nextSession, true)
         setSessionAndDerivedRef.current(nextSession)
-        await hydrateProfile(supabaseClient, nextSession.user.id)
+        // Profile hydration is intentionally fire-and-forget. Previously this
+        // was awaited, which meant a slow `user_profiles` query could keep
+        // the auth-loading state pinned to `true` indefinitely — trapping
+        // every consumer behind <AuthGuard> on "Checking authentication...".
+        // Identity is already established by the session; the profile is an
+        // enrichment the rest of the UI can render around.
+        void hydrateProfile(supabaseClient, nextSession.user.id)
       } else {
         initializeAuthRef.current(null, null, false)
         storeSignOutRef.current()
@@ -149,8 +155,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     let mounted = true
 
+    // Hard ceiling on how long the UI can sit on "Checking authentication...".
+    // Empirically, supabase.auth.getSession() can hang indefinitely when the
+    // browser's `navigator.locks` is stuck (e.g. a previous worker/tab held
+    // the auth lock and never released it — common in Incognito and after a
+    // crashed tab). The previous bootstrap had only an 8s WARNING log here,
+    // no escape: isLoading stayed true forever.
+    const GET_SESSION_HARD_TIMEOUT_MS = 10_000
+
+    const adoptSession = (session: Session | null, supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>) => {
+      if (!mounted) return
+      setSession(session)
+      setUser(session?.user ?? null)
+      applySession(supabase, session)
+      setStoreLoadingRef.current(false)
+      setLoading(false)
+    }
+
     const bootstrapAuth = async (): Promise<(() => void) | undefined> => {
-      // DIAGNOSTIC: Log auth bootstrap start
       if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
         logger.debug('🚨 AuthContext: Starting auth bootstrap', {
           mounted,
@@ -163,55 +185,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!mounted) return undefined
 
-        // Never substitute a fake "null session" while getSession() is still pending.
-        // Promise.race with a timeout that resolved `{ session: null }` caused production
-        // false logouts: middleware/cookies looked valid but AuthGuard saw isAuthenticated=false
-        // until a full reload (and E2E could hit /feed in that window).
-        const sessionPromise = supabase.auth.getSession()
-        const slowMs = 8_000
-        const slowTimer =
-          typeof window !== 'undefined'
-            ? window.setTimeout(() => {
-                logger.warn(
-                  'AuthContext: getSession() still pending after 8s — waiting for real result (do not assume logged out)',
-                )
-              }, slowMs)
-            : null
+        // CRITICAL: subscribe to auth state changes BEFORE awaiting getSession.
+        // If getSession() hangs (lock stuck, network stalled), we still need
+        // the listener wired up so a real session arriving later — via
+        // sign-in, token refresh, or cross-tab broadcast — can unblock the UI.
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event: string, nextSession: Session | null) => {
+            if (!mounted) return
+            if (process.env.NODE_ENV === 'development') {
+              logger.debug('Auth state changed', {
+                event,
+                hasSession: !!nextSession,
+                userId: nextSession?.user?.id,
+              })
+            }
+            adoptSession(nextSession, supabase)
+          },
+        )
 
-        let session: Session | null = null
-        try {
-          const { data } = await sessionPromise
-          session = data.session ?? null
-        } finally {
-          if (slowTimer !== null) {
-            window.clearTimeout(slowTimer)
-          }
-        }
+        // Race getSession() against a hard timeout. On timeout we DO NOT
+        // substitute a fake `{ session: null }` (previous attempts at that
+        // caused production false-logouts where middleware-validated cookies
+        // were silently overridden client-side). Instead we just unblock the
+        // loading state and let the listener above adopt the real session if
+        // and when it finally arrives.
+        const sessionPromise = supabase.auth
+          .getSession()
+          .then((r): { kind: 'resolved'; session: Session | null } => ({
+            kind: 'resolved',
+            session: r.data.session ?? null,
+          }))
+          .catch((err): { kind: 'error'; error: unknown } => ({ kind: 'error', error: err }))
 
-        if (mounted) {
-          setSession(session)
-          setUser(session?.user ?? null)
-          await applySession(supabase, session)
+        const timeoutPromise = new Promise<{ kind: 'timeout' }>((resolve) => {
+          window.setTimeout(() => resolve({ kind: 'timeout' }), GET_SESSION_HARD_TIMEOUT_MS)
+        })
+
+        const raceResult = await Promise.race([sessionPromise, timeoutPromise])
+
+        if (!mounted) return () => subscription.unsubscribe()
+
+        if (raceResult.kind === 'resolved') {
+          adoptSession(raceResult.session, supabase)
+        } else if (raceResult.kind === 'error') {
+          logger.warn(
+            'AuthContext: getSession() rejected — unblocking UI; preserving any persisted auth state',
+            { error: raceResult.error },
+          )
           setStoreLoadingRef.current(false)
           setLoading(false)
+        } else {
+          // Timeout: unblock UI without changing auth state. Persisted
+          // `isAuthenticated` (set by the previous successful login and
+          // validated by middleware on the current request) stays intact, so
+          // AuthGuard renders children. If getSession() eventually completes
+          // we still adopt the real session via the late .then() below.
+          logger.error(
+            `AuthContext: getSession() did not resolve within ${GET_SESSION_HARD_TIMEOUT_MS}ms — unblocking UI; will adopt real session if/when it arrives`,
+          )
+          setStoreLoadingRef.current(false)
+          setLoading(false)
+          void sessionPromise.then((late) => {
+            if (!mounted || late.kind !== 'resolved') return
+            adoptSession(late.session, supabase)
+          })
         }
-
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event: string, session: Session | null) => {
-            if (mounted) {
-              // Log auth state changes for debugging
-              if (process.env.NODE_ENV === 'development') {
-                logger.debug('Auth state changed', { event, hasSession: !!session, userId: session?.user?.id })
-              }
-              setSession(session)
-              setUser(session?.user ?? null)
-              setLoading(false)
-              await applySession(supabase, session)
-              setStoreLoadingRef.current(false)
-            }
-          }
-        )
 
         return () => subscription.unsubscribe()
       } catch (error) {
@@ -219,7 +257,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           // Always set loading to false, even on error, to prevent UI from being stuck
           setLoading(false)
-          // Initialize with null session on error
           initializeAuthRef.current(null, null, false)
           setStoreLoadingRef.current(false)
         }
