@@ -124,7 +124,9 @@ playground/
 
 # Test artifacts
 test-results/
+test-results-production/
 playwright-report/
+playwright-report-production/
 playwright/.cache/
 
 # API testing documentation (may contain test keys)

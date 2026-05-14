@@ -15,20 +15,30 @@ import { expect, test } from '@playwright/test';
 
 import { waitForPageReady } from '../helpers/e2e-setup';
 
+/** Live www deployment: no E2E harness cookies and protected routes require a real session. */
+function isDeployedProduction(): boolean {
+  return (
+    process.env.E2E_PRODUCTION === '1' ||
+    (typeof process.env.BASE_URL === 'string' && process.env.BASE_URL.includes('choices-app.com'))
+  );
+}
+
 test.describe('Critical user journey', () => {
   test.beforeEach(async ({ page, context }) => {
-    await context.addCookies([
-      {
-        name: 'e2e-dashboard-bypass',
-        value: '1',
-        url: 'http://127.0.0.1:3000',
-      },
-      {
-        name: 'E2E',
-        value: '1',
-        url: 'http://127.0.0.1:3000',
-      },
-    ]);
+    if (!isDeployedProduction()) {
+      await context.addCookies([
+        {
+          name: 'e2e-dashboard-bypass',
+          value: '1',
+          url: 'http://127.0.0.1:3000',
+        },
+        {
+          name: 'E2E',
+          value: '1',
+          url: 'http://127.0.0.1:3000',
+        },
+      ]);
+    }
     await page.addInitScript(() => {
       try {
         localStorage.setItem('e2e-dashboard-bypass', '1');
@@ -66,6 +76,10 @@ test.describe('Critical user journey', () => {
   });
 
   test('/dashboard redirects to /feed (canonical activity surface)', async ({ page }) => {
+    test.skip(
+      isDeployedProduction(),
+      'Without a session, middleware sends users to /auth; this assertion requires the local E2E harness or a logged-in browser.',
+    );
     // `app/(app)/dashboard/page.tsx` issues `redirect('/feed')`. Assert final URL after full
     // document load so we are not racing client hydration of `AppShell` (first compile can delay it).
     await page.goto('/dashboard', { waitUntil: 'load', timeout: 60_000 });

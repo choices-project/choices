@@ -22,6 +22,13 @@ import {
 
 const useMocks = process.env.PLAYWRIGHT_USE_MOCKS === '1';
 
+function isDeployedProduction(): boolean {
+  return (
+    process.env.E2E_PRODUCTION === '1' ||
+    (typeof process.env.BASE_URL === 'string' && process.env.BASE_URL.includes('choices-app.com'))
+  );
+}
+
 test.describe('Registration Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Ensure we start logged out for each test
@@ -97,6 +104,10 @@ test.describe('Registration Flow', () => {
       test.skip(
         process.env.PLAYWRIGHT_USE_MOCKS === '1',
         'Registration requires a real Supabase backend — skipped in mock mode',
+      );
+      test.skip(
+        isDeployedProduction(),
+        'Avoid creating disposable @example.com accounts on the live production project.',
       );
       test.setTimeout(120_000);
 
@@ -354,6 +365,10 @@ test.describe('Registration Flow', () => {
   test.describe('Registration Error Handling', () => {
     test('registration fails with duplicate email', async ({ page }) => {
       test.skip(useMocks, 'Duplicate email check requires real Supabase — skipped in mock mode');
+      test.skip(
+        isDeployedProduction(),
+        'Avoid exercising signup against the live production auth service from CI.',
+      );
       test.setTimeout(120_000);
 
       const regularEmail = process.env.E2E_USER_EMAIL;

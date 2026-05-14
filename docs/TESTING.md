@@ -147,8 +147,9 @@ Use these only when you intentionally want to hit the live site (e.g. after a re
 After **service worker** or **PWA manifest** changes, do a quick manual pass: installability, offline shell, and that authenticated routes are not cached incorrectly (`web/public/service-worker.js`, `web/features/pwa/`).
 
 ```bash
-cd web && npm run test:e2e:production:smoke   # ~20s: API health, feature flags, ingest, core pages
-cd web && npm run test:e2e:production          # Full suite (skips harness specs; auth/admin tests may fail without credentials)
+cd web && npm run test:e2e:production:smoke    # ~20s: API health, feature flags, ingest, core pages
+cd web && npm run test:e2e:production:curated  # ~minutes: curated live specs (matches GitHub “Production E2E” job; needs E2E_* secrets for login tests)
+cd web && npm run test:e2e:production          # All Playwright specs allowed by playwright.production.config (excludes harness-only paths); long; needs secrets
 ```
 
 Production tests run against the live site at `https://www.choices-app.com`. Use `test:e2e:production:smoke` for a fast (~20s) check after deployments when you are validating production:
@@ -156,7 +157,9 @@ Production tests run against the live site at `https://www.choices-app.com`. Use
 - **API smoke** (`production-api.spec.ts`): `/api/health`, `/api/feature-flags/public`, `/api/health/ingest`
 - **Page smoke** (`mvp-smoke.spec.ts`): auth, civics, representatives, civic-actions create, contact submissions, account pages
 
-The full `test:e2e:production` run excludes harness specs (feeds-store, polls-store, etc.) since those require `/e2e/*` pages not deployed to production.
+**GitHub Actions** (`.github/workflows/production-tests.yml`): the **Production E2E** job sets `PLAYWRIGHT_PRODUCTION_CURATED=1` so only a **curated** list of specs runs against www (smoke/API jobs pass explicit file paths and do not set that flag). Workflow dispatch can enable **production_e2e_all_specs** to run the full production Playwright set.
+
+The full `test:e2e:production` run still excludes harness-only specs (`testIgnore` in `playwright.production.config.ts`) because `/e2e/*` pages are not deployed to production.
 
 Utilities:
 - `npm run lint` — ESLint (use before submitting PRs).
@@ -235,7 +238,7 @@ We expose store and feature harnesses under `/app/(app)/e2e/*` to keep Playwrigh
 
 - **Store harnesses** map to the stores in `docs/ROADMAP.md` §2.2: adminStore, appStore, feedsStore, pollsStore, profileStore, pwaStore, etc. Each store that has user-visible behaviour should have (1) unit/RTL coverage, (2) a harness page under `/e2e/*` when needed for Playwright, (3) specs that use `waitForHarnessReady` or equivalent and `findBy*` queries so hydration completes before assertions.
 - **Reducing flake:** Use `data-*-harness="ready"` and `window.__*Harness` readiness before interacting; prefer `page.getByRole` / `getByTestId` with explicit timeouts; keep `beforeEach` state resets (e.g. `reset*State()`) so tests don’t leak. Production config uses `retries: 1` in CI for E2E; avoid relaxing assertions—fix timing or selectors instead.
-- **Production vs harness:** Full production E2E skips specs that depend on `/e2e/*` (harness pages are not deployed). So “51 skipped” in production is expected for harness-only specs. Contract tests and smoke must stay green; store coverage in CI runs against the dev server with `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`.
+- **Production vs harness:** Curated production E2E (CI default) and the full `test:e2e:production` run both skip specs that depend on `/e2e/*` (harness pages are not deployed). Contract tests and smoke must stay green; store coverage in CI runs against the dev server with `NEXT_PUBLIC_ENABLE_E2E_HARNESS=1`.
 - **Adding coverage:** When modernizing a store (ROADMAP C), add or extend RTL/integration tests and, if the store drives a dedicated UI, ensure the harness page and spec are updated and documented in this section and in `tests/e2e/README.md`.
 
 ### Shared Test Fixtures

@@ -7,14 +7,24 @@
  * @production
  */
 
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIResponse } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'https://www.choices-app.com';
+
+async function assertHttpStatus(res: APIResponse, expected: number, label: string): Promise<void> {
+  if (res.status() === expected) return;
+  const text = await res.text().catch(() => '');
+  const hint =
+    res.status() === 402 && text.includes('DEPLOYMENT_DISABLED')
+      ? ' Vercel returned DEPLOYMENT_DISABLED — re-enable the production deployment or billing in the Vercel project.'
+      : '';
+  throw new Error(`${label}: expected HTTP ${expected}, got ${res.status()}.${hint} Response: ${text.slice(0, 500)}`);
+}
 
 test.describe('@production Production API smoke', () => {
   test('GET /api/health returns ok', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/api/health`, { timeout: 15_000 });
-    expect(res.status()).toBe(200);
+    await assertHttpStatus(res, 200, 'GET /api/health');
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.data?.status).toBe('ok');
@@ -25,7 +35,7 @@ test.describe('@production Production API smoke', () => {
     const res = await request.get(`${BASE_URL}/api/feature-flags/public`, {
       timeout: 15_000,
     });
-    expect(res.status()).toBe(200);
+    await assertHttpStatus(res, 200, 'GET /api/feature-flags/public');
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.data?.flags).toBeDefined();
@@ -40,7 +50,7 @@ test.describe('@production Production API smoke', () => {
     const res = await request.get(`${BASE_URL}/api/health/ingest`, {
       timeout: 15_000,
     });
-    expect(res.status()).toBe(401);
+    await assertHttpStatus(res, 401, 'GET /api/health/ingest (unauthenticated)');
     const body = await res.json();
     expect(body.success).toBe(false);
   });

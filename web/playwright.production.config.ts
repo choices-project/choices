@@ -32,8 +32,30 @@ process.env.BASE_URL = 'https://www.choices-app.com';
 process.env.PLAYWRIGHT_USE_MOCKS = '0';
 process.env.E2E_PRODUCTION = '1';
 
+/**
+ * Curated suite: set `PLAYWRIGHT_PRODUCTION_CURATED=1` (production E2E CI job only).
+ * Omit it for smoke/API jobs that pass explicit file paths — otherwise Playwright finds 0 tests.
+ * Set `PRODUCTION_E2E_ALL=1` to run every spec except testIgnore (workflow dispatch).
+ */
+const useCuratedProductionSuite =
+  process.env.PLAYWRIGHT_PRODUCTION_CURATED === '1' &&
+  process.env.PRODUCTION_E2E_ALL !== '1';
+
+const curatedProductionSpecs = [
+  '**/critical-journey.spec.ts',
+  '**/error-paths.spec.ts',
+  '**/mvp-verification.spec.ts',
+  '**/mvp-critical-flows.spec.ts',
+  '**/auth/auth-flow.spec.ts',
+  '**/auth/auth-redirects.spec.ts',
+  '**/auth/password-reset-flow.spec.ts',
+  '**/auth/biometric-setup-flow.spec.ts',
+  '**/production/**/*.spec.ts',
+];
+
 export default defineConfig({
     testDir: './tests/e2e',
+    ...(useCuratedProductionSuite ? { testMatch: curatedProductionSpecs } : {}),
     // Harness specs require E2E harness pages (/e2e/*) which are not deployed to production
     testIgnore: [
       '**/_archived/**',
@@ -90,7 +112,8 @@ export default defineConfig({
   ],
 
   // No webServer needed for production - it's already deployed
-  // Increase workers for parallelization - 4 workers = ~4x faster execution
-  // Playwright will automatically adjust if system resources are limited
-  ...(process.env.CI ? { workers: 4 } : { workers: 2 }),
+  // Fewer workers on the curated CI suite reduces duplicate logins and edge pressure on one IP.
+  ...(process.env.CI
+    ? { workers: useCuratedProductionSuite ? 2 : 4 }
+    : { workers: 2 }),
 });

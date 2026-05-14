@@ -92,10 +92,11 @@ npm run type-check              # Confirm type safety with regenerated types
 ## 4. Post-Deployment Validation
 
 - hit `/api/health` and confirm the `status` payload returns `"ok"` with all services green.
-- Run production Playwright smoke tests (uses read-only service credentials):
+- Run production Playwright smoke tests from `web/` (fast; no curated flag needed):
   ```bash
-  PLAYWRIGHT_USE_MOCKS=0 npm run test:e2e:production
+  cd web && npm run test:e2e:production:smoke
   ```
+  For the same **curated** suite as GitHub’s Production E2E job (requires `E2E_USER_*` / Supabase env for login tests): `npm run test:e2e:production:curated`.
 - Spot-check analytics widgets to ensure Redis caching is warm and Supabase queries return data.
 - Confirm Sentry, Resend, and Upstash dashboards show healthy traffic with no spikes.
 

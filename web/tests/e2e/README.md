@@ -100,7 +100,10 @@ Production tests run against the live site (`https://www.choices-app.com`) using
 # Fast production smoke (~20s): API health + MVP core pages
 npm run test:e2e:production:smoke
 
-# Full production E2E (skips harness-only specs)
+# Curated production E2E (matches CI when PLAYWRIGHT_PRODUCTION_CURATED=1; see playwright.production.config.ts)
+npm run test:e2e:production:curated
+
+# Full production Playwright run (all non-ignored specs; long)
 BASE_URL=https://www.choices-app.com PLAYWRIGHT_USE_MOCKS=0 npm run test:e2e:production
 ```
 

@@ -38,6 +38,8 @@ These CI-safe placeholder values allow the dev server and E2E smoke tests to run
 | Unit tests | `npm run test` (Jest) |
 | E2E smoke tests | `npm run test:e2e:smoke` |
 | Full E2E | `npm run test:e2e` |
+| Production smoke (live www) | From `web/`: `npm run test:e2e:production:smoke` |
+| Production E2E curated (live www; same idea as CI) | From `web/`: `npm run test:e2e:production:curated` (needs `E2E_*` + Supabase env for auth specs) |
 | Build | `npm run build` |
 
 Refer to `web/package.json` scripts and `docs/TESTING.md` for the full list.

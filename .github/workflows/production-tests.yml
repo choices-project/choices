@@ -8,6 +8,11 @@ on:
         required: false
         default: 'true'
         type: boolean
+      production_e2e_all_specs:
+        description: 'Production E2E: run ALL Playwright specs (not recommended; curated subset is default in CI)'
+        required: false
+        default: false
+        type: boolean
   schedule:
     # Run production tests every 6 hours
     - cron: '0 */6 * * *'
@@ -17,6 +22,8 @@ on:
       - '.github/workflows/production-tests.yml'
       - 'web/tests/e2e/specs/production-api.spec.ts'
       - 'web/tests/e2e/specs/mvp-smoke.spec.ts'
+      - 'web/tests/e2e/specs/critical-journey.spec.ts'
+      - 'web/tests/e2e/specs/auth/registration-flow.spec.ts'
       - 'web/playwright.production.config.ts'
       - 'web/tests/e2e/specs/auth/**/*.spec.ts'
 
@@ -125,6 +132,8 @@ jobs:
         working-directory: web
 
     env:
+      PLAYWRIGHT_PRODUCTION_CURATED: '1'
+      PRODUCTION_E2E_ALL: ${{ github.event.inputs.production_e2e_all_specs == true && '1' || '0' }}
       # PRODUCTION_URL and BASE_URL are inherited from workflow-level env
       E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
       E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
