@@ -17,6 +17,8 @@
 import { render, screen, act } from '@testing-library/react';
 import React from 'react';
 
+import { AuthGuard } from './AuthGuard';
+
 let mockIsAuthenticated = false;
 let mockIsLoading = true;
 const mockPush = jest.fn();
@@ -33,9 +35,6 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/lib/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
-
-// eslint-disable-next-line import/first
-import { AuthGuard } from './AuthGuard';
 
 const setStoreState = (next: { isLoading: boolean; isAuthenticated: boolean }) => {
   mockIsLoading = next.isLoading;
