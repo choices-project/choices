@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+# GitHub is moving JS actions to Node 24; avoids deprecation noise for actions still on Node 20.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: gitleaks-${{ github.ref }}
   cancel-in-progress: true
@@ -60,13 +64,15 @@ jobs:
           echo "Also verify no environment scoping is required (this job has no 'environment:' block)."
           echo "Skipping GitLeaks scan due to missing license."
 
+      # gitleaks-action@v2 declares no `inputs` / `with` block (only `runs:`).
+      # Run the same flags via the published Linux binary so we keep `--no-git`.
       - name: Run GitLeaks
         if: ${{ steps.license.outputs.present == 'true' }}
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          # Use --no-git flag to scan only current state, not git history
-          # This prevents false positives from historical documentation
-          args: detect --no-banner -v --redact --source . --config .gitleaks.toml --no-git
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        run: |
+          set -euo pipefail
+          GITLEAKS_VERSION="8.30.1"
+          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          chmod +x gitleaks
+          ./gitleaks detect --no-banner -v --redact --source . --config .gitleaks.toml --no-git

@@ -3759,7 +3759,9 @@
       "registrationFailed": "Registration failed",
       "loginFailed": "Login failed",
       "unexpected": "An unexpected error occurred",
-      "serviceUnavailable": "Authentication service not available"
+      "serviceUnavailable": "Authentication service not available",
+      "socialSignInFailed": "Social sign-in failed. Please try again.",
+      "oauthTimeout": "Sign-in timed out. Check your network and try again."
     },
     "success": {
       "accountCreated": "Account created successfully",

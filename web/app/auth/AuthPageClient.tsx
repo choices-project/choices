@@ -40,6 +40,8 @@ export default function AuthPageClient() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  /** OAuth uses local busy state so a stuck Google/GitHub round-trip never wedges the email/password button. */
+  const [oauthProviderBusy, setOauthProviderBusy] = useState<string | null>(null);
   const emailRef = React.useRef<HTMLInputElement | null>(null);
   const passwordRef = React.useRef<HTMLInputElement | null>(null);
   const displayNameRef = React.useRef<HTMLInputElement | null>(null);
@@ -95,40 +97,66 @@ export default function AuthPageClient() {
     return '';
   }, []);
 
+  // Heal stale global loading (e.g. OAuth started, redirect never fired, SPA navigation back to /auth).
+  React.useEffect(() => {
+    setAuthLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot when opening the sign-in page
+  }, []);
+
+  const OAUTH_START_TIMEOUT_MS = 25_000;
+
   // Social OAuth handler
   const handleSocialAuth = async (provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok') => {
-    try {
-      setAuthLoading(true);
-      clearAuthError();
+    if (oauthProviderBusy) {
+      return;
+    }
+    clearAuthError();
+    setOauthProviderBusy(provider);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
+    try {
       const supabase = await getSupabaseBrowserClient();
       if (!supabase) {
         setAuthError(t('auth.errors.serviceUnavailable') || 'Service unavailable');
         return;
       }
 
-      // Supabase supports: google, github, facebook, twitter, linkedin, discord, azure, bitbucket, gitlab, keycloak, zoom
-      // We only support providers that are configured in our social-auth-config
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: provider as any, // Type assertion needed as Supabase types may not include all providers
+      const redirectTo = `${canonicalSiteOrigin}/auth/callback?redirectTo=${encodeURIComponent(redirectTarget)}`;
+
+      const oauthPromise = supabase.auth.signInWithOAuth({
+        provider: provider as never,
         options: {
-          // Always send users to the canonical site origin so we don't bounce
-          // through Vercel preview/deployment URLs (which are gated by Vercel
-          // Deployment Protection and trigger 1Password "Save Item" prompts
-          // because of the origin mismatch).
-          redirectTo: `${canonicalSiteOrigin}/auth/callback?redirectTo=${encodeURIComponent(redirectTarget)}`
-        }
+          redirectTo,
+        },
       });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(t('auth.errors.oauthTimeout') || 'Sign-in timed out. Check your connection and try again.'));
+        }, OAUTH_START_TIMEOUT_MS);
+      });
+
+      const { data, error } = await Promise.race([oauthPromise, timeoutPromise]);
 
       if (error) {
         setAuthError(error.message);
+        return;
       }
-      // If successful, user will be redirected to OAuth provider
-      // No need to set loading false here as page will redirect
+
+      // Backup redirect if the client did not navigate (extensions, rare browser quirks).
+      const url = data?.url;
+      if (typeof window !== 'undefined' && url && window.location.href !== url) {
+        window.location.assign(url);
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('auth.errors.socialSignInFailed') || 'Social sign-in failed';
+      const errorMessage =
+        err instanceof Error ? err.message : t('auth.errors.socialSignInFailed') || 'Social sign-in failed';
       setAuthError(errorMessage);
-      setAuthLoading(false);
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      setOauthProviderBusy(null);
     }
   };
 
@@ -1003,17 +1031,25 @@ export default function AuthPageClient() {
             </div>
 
             <div className="mt-6 space-y-3">
-              {availableProviders.map((provider) => (
+              {availableProviders.map((provider) => {
+                const socialBusy = oauthProviderBusy === provider.provider;
+                const isSocialDisabled = Boolean(oauthProviderBusy) || safeIsLoading;
+                return (
                 <Button
                   key={provider.provider}
                   type="button"
                   variant="outline"
-                  onClick={() => handleSocialAuth(provider.provider as any)}
-                  disabled={safeIsLoading}
+                  onClick={() => handleSocialAuth(provider.provider as never)}
+                  disabled={isSocialDisabled}
                   className={`w-full min-h-[44px] ${provider.bgColor} ${provider.borderColor} ${provider.textColor} ${provider.hoverBgColor} ${provider.hoverTextColor}`}
                   data-testid={`social-auth-${provider.provider}`}
                   aria-label={provider.label}
+                  aria-busy={socialBusy}
                 >
+                  {socialBusy ? (
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin shrink-0" aria-hidden="true" />
+                  ) : (
+                    <>
                   {provider.provider === 'google' && (
                     <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
                       <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1032,9 +1068,12 @@ export default function AuthPageClient() {
                       <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                     </svg>
                   )}
+                    </>
+                  )}
                   <span>{provider.label}</span>
                 </Button>
-              ))}
+                );
+              })}
             </div>
             {!isSignUp && (
               <div className="mt-2 flex justify-end">

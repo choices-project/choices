@@ -3433,7 +3433,9 @@
       "unexpected": "Ocurrió un error inesperado",
       "passwordTooShort": "Password must be at least 8 characters",
       "displayNameInvalid": "Display name must include at least 3 letters or numbers",
-      "serviceUnavailable": "Authentication service not available"
+      "serviceUnavailable": "Authentication service not available",
+      "socialSignInFailed": "Error al iniciar sesión con el proveedor. Inténtalo de nuevo.",
+      "oauthTimeout": "El inicio de sesión tardó demasiado. Comprueba tu conexión e inténtalo de nuevo."
     },
     "success": {
       "accountCreated": "La cuenta se creó correctamente",
