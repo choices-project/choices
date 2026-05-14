@@ -56,11 +56,12 @@ The Choices platform MVP is **complete and production-ready**. All core features
 
 While the MVP is complete, the platform continues to evolve. Future work is tracked in:
 
-- **Roadmap**: [`ROADMAP.md`](ROADMAP.md) - Definitive MVP roadmap (all remaining work)
+- **Consolidated backlog**: [`REMAINING_WORK_ROADMAP.md`](REMAINING_WORK_ROADMAP.md) — single prioritized list (P0–P3)
+- **Roadmap narrative**: [`ROADMAP.md`](ROADMAP.md) — launch phases, engagement roadmap, completed milestones
 
 ### Planned Enhancements (Not Blocking MVP)
 
-**GA (shipped):** Contact Information System, Push Notifications, and Civic Engagement v2 are generally available (default on). See [ROADMAP.md](ROADMAP.md) for remaining work and post-deploy verification steps.
+**GA (shipped):** Contact Information System, Push Notifications, and Civic Engagement v2 are generally available (default on). See [REMAINING_WORK_ROADMAP.md](REMAINING_WORK_ROADMAP.md) for the prioritized backlog and [ROADMAP.md](ROADMAP.md) for launch narrative and verification detail.
 
 **In Progress / Quarantined:**
 - 🔄 Device Flow Auth - Implementation complete; E2E and OAuth provider config on hold (see [ROADMAP.md](ROADMAP.md) §5 Quarantined)

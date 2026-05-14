@@ -79,7 +79,7 @@ cd web && npx playwright test --config=playwright.config.ts tests/e2e/specs/user
     - Ensure the CI jobs reference only existing `projects` names.
     - Tag performance-sensitive specs with `@performance` to participate in the `Performance Tests` job.
 
-See also: `docs/ROADMAP.md` for remaining test work.
+See also: `docs/REMAINING_WORK_ROADMAP.md` (prioritized backlog) and `docs/ROADMAP.md` (narrative + launch checklist).
 
 ### Premiere-quality gate policy (Phase 1)
 

@@ -10,7 +10,7 @@ _Last updated: April 5, 2026_
 | Submit a PR or report a bug | [../CONTRIBUTING.md](../CONTRIBUTING.md), [../CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md), [../SECURITY.md](../SECURITY.md) |
 | Understand the codebase | [ARCHITECTURE.md](ARCHITECTURE.md) → [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) |
 | Keep docs accurate with code | [DOCUMENTATION_AUDIT_ROADMAP.md](DOCUMENTATION_AUDIT_ROADMAP.md), then `npm run verify:docs` (repo root) |
-| Cursor / MCP / AI assistants | [AGENT_SETUP.md](AGENT_SETUP.md) |
+| Cursor / MCP / AI assistants | [AGENT_SETUP.md](AGENT_SETUP.md), [agent-prompts/full-application-quality-pass.md](agent-prompts/full-application-quality-pass.md) |
 | Product feedback vs GitHub Issues | [FEEDBACK_AND_ISSUES.md](FEEDBACK_AND_ISSUES.md) |
 
 ## Getting Started
@@ -70,7 +70,8 @@ Requires **ripgrep** (`rg`) on `PATH` (CI installs it before `verify:docs`).
 | Release copy freeze (i18n) | [COPY_FREEZE.md](COPY_FREEZE.md) |
 | Security model | [SECURITY.md](SECURITY.md) |
 | WebAuthn / passkeys | [WEBAUTHN_DESIGN.md](WEBAUTHN_DESIGN.md) |
-| Roadmap & remaining work | [ROADMAP.md](ROADMAP.md) |
+| **Remaining work (single backlog)** | [REMAINING_WORK_ROADMAP.md](REMAINING_WORK_ROADMAP.md) |
+| Roadmap narrative, launch detail, completed history | [ROADMAP.md](ROADMAP.md) |
 | **Documentation ↔ code audit checklist** | [DOCUMENTATION_AUDIT_ROADMAP.md](DOCUMENTATION_AUDIT_ROADMAP.md) |
 | Cursor / MCP / agent skills | [AGENT_SETUP.md](AGENT_SETUP.md) |
 

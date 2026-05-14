@@ -1,8 +1,10 @@
 # Roadmap
 
-_Last updated: April 20, 2026_
+_Last updated: May 14, 2026_
 
-Single source of truth for all remaining work. The MVP is complete — this document tracks launch tasks, post-launch improvements, and future features.
+**Prioritized action backlog:** [`REMAINING_WORK_ROADMAP.md`](./REMAINING_WORK_ROADMAP.md) — single consolidated list (P0–P3) merging launch, testing, doc-audit, and engineering follow-ups. **This page** keeps narrative context: premiere-quality phases, launch checklist detail, engagement roadmap, completed history, and commands.
+
+The MVP is complete — the sections below track launch tasks, post-launch improvements, and future features.
 
 ## Premiere-quality program (April 2026)
 

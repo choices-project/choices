@@ -72,6 +72,8 @@ Configuration lives in **[`.cursor/mcp.json`](../.cursor/mcp.json)**.
 
 When adding a new skill or rule: update **`.cursor/rules`** and, if it affects onboarding, add one line here.
 
+**Reusable prompts:** For a fresh chat that should **identify, test, and fix** remaining app issues end-to-end, paste the `<agent_task>` block from [`agent-prompts/full-application-quality-pass.md`](agent-prompts/full-application-quality-pass.md).
+
 ---
 
 ## 4. Operational habits for agents
