@@ -77,6 +77,24 @@ export default function AuthPageClient() {
 
   const resetPasswordHref = `/auth/reset?redirectTo=${encodeURIComponent(redirectTarget)}`;
 
+  /**
+   * Canonical origin for OAuth redirects. We always prefer the build-time
+   * `NEXT_PUBLIC_SITE_URL` / `NEXT_PUBLIC_BASE_URL` so the OAuth flow returns
+   * users to the production domain (e.g., `https://www.choices-app.com`) even
+   * if they somehow loaded `/auth` from a non-canonical origin like a Vercel
+   * preview URL. We strip a trailing slash so the joined path stays clean.
+   */
+  const canonicalSiteOrigin = React.useMemo(() => {
+    const fromEnv = env.NEXT_PUBLIC_SITE_URL ?? env.NEXT_PUBLIC_BASE_URL ?? '';
+    if (fromEnv) {
+      return fromEnv.replace(/\/+$/, '');
+    }
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return '';
+  }, []);
+
   // Social OAuth handler
   const handleSocialAuth = async (provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok') => {
     try {
@@ -94,7 +112,11 @@ export default function AuthPageClient() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as any, // Type assertion needed as Supabase types may not include all providers
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTarget)}`
+          // Always send users to the canonical site origin so we don't bounce
+          // through Vercel preview/deployment URLs (which are gated by Vercel
+          // Deployment Protection and trigger 1Password "Save Item" prompts
+          // because of the origin mismatch).
+          redirectTo: `${canonicalSiteOrigin}/auth/callback?redirectTo=${encodeURIComponent(redirectTarget)}`
         }
       });
 

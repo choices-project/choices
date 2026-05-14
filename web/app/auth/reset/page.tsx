@@ -9,6 +9,8 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import { env } from '@/lib/config/env';
+
 import { useI18n } from '@/hooks/useI18n';
 
 export const dynamic = 'force-dynamic';
@@ -33,8 +35,17 @@ export default function ResetPasswordPage() {
         return;
       }
 
+      // Pin the reset-link origin to the canonical site URL so the email
+      // never carries a non-canonical Vercel preview origin (which would be
+      // gated by Vercel Deployment Protection for end users).
+      const canonicalOrigin =
+        (env.NEXT_PUBLIC_SITE_URL ?? env.NEXT_PUBLIC_BASE_URL ?? window.location.origin).replace(
+          /\/+$/,
+          '',
+        );
+
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/reset/confirm`,
+        redirectTo: `${canonicalOrigin}/auth/reset/confirm`,
       });
 
       if (resetError) {
