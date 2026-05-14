@@ -63,6 +63,18 @@ export default function AuthPageClient() {
 
   const [redirectTarget, setRedirectTarget] = useState('/feed');
 
+  /** Full navigation after credential login so middleware sees httpOnly cookies on a document request. */
+  const redirectAfterAuth = React.useCallback(
+    (path: string) => {
+      if (typeof window !== 'undefined') {
+        window.location.assign(path);
+        return;
+      }
+      router.replace(path);
+    },
+    [router],
+  );
+
   const resetPasswordHref = `/auth/reset?redirectTo=${encodeURIComponent(redirectTarget)}`;
 
   // Social OAuth handler
@@ -503,7 +515,7 @@ export default function AuthPageClient() {
           setMessage(t('auth.success.accountCreated'));
           if (result?.data?.session) {
             setTimeout(() => {
-              router.push('/onboarding');
+              redirectAfterAuth('/onboarding');
             }, 1000);
           }
         } else {
@@ -536,9 +548,7 @@ export default function AuthPageClient() {
           }
 
           await syncSupabaseSession(loginResult?.data?.session ?? null);
-          // Redirect to feed (default for authenticated users per middleware)
-          // Use router.replace to avoid adding to history
-          router.replace(redirectTarget);
+          redirectAfterAuth(redirectTarget);
         } catch (loginError: unknown) {
           // Check if it's a rate limit error (429 status)
           const isRateLimit = loginError instanceof Error &&
@@ -1032,7 +1042,7 @@ export default function AuthPageClient() {
             />
           </summary>
           <div className="border-t border-border px-4 pb-4 pt-2">
-            <PasskeyControls onLoginSuccess={() => router.replace(redirectTarget)} />
+            <PasskeyControls onLoginSuccess={() => redirectAfterAuth(redirectTarget)} />
           </div>
         </details>
       </div>

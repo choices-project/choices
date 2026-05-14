@@ -126,6 +126,24 @@ curl https://your-project.supabase.co/rest/v1/
 3. Check CORS configuration
 4. Verify `NEXT_PUBLIC_BASE_URL` matches your domain
 
+#### Production: “This site can’t be reached” / `DNS_PROBE_FINISHED_NXDOMAIN` on `*.supabase.co`
+
+**Symptom:** Clicking Google, GitHub, or email/magic-link flows opens a URL like `https://<project-ref>.supabase.co/auth/v1/...` and Chrome reports **NXDOMAIN** (hostname does not resolve).
+
+**Cause:** The value of **`NEXT_PUBLIC_SUPABASE_URL`** used for the **production** build does not match a live Supabase project (typo, old project ref, deleted project, or wrong env pasted into Vercel). OAuth and passwordless email all call that host; if DNS fails, **every** login path breaks the same way.
+
+**Fix (operators):**
+
+1. In **Supabase** → **Project Settings** → **API**, copy **Project URL** exactly (format `https://<ref>.supabase.co`, no trailing slash issues that change the host).
+2. In **Vercel** → your production project → **Settings** → **Environment Variables**, set **`NEXT_PUBLIC_SUPABASE_URL`** for **Production** to that URL. Ensure **`NEXT_PUBLIC_SUPABASE_ANON_KEY`** matches the same project’s anon key.
+3. **Redeploy** production after changing any `NEXT_PUBLIC_*` variable. Next.js inlines these into the browser bundle at build time; a variable change alone does not update already-deployed client JS.
+4. Confirm DNS: `curl -sI "https://<ref>.supabase.co/auth/v1/health"` should return HTTP headers (not “Could not resolve host”).
+5. In **Supabase** → **Authentication** → **URL configuration**, keep **Site URL** and **Redirect URLs** aligned with production (e.g. `https://www.choices-app.com` and `https://www.choices-app.com/auth/callback`). Misconfiguration there breaks OAuth *after* DNS works.
+
+**Symptom:** Supabase **Auth logs** show a successful sign-in, but the browser **stays on `/auth`** with no error. Often the session cookie was set on the `/api/auth/login` response, but the next **client-side** navigation did not yet attach that cookie for **Edge middleware**, which redirected back to `/auth`. After a **deploy** with the fix in `web/app/auth/AuthPageClient.tsx`, password / passkey / post-register flows use a **full page** redirect (`location.assign`) so the next request is a **document** load and cookies are visible. If you still see the issue on an older deploy, try a **hard refresh** after login or confirm `NEXT_PUBLIC_SUPABASE_URL` matches the project ref used in `sb-<ref>-auth-token` cookies (see middleware auth diagnostics with `DEBUG_MIDDLEWARE=1` in non-production).
+
+**Code reference:** The browser client reads `env.NEXT_PUBLIC_SUPABASE_URL` from `web/utils/supabase/client.ts`; OAuth uses `signInWithOAuth` against that host (`web/app/auth/AuthPageClient.tsx`).
+
 ### Rate Limiting Issues
 
 **Problem:** Getting 429 errors or rate limit warnings.
