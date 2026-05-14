@@ -1,6 +1,6 @@
 # AI agents & Cursor setup (Choices)
 
-_Last updated: April 22, 2026_
+_Last updated: May 14, 2026_
 
 This guide is for **human developers** and **coding agents** (Cursor, Claude Code, Codex, etc.) working on the Choices repo. It complements [`AGENTS.md`](../AGENTS.md) (commands and env) and [`DOCUMENTATION_AUDIT_ROADMAP.md`](DOCUMENTATION_AUDIT_ROADMAP.md) (doc ↔ code parity).
 
@@ -36,6 +36,12 @@ Examples of what you get (see upstream docs for the full list):
 **Deploy policy for this repo (unchanged):** production goes out via **git push to `main` → CI/CD → Vercel**. Do not use MCP **`deploy_to_vercel`** (keep it disabled). Treat plugin **deploy** commands the same way unless a maintainer explicitly asks for a one-off preview deploy.
 
 **Telemetry (optional):** to disable plugin telemetry in shells that launch your agent, use `VERCEL_PLUGIN_TELEMETRY=off` as described in the [Vercel plugin telemetry section](https://vercel.com/docs/agent-resources/vercel-plugin#telemetry). **Debug:** `VERCEL_PLUGIN_LOG_LEVEL=debug` or `npx vercel-plugin doctor` per upstream docs.
+
+### 1.2 Vercel dashboard: align Build & Deployment with the repo
+
+The linked Git repository’s **root** [`vercel.json`](../vercel.json) is the canonical build contract: **Root Directory** `web`, **Build Command** `./scripts/vercel-build.sh`, **Install Command** `npm install`. App crons are declared in [`web/vercel.json`](../web/vercel.json).
+
+If Vercel shows a warning that **Production** used different settings than **Project Settings**, open **Settings → Build and Deployment**, enable **overrides** for **Build** and **Install**, set the values above to match `vercel.json`, then **redeploy** Production. Details: [`docs/TROUBLESHOOTING.md`](TROUBLESHOOTING.md) → **Vercel: Production deployment differs from Project Settings (build command)**.
 
 ---
 

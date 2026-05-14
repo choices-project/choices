@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-_Last updated: April 4, 2026_
+_Last updated: May 14, 2026_
 
 This guide covers common issues and solutions when working with the Choices platform.
 
@@ -260,7 +260,32 @@ See [`STATE_MANAGEMENT.md`](STATE_MANAGEMENT.md) for patterns.
 2. Verify environment variables are set in Vercel
 3. Ensure Node.js version matches (24.11.0)
 4. Check for memory/timeout issues
-5. Review `vercel.json` configuration
+5. Review root [`vercel.json`](../vercel.json) and [`web/vercel.json`](../web/vercel.json); align the Vercel dashboard build/install overrides with that contract (see [Vercel dashboard vs Production](#vercel-production-deployment-differs-from-project-settings-build-command) below).
+
+### Vercel: Production deployment differs from Project Settings (build command)
+
+**Problem:** The dashboard shows a yellow banner that **Production** was built with settings that do not match what **Build and Deployment** currently displays (for example **Production overrides** list `./scripts/vercel-build.sh` while **Project settings** shows the default Next.js build with overrides off).
+
+**Cause:** Vercel compares the **last Production deployment’s effective config** with the **saved dashboard fields**. Drift happens after `vercel.json` or dashboard values change without a matching redeploy, or when the UI does not reflect the same build/install commands the repo uses.
+
+**Source of truth in git:**
+
+| Setting | Repo value (see root [`vercel.json`](../vercel.json)) |
+|---------|--------------------------------------------------------|
+| **Root Directory** | `web` |
+| **Framework** | Next.js (`nextjs`) |
+| **Build Command** | `./scripts/vercel-build.sh` (runs under `web/`; copies civics shared deps then builds — see [`web/scripts/vercel-build.sh`](../web/scripts/vercel-build.sh)) |
+| **Install Command** | `npm install` |
+
+Cron routes for the app live in [`web/vercel.json`](../web/vercel.json).
+
+**Fix (operators):**
+
+1. Vercel → **Project** → **Settings** → **General**: set **Root Directory** to **`web`** if it is not already.
+2. **Settings** → **Build and Deployment**: turn **Override** **ON** for **Build Command** and set **`./scripts/vercel-build.sh`**. Turn **Override** **ON** for **Install Command** and set **`npm install`**. Leave **Output Directory** on the Next.js default unless you have a documented reason to change it.
+3. **Redeploy** Production (empty commit push or “Redeploy” from the dashboard) so the live deployment and saved settings match and the banner clears.
+
+For deploy policy (git push → CI, not agent MCP deploy), see [`docs/AGENT_SETUP.md`](AGENT_SETUP.md).
 
 ### Production Build Different from Dev
 
