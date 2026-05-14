@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { detectCorruptSupabaseAuthCookies } from '@/utils/supabase/sanitize-cookies'
+
 import { env } from '@/lib/config/env'
 import {
   getSecurityConfig,
@@ -185,6 +187,8 @@ export type AuthDiagnostics = {
   authCookieValueLength: number
   parsedCookiesCount: number
   parsedCookiesHasSb: boolean
+  /** Number of corrupt `sb-*-auth-token` cookies suppressed on this request. */
+  corruptAuthCookieCount?: number
 }
 
 /**
@@ -328,7 +332,21 @@ function checkAuthInMiddleware(
     name: cookie.name,
     value: cookie.value,
   }))
-  const cookies = [...headerCookies, ...parsedCookies]
+  const rawCookies = [...headerCookies, ...parsedCookies]
+
+  // Suppress corrupt `sb-*-auth-token` cookies. If we let them through, this
+  // middleware happily marks the user as "authenticated" based on cookie
+  // presence, but every downstream Supabase call throws `Invalid UTF-8
+  // sequence` and returns 500 (e.g. `/api/polls`). Treating these cookies as
+  // absent here forces the user back through the auth flow, where a fresh
+  // session will overwrite the bad cookies.
+  const corruptAuthCookies = detectCorruptSupabaseAuthCookies(rawCookies)
+  if (corruptAuthCookies.size > 0) {
+    diagnostics.corruptAuthCookieCount = corruptAuthCookies.size
+  }
+  const cookies = corruptAuthCookies.size === 0
+    ? rawCookies
+    : rawCookies.filter((c) => !corruptAuthCookies.has(c.name))
   diagnostics.parsedCookiesCount = cookies.length
   diagnostics.parsedCookiesHasSb = cookies.some(c => c.name.startsWith('sb-'))
 
@@ -404,6 +422,23 @@ function checkAuthInMiddleware(
   }
 
   return { isAuthenticated: true, diagnostics }
+}
+
+/**
+ * Clear cookies that `detectCorruptSupabaseAuthCookies` flagged on the
+ * current request. Safe to call on any `NextResponse` (including redirects).
+ */
+function clearCorruptAuthCookies(
+  response: NextResponse,
+  request: NextRequest,
+): NextResponse {
+  const all = request.cookies.getAll().map((c) => ({ name: c.name, value: c.value }))
+  const corrupt = detectCorruptSupabaseAuthCookies(all)
+  if (corrupt.size === 0) return response
+  for (const name of corrupt) {
+    response.cookies.set({ name, value: '', maxAge: 0, path: '/' })
+  }
+  return response
 }
 
 export async function middleware(request: NextRequest) {
@@ -622,7 +657,7 @@ export async function middleware(request: NextRequest) {
           })
         }
 
-        return NextResponse.redirect(authUrl, 307)
+        return clearCorruptAuthCookies(NextResponse.redirect(authUrl, 307), request)
       }
     }
   }
@@ -750,7 +785,7 @@ export async function middleware(request: NextRequest) {
     })
   }
 
-  return response
+  return clearCorruptAuthCookies(response, request)
 }
 
 export const config = {

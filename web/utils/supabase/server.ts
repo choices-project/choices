@@ -1,6 +1,8 @@
 import { getValidatedEnv } from '@/lib/config/env'
 import { logger } from '@/lib/utils/logger'
 
+import { detectCorruptSupabaseAuthCookies } from './sanitize-cookies'
+
 import type { Database } from '@/types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -69,8 +71,36 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     });
   }
 
+  // Identify corrupt `sb-*-auth-token` cookies whose base64url payload no
+  // longer round-trips through strict UTF-8. If left untouched, @supabase/ssr
+  // throws `Invalid UTF-8 sequence` on every `.from(...)` call, surfacing as
+  // opaque 500s on anonymous-readable endpoints (e.g. `/api/polls`).
+  const corruptAuthCookies = cookieStore
+    ? detectCorruptSupabaseAuthCookies(Array.from(cookieStore.getAll()))
+    : new Set<string>();
+
+  if (cookieStore && corruptAuthCookies.size > 0) {
+    logger.warn(
+      '[getSupabaseServerClient] Detected corrupt Supabase auth cookies; treating session as anonymous and clearing them.',
+      { cookieNames: Array.from(corruptAuthCookies) },
+    );
+    for (const name of corruptAuthCookies) {
+      try {
+        cookieStore.delete(name);
+      } catch {
+        // Some render contexts (e.g. Server Components) disallow cookie
+        // mutation. The adapter still suppresses the value below so the
+        // current request stays healthy; cleanup happens on the next
+        // route-handler request.
+      }
+    }
+  }
+
   const cookieAdapter = {
     get: (name: string) => {
+      if (corruptAuthCookies.has(name)) {
+        return undefined;
+      }
       const value = cookieStore?.get(name)?.value;
       // Debug logging for CI troubleshooting
       if (env.CI === 'true' && name.includes('auth')) {
