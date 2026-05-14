@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+import { normalizePostAuthRedirectPath } from '@/lib/auth/normalize-post-auth-redirect';
 import { devLog } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +11,9 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const token = searchParams.get('token')
   const type = searchParams.get('type')
-  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard'
+  const redirectTo = normalizePostAuthRedirectPath(
+    searchParams.get('redirectTo') ?? '/dashboard',
+  )
 
   if (!token) {
     return NextResponse.redirect(

@@ -16,6 +16,7 @@ import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import { normalizePostAuthRedirectPath } from '@/lib/auth/normalize-post-auth-redirect';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -202,11 +203,7 @@ export default function AuthPageClient() {
     }
     const params = new URLSearchParams(window.location.search);
     const rawRedirect = params.get('redirectTo') ?? '/feed';
-    const nextRedirect =
-      rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && !rawRedirect.startsWith('/auth')
-        ? rawRedirect
-        : '/feed';
-    setRedirectTarget(nextRedirect);
+    setRedirectTarget(normalizePostAuthRedirectPath(rawRedirect));
   }, []);
 
   // Sync DOM values with React state for E2E test compatibility
