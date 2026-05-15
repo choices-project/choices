@@ -16,7 +16,10 @@ import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-import { normalizePostAuthRedirectPath } from '@/lib/auth/normalize-post-auth-redirect';
+import {
+  normalizePostAuthRedirectPath,
+  pickRedirectQueryParam,
+} from '@/lib/auth/normalize-post-auth-redirect';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -64,7 +67,11 @@ export default function AuthPageClient() {
   const safeMessage = message;
   const safeIsRateLimited = isRateLimited;
 
-  const [redirectTarget, setRedirectTarget] = useState('/feed');
+  /** Post-login destination: middleware uses `redirectTo`; many routes use legacy `redirect`; `next` also supported. */
+  const redirectTarget = React.useMemo(() => {
+    const raw = pickRedirectQueryParam(searchParams) ?? '/feed';
+    return normalizePostAuthRedirectPath(raw);
+  }, [searchParams]);
 
   /** Full navigation after credential login so middleware sees httpOnly cookies on a document request. */
   const redirectAfterAuth = React.useCallback(
@@ -196,15 +203,6 @@ export default function AuthPageClient() {
     return () => clearTimeout(timer);
   }, []);
 
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    const params = new URLSearchParams(window.location.search);
-    const rawRedirect = params.get('redirectTo') ?? '/feed';
-    setRedirectTarget(normalizePostAuthRedirectPath(rawRedirect));
-  }, []);
 
   // Sync DOM values with React state for E2E test compatibility
   // This ensures that when tests use page.fill(), the React state updates
@@ -408,7 +406,7 @@ export default function AuthPageClient() {
 
     // Check if we have a redirectTo parameter and bypass flag is set
     const urlParams = new URLSearchParams(window.location.search);
-    const redirectTo = urlParams.get('redirectTo');
+    const redirectTo = pickRedirectQueryParam(urlParams);
 
     if (redirectTo === '/dashboard' || redirectTo === '/feed') {
       try {
