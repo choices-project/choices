@@ -2,40 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 
+import { finalizeAuthCookiesOnResponse } from '@/lib/auth/finalize-auth-cookies';
 import { getCanonicalSiteOrigin } from '@/lib/auth/canonical-site-origin';
 import { normalizePostAuthRedirectPath } from '@/lib/auth/normalize-post-auth-redirect';
 import { logger } from '@/lib/utils/logger';
 
+import { isEnabledOAuthProvider } from '@/lib/auth/enabled-oauth-providers';
+
 import type { Provider } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
-
-const ALL_OAUTH_PROVIDERS = [
-  'google',
-  'github',
-  'apple',
-  'facebook',
-  'twitter',
-  'linkedin',
-  'discord',
-  'instagram',
-  'tiktok',
-] as const;
-
-type OAuthProvider = (typeof ALL_OAUTH_PROVIDERS)[number];
-
-function getEnabledOAuthProviders(): OAuthProvider[] {
-  const envValue = process.env.NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS;
-  const enabled =
-    envValue && envValue.trim()
-      ? envValue.split(',').map((p) => p.trim()).filter(Boolean)
-      : ['google'];
-  return ALL_OAUTH_PROVIDERS.filter((p) => enabled.includes(p));
-}
-
-function isOAuthProvider(value: string): value is OAuthProvider {
-  return (ALL_OAUTH_PROVIDERS as readonly string[]).includes(value);
-}
 
 /**
  * Server-initiated OAuth: sets PKCE verifier cookies on the redirect to the provider,
@@ -48,7 +24,7 @@ export async function GET(
   const { provider: providerParam } = await context.params;
   const origin = getCanonicalSiteOrigin(request.url);
 
-  if (!isOAuthProvider(providerParam) || !getEnabledOAuthProviders().includes(providerParam)) {
+  if (!isEnabledOAuthProvider(providerParam)) {
     return NextResponse.redirect(
       `${origin}/auth?error=${encodeURIComponent('OAuth provider is not available')}`,
     );
@@ -86,6 +62,7 @@ export async function GET(
     }
 
     oauthResponse.headers.set('Location', data.url);
+    finalizeAuthCookiesOnResponse(oauthResponse, request);
     oauthResponse.headers.set('cache-control', 'no-store');
     return oauthResponse;
   } catch (err) {

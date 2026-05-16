@@ -2,7 +2,7 @@
 
 | Flow | Mechanism | Entry |
 |------|-----------|--------|
-| OAuth (Google, GitHub, …) | `GET /api/auth/oauth/[provider]` → provider → `GET /auth/callback` (exchange + `setSession` on redirect) | `AuthPageClient` → `/api/auth/oauth/google?redirectTo=…` |
+| OAuth (Google, GitHub, …) | `GET /api/auth/oauth/[provider]` → provider → `GET /auth/callback` → `/auth/finish` (`completeSignIn`) | `AuthPageClient` → `/api/auth/oauth/github?redirectTo=…` |
 | Email / password sign-in | `POST /api/auth/login` sets cookies; client finishes | `AuthPageClient` → `completeSignIn()` |
 | Passkey sign-in | `POST …/webauthn/…/verify` sets cookies; client finishes | `PasskeyLogin` → `completeSignIn()` |
 | Sign-up (auth tab) | `POST /api/auth/register` sets cookies when session returned | `completeSignIn()` |

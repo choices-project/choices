@@ -20,6 +20,7 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
+import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session';
 import { completeSignIn } from '@/lib/auth/complete-sign-in';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
@@ -101,6 +102,22 @@ export default function AuthPageClient() {
     const params = new URLSearchParams(searchParams.toString());
     window.location.replace(`/auth/callback?${params.toString()}`);
   }, [searchParams]);
+
+  // PWA / OAuth: server may have set httpOnly cookies but the client store is still empty.
+  const sessionRecoveryAttemptedRef = React.useRef(false);
+  React.useEffect(() => {
+    const code = searchParams.get('code');
+    const error = searchParams.get('error');
+    if (code || error || sessionRecoveryAttemptedRef.current) {
+      return;
+    }
+    sessionRecoveryAttemptedRef.current = true;
+    void hydrateBrowserSessionFromServer().then((session) => {
+      if (session) {
+        finishAuthNavigation(redirectTarget);
+      }
+    });
+  }, [searchParams, redirectTarget, finishAuthNavigation]);
 
   /** Server route sets PKCE cookies and redirects to the provider (see /api/auth/oauth/[provider]). */
   const handleSocialAuth = (provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok') => {

@@ -1,3 +1,4 @@
+import { getEnabledOAuthProviderIds } from '@/lib/auth/enabled-oauth-providers';
 import type { SocialLoginOption } from '@/lib/core/types'
 
 export const socialLoginOptions: SocialLoginOption[] = [
@@ -116,14 +117,9 @@ export const getSocialLoginOption = (provider: string): SocialLoginOption | unde
 }
 
 export const getAvailableProviders = (): SocialLoginOption[] => {
-  // Filter based on environment configuration
-  // Default to Google if no env var is set (for production builds where env var wasn't set at build time)
-  const envValue = process.env.NEXT_PUBLIC_ENABLED_OAUTH_PROVIDERS
-  const enabledProviders = envValue && envValue.trim()
-    ? envValue.split(',').map(p => p.trim()).filter(Boolean)
-    : ['google'] // Default to Google OAuth if env var not set
+  const enabledProviders = getEnabledOAuthProviderIds();
 
-  return socialLoginOptions.filter(option =>
-    enabledProviders.includes(option.provider)
-  )
+  return socialLoginOptions.filter((option) =>
+    (enabledProviders as readonly string[]).includes(option.provider),
+  );
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 
+import { finalizeAuthCookiesOnResponse } from '@/lib/auth/finalize-auth-cookies';
 import {
   parsePostAuthRedirectFromSearchParams,
   resolvePostAuthRedirect,
@@ -67,7 +68,10 @@ export async function GET(request: Request) {
       postAuthParams,
     );
 
-    const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`, 303);
+    const finishUrl = new URL('/auth/finish', origin);
+    finishUrl.searchParams.set('redirectTo', finalRedirect);
+
+    const redirectResponse = NextResponse.redirect(finishUrl.toString(), 303);
     const sessionClient = await getSupabaseApiRouteClient(nextRequest, redirectResponse);
     const { error: setSessionError } = await sessionClient.auth.setSession({
       access_token: data.session.access_token,
@@ -81,6 +85,7 @@ export async function GET(request: Request) {
       );
     }
 
+    finalizeAuthCookiesOnResponse(redirectResponse, nextRequest);
     redirectResponse.headers.set('cache-control', 'no-store');
     return redirectResponse;
   } catch (err) {

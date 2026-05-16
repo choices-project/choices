@@ -24,8 +24,11 @@ function applyAuthCookieOptions(
   value: string,
   options: Record<string, unknown>,
   response: NextResponse,
+  requestHostname: string,
 ): void {
   const isProduction = process.env.NODE_ENV === 'production'
+  const requireSecure =
+    isProduction && requestHostname.includes('choices-app.com')
   const isAuthCookie =
     name.includes('auth') || name.includes('session') || name.startsWith('sb-')
 
@@ -45,7 +48,7 @@ function applyAuthCookieOptions(
 
   if (isAuthCookie) {
     cookieOptions.httpOnly = true
-    cookieOptions.secure = isProduction
+    cookieOptions.secure = requireSecure
   } else {
     if (typeof options.httpOnly === 'boolean') {
       cookieOptions.httpOnly = options.httpOnly
@@ -94,6 +97,11 @@ export async function getSupabaseApiRouteClient(
     throw new Error('Missing required Supabase environment variables')
   }
 
+  const requestHostname =
+    request.headers.get('x-forwarded-host') ??
+    request.headers.get('host') ??
+    ''
+
   const cookieAdapter = {
     getAll() {
       return request.cookies.getAll()
@@ -108,7 +116,7 @@ export async function getSupabaseApiRouteClient(
       try {
         for (const { name, value, options } of cookiesToSet) {
           if (value) {
-            applyAuthCookieOptions(name, value, options, response)
+            applyAuthCookieOptions(name, value, options, response, requestHostname)
           } else {
             response.cookies.set(name, '', {
               path: typeof options.path === 'string' ? options.path : '/',

@@ -510,6 +510,7 @@ export async function middleware(request: NextRequest) {
   // before `exchangeCodeForSession` runs — Google OAuth appears "broken").
   const isAuthSessionHandshakeRoute =
     pathname === '/auth/callback' ||
+    pathname === '/auth/finish' ||
     pathname === '/auth/verify' ||
     pathname.startsWith('/auth/device-flow/') ||
     pathname.startsWith('/auth/reset/confirm')
