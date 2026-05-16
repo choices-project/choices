@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { detectCorruptSupabaseAuthCookies } from '@/utils/supabase/sanitize-cookies'
+import {
+  dedupeCookiesByName,
+  detectCorruptSupabaseAuthCookies,
+} from '@/utils/supabase/sanitize-cookies'
 
 import { env } from '@/lib/config/env'
 import {
@@ -347,7 +350,7 @@ function checkAuthInMiddleware(
     name: cookie.name,
     value: cookie.value,
   }))
-  const rawCookies = [...headerCookies, ...parsedCookies]
+  const rawCookies = dedupeCookiesByName([...headerCookies, ...parsedCookies])
 
   // Suppress corrupt `sb-*-auth-token` cookies. If we let them through, this
   // middleware happily marks the user as "authenticated" based on cookie
@@ -397,10 +400,10 @@ function checkAuthInMiddleware(
     const fallbackCookie = cookies.find((cookie) => {
       if (!cookie.name.startsWith('sb-')) return false
       const lowerName = cookie.name.toLowerCase()
+      // Do not treat a single chunked fragment as a full session.
+      if (/\-auth-token\.\d+$/.test(lowerName)) return false
       const isAuthTokenLike =
-        lowerName.endsWith('-auth-token') ||
-        lowerName.includes('-auth-token.') ||
-        lowerName === 'sb-access-token'
+        lowerName.endsWith('-auth-token') || lowerName === 'sb-access-token'
       return isAuthTokenLike && isValidCookieValue(cookie.value)
     })
     if (fallbackCookie) {

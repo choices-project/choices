@@ -28,6 +28,18 @@
 type CookieLike = { name: string; value: string };
 
 const AUTH_TOKEN_RE = /^(sb-.+-auth-token)(?:\.(\d+))?$/;
+
+/** Edge middleware merges Cookie header + `request.cookies`; dedupe before chunk assembly. */
+export function dedupeCookiesByName(cookies: Iterable<CookieLike>): CookieLike[] {
+  const byName = new Map<string, string>();
+  for (const cookie of cookies) {
+    if (!cookie?.name) continue;
+    if (!byName.has(cookie.name)) {
+      byName.set(cookie.name, cookie.value ?? '');
+    }
+  }
+  return [...byName.entries()].map(([name, value]) => ({ name, value }));
+}
 const BASE64_PREFIX = 'base64-';
 
 /**
@@ -65,7 +77,7 @@ export function detectCorruptSupabaseAuthCookies(
     Array<{ name: string; index: number; value: string }>
   >();
 
-  for (const cookie of cookies) {
+  for (const cookie of dedupeCookiesByName(cookies)) {
     if (!cookie?.name) continue;
     const match = cookie.name.match(AUTH_TOKEN_RE);
     if (!match || !match[1]) continue;

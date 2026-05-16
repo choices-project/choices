@@ -108,6 +108,20 @@ describe('detectCorruptSupabaseAuthCookies', () => {
     expect(result.size).toBe(0);
   });
 
+  it('does not false-positive when the same chunked cookies appear twice (header + request.cookies)', () => {
+    const payload = toBase64Url(
+      JSON.stringify({ access_token: 'eyJhbGciOi', refresh_token: 'rt', user: { id: 'u1' } }),
+    );
+    const chunk0 = `base64-${payload.slice(0, 40)}`;
+    const chunk1 = payload.slice(40);
+    const pair = [
+      { name: `${PROJECT}.0`, value: chunk0 },
+      { name: `${PROJECT}.1`, value: chunk1 },
+    ];
+    const result = detectCorruptSupabaseAuthCookies([...pair, ...pair]);
+    expect(result.size).toBe(0);
+  });
+
   it('ignores unrelated cookies that happen to share a prefix', () => {
     const result = detectCorruptSupabaseAuthCookies([
       { name: 'sb-abcdefgh-auth-token-code-verifier', value: 'whatever' },
