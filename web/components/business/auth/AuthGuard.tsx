@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session';
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
@@ -27,11 +28,8 @@ type AuthGuardProps = {
 const LOADING_HARD_TIMEOUT_MS = 10_000;
 
 /**
- * Authentication Guard Component
- *
- * UX gate that decides whether to show the protected children, the
- * loading fallback, or a redirect to login. The actual security gate is
- * `web/middleware.ts`.
+ * UX gate for protected UI. Middleware enforces httpOnly cookies; this hydrates
+ * the browser Supabase client from `/api/auth/session` before denying access.
  */
 export function AuthGuard({
   children,
@@ -51,21 +49,13 @@ export function AuthGuard({
   const routerRef = useRef(router);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const [hydrating, setHydrating] = useState(false);
+  const hydrateAttemptedRef = useRef(false);
 
   useEffect(() => {
     routerRef.current = router;
   }, [router]);
 
-  // Real timeout: when isLoading stays true past the ceiling, FLIP a state
-  // bit so the component proceeds rather than waiting on a stuck promise.
-  //
-  // IMPORTANT: `loadingTimedOut` is STICKY for the lifetime of this mount.
-  // Once we've decided to bypass the gate (because middleware already vetted
-  // the request server-side), we MUST NOT later redirect the user to /auth
-  // when isLoading eventually flips to false with isAuthenticated=false.
-  // Doing so would bounce them: middleware lets them back into /feed because
-  // cookies are valid, AuthContext times out again, AuthGuard redirects
-  // again — an infinite redirect loop.
   useEffect(() => {
     if (!isLoading) {
       if (loadingTimeoutRef.current) {
@@ -90,23 +80,30 @@ export function AuthGuard({
     };
   }, [isLoading, loadingTimedOut]);
 
-  // While the auth bootstrap is still in flight (and hasn't exceeded the
-  // hard timeout), show the loading fallback.
-  const stillLoading = isLoading && !loadingTimedOut;
+  const stillLoading = (isLoading || hydrating) && !loadingTimedOut;
 
   useEffect(() => {
-    if (!stillLoading && !isAuthenticated && !loadingTimedOut) {
-      logger.warn('AuthGuard - Unauthenticated user blocked, redirecting to login');
-      routerRef.current.push(redirectTo);
+    if (stillLoading || isAuthenticated || loadingTimedOut || hydrateAttemptedRef.current) {
+      return;
     }
+    hydrateAttemptedRef.current = true;
+    setHydrating(true);
+    void hydrateBrowserSessionFromServer()
+      .then((session) => {
+        if (!session) {
+          logger.warn('AuthGuard - Unauthenticated user blocked, redirecting to login');
+          routerRef.current.push(redirectTo);
+        }
+      })
+      .finally(() => {
+        setHydrating(false);
+      });
   }, [isAuthenticated, stillLoading, loadingTimedOut, redirectTo]);
 
   if (stillLoading) {
     return <>{fallback}</>;
   }
 
-  // Bootstrap completed cleanly (not via timeout) AND confirmed no session.
-  // Middleware should have redirected upstream, but we double-check.
   if (!isAuthenticated && !loadingTimedOut) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -123,4 +120,3 @@ export function AuthGuard({
 }
 
 export default AuthGuard;
-

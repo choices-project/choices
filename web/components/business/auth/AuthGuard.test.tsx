@@ -36,6 +36,12 @@ jest.mock('@/lib/utils/logger', () => ({
   logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
+const mockHydrate = jest.fn().mockResolvedValue(null);
+
+jest.mock('@/lib/auth/browser-session', () => ({
+  hydrateBrowserSessionFromServer: () => mockHydrate(),
+}));
+
 const setStoreState = (next: { isLoading: boolean; isAuthenticated: boolean }) => {
   mockIsLoading = next.isLoading;
   mockIsAuthenticated = next.isAuthenticated;
@@ -45,6 +51,7 @@ describe('AuthGuard', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     mockPush.mockReset();
+    mockHydrate.mockReset().mockResolvedValue(null);
     setStoreState({ isLoading: true, isAuthenticated: false });
   });
 
@@ -84,7 +91,7 @@ describe('AuthGuard', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('redirects to /auth when bootstrap completes cleanly with no session', () => {
+  it('redirects to /auth when bootstrap completes cleanly with no session', async () => {
     const { rerender } = render(
       <AuthGuard>
         <div data-testid="kids">protected content</div>
@@ -97,6 +104,10 @@ describe('AuthGuard', () => {
         <div data-testid="kids">protected content</div>
       </AuthGuard>,
     );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(mockPush).toHaveBeenCalledWith('/auth');
   });
@@ -145,7 +156,7 @@ describe('AuthGuard', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('honors a custom redirectTo when bootstrap completes with no session', () => {
+  it('honors a custom redirectTo when bootstrap completes with no session', async () => {
     const { rerender } = render(
       <AuthGuard redirectTo="/login">
         <div data-testid="kids">protected content</div>
@@ -158,6 +169,10 @@ describe('AuthGuard', () => {
         <div data-testid="kids">protected content</div>
       </AuthGuard>,
     );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(mockPush).toHaveBeenCalledWith('/login');
   });

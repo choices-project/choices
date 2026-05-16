@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getServerAuthSession } from '@/lib/auth/get-server-auth';
 
 import { authError, successResponse, withErrorHandling } from '@/lib/api';
 
@@ -6,16 +6,12 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Read the httpOnly Supabase session on the server and return tokens so the
- * browser client can call `setSession` (middleware already validated cookies).
+ * browser client can call `setSession`. Same-origin + credentials only.
  */
 export const GET = withErrorHandling(async () => {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
+  const session = await getServerAuthSession();
 
-  if (error || !session) {
+  if (!session) {
     return authError('Not authenticated');
   }
 

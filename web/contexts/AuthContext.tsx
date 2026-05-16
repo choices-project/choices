@@ -15,6 +15,7 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token'
 
+import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session'
 import { PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders'
 import { env } from '@/lib/config/env'
 import {
@@ -172,42 +173,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }
 
-    /** Mirror httpOnly cookies into the browser Supabase client (OAuth / API login). */
-    const hydrateFromServerCookies = async (
-      supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>,
-    ): Promise<Session | null> => {
-      try {
-        const res = await fetch('/api/auth/session', {
-          credentials: 'include',
-          cache: 'no-store',
-        })
-        if (!res.ok) {
-          return null
-        }
-        const body = (await res.json()) as {
-          data?: { session?: { access_token: string; refresh_token: string } }
-        }
-        const tokens = body.data?.session
-        if (!tokens?.access_token || !tokens.refresh_token) {
-          return null
-        }
-        const { data, error } = await supabase.auth.setSession({
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-        })
-        if (error) {
-          logger.warn('AuthContext: setSession from server session failed', {
-            message: error.message,
-          })
-          return null
-        }
-        return data.session ?? null
-      } catch (error) {
-        logger.warn('AuthContext: failed to hydrate session from server cookies', { error })
-        return null
-      }
-    }
-
     const bootstrapAuth = async (): Promise<(() => void) | undefined> => {
       if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
         logger.debug('🚨 AuthContext: Starting auth bootstrap', {
@@ -239,6 +204,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         )
 
+        // Start in parallel with getSession — httpOnly cookies are invisible to the client until hydrated.
+        const serverHydrationPromise = hydrateBrowserSessionFromServer()
+
         // Race getSession() against a hard timeout. On timeout we DO NOT
         // substitute a fake `{ session: null }` (previous attempts at that
         // caused production false-logouts where middleware-validated cookies
@@ -261,14 +229,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!mounted) return () => subscription.unsubscribe()
 
-        if (raceResult.kind === 'resolved') {
-          let session = raceResult.session
-          if (!session) {
-            session = await hydrateFromServerCookies(supabase)
-          }
+        const adoptWithServerFallback = async (
+          clientSession: Session | null,
+        ): Promise<void> => {
+          const session = clientSession ?? (await serverHydrationPromise)
           adoptSession(session, supabase)
+        }
+
+        if (raceResult.kind === 'resolved') {
+          await adoptWithServerFallback(raceResult.session)
         } else if (raceResult.kind === 'error') {
-          const session = await hydrateFromServerCookies(supabase)
+          const session = await serverHydrationPromise
           if (session) {
             adoptSession(session, supabase)
           } else {
@@ -280,7 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false)
           }
         } else {
-          const serverSession = await hydrateFromServerCookies(supabase)
+          const serverSession = await serverHydrationPromise
           if (serverSession) {
             adoptSession(serverSession, supabase)
           } else {
@@ -291,11 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false)
             void sessionPromise.then(async (late) => {
               if (!mounted || late.kind !== 'resolved') return
-              let session = late.session
-              if (!session) {
-                session = await hydrateFromServerCookies(supabase)
-              }
-              adoptSession(session, supabase)
+              await adoptWithServerFallback(late.session)
             })
           }
         }

@@ -20,7 +20,7 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
-import { navigateAfterAuth } from '@/lib/auth/post-auth-navigation';
+import { completeSignIn } from '@/lib/auth/complete-sign-in';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -74,10 +74,15 @@ export default function AuthPageClient() {
     return normalizePostAuthRedirectPath(raw);
   }, [searchParams]);
 
-  /** Navigate after httpOnly cookies are set (login, passkey, OAuth). */
-  const finishAuthNavigation = React.useCallback((path: string) => {
-    navigateAfterAuth(path);
-  }, []);
+  const finishAuthNavigation = React.useCallback(
+    (
+      path: string,
+      tokens?: { access_token: string; refresh_token: string } | null,
+    ) => {
+      void completeSignIn(path, tokens);
+    },
+    [],
+  );
 
   const resetPasswordHref = `/auth/reset?redirectTo=${encodeURIComponent(redirectTarget)}`;
 
@@ -553,18 +558,11 @@ export default function AuthPageClient() {
           password: effectivePassword,
         });
         if (result?.success) {
-          if (result?.data?.session) {
-            const supabase = await getSupabaseBrowserClient();
-            await supabase.auth.setSession({
-              access_token: result.data.session.access_token,
-              refresh_token: result.data.session.refresh_token,
-            });
-          }
           await syncSupabaseSession(result?.data?.session ?? null);
           setMessage(t('auth.success.accountCreated'));
           if (result?.data?.session) {
             setTimeout(() => {
-              finishAuthNavigation('/onboarding');
+              finishAuthNavigation('/onboarding', result.data.session);
             }, 1000);
           }
         } else {
@@ -586,18 +584,8 @@ export default function AuthPageClient() {
           password: effectivePassword,
         });
 
-          // Set the session in the browser's Supabase client
-          // This is needed because our httpOnly cookies can't be read by JS
-          if (loginResult?.data?.session) {
-            const supabase = await getSupabaseBrowserClient();
-            await supabase.auth.setSession({
-              access_token: loginResult.data.session.access_token,
-              refresh_token: loginResult.data.session.refresh_token,
-            });
-          }
-
           await syncSupabaseSession(loginResult?.data?.session ?? null);
-          finishAuthNavigation(redirectTarget);
+          finishAuthNavigation(redirectTarget, loginResult?.data?.session ?? null);
         } catch (loginError: unknown) {
           // Check if it's a rate limit error (429 status)
           const isRateLimit = loginError instanceof Error &&

@@ -168,7 +168,6 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
     if (
       method === 'POST' &&
       !isNextInternal &&
-      pathname !== '/api/auth/sync-session' &&
       !SECURITY_CONFIG.validation.allowedContentTypes.some((type) =>
         contentType?.includes(type),
       )
