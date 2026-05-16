@@ -256,6 +256,10 @@ function checkAuthInMiddleware(
 
   const isValidCookieValue = (value: string): boolean => {
     const trimmed = value.trim()
+    // Supabase SSR stores sessions as `base64-` + base64url payload (often chunked).
+    if (trimmed.startsWith('base64-')) {
+      return trimmed.length > 'base64-'.length + 16
+    }
     return (
       trimmed.length >= 20 &&
       trimmed !== 'null' &&

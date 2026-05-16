@@ -10,7 +10,7 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
-import { syncServerSessionCookies } from '@/lib/auth/sync-server-session';
+import { syncServerSessionAndNavigate } from '@/lib/auth/sync-server-session';
 
 function CallbackLoading({ message }: { message: string }) {
   return (
@@ -90,21 +90,24 @@ function AuthCallbackInner() {
           return;
         }
 
-        setMessage('Securing your session…');
-        const synced = await syncServerSessionCookies();
-
-        if (!synced) {
-          router.replace(
-            `/auth?error=${encodeURIComponent('Could not establish session. Please try again.')}`,
-          );
-          return;
-        }
-
         if (cancelled) {
           return;
         }
 
-        window.location.assign(redirectTarget);
+        setMessage('Securing your session…');
+        const navigated = await syncServerSessionAndNavigate(
+          {
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          },
+          redirectTarget,
+        );
+
+        if (!navigated) {
+          router.replace(
+            `/auth?error=${encodeURIComponent('Could not establish session. Please try again.')}`,
+          );
+        }
       } catch (err) {
         const text = err instanceof Error ? err.message : 'Sign-in failed';
         router.replace(`/auth?error=${encodeURIComponent(text)}`);

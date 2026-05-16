@@ -20,7 +20,7 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
-import { syncServerSessionCookies } from '@/lib/auth/sync-server-session';
+import { syncServerSessionAndNavigate } from '@/lib/auth/sync-server-session';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -74,10 +74,35 @@ export default function AuthPageClient() {
     return normalizePostAuthRedirectPath(raw);
   }, [searchParams]);
 
-  /** Full navigation after login once httpOnly session cookies are synced for middleware. */
+  /** Set httpOnly cookies and navigate in one server redirect (middleware-safe). */
   const redirectAfterAuth = React.useCallback(
-    async (path: string) => {
-      await syncServerSessionCookies();
+    async (
+      path: string,
+      session?: { access_token: string; refresh_token: string } | null,
+    ) => {
+      let tokens = session;
+      if (!tokens?.access_token || !tokens.refresh_token) {
+        try {
+          const supabase = await getSupabaseBrowserClient();
+          const { data: { session: current } } = await supabase.auth.getSession();
+          if (current) {
+            tokens = {
+              access_token: current.access_token,
+              refresh_token: current.refresh_token,
+            };
+          }
+        } catch {
+          // fall through to direct navigation
+        }
+      }
+
+      if (tokens?.access_token && tokens.refresh_token) {
+        const navigated = await syncServerSessionAndNavigate(tokens, path);
+        if (navigated) {
+          return;
+        }
+      }
+
       if (typeof window !== 'undefined') {
         window.location.assign(path);
         return;
@@ -572,7 +597,7 @@ export default function AuthPageClient() {
           setMessage(t('auth.success.accountCreated'));
           if (result?.data?.session) {
             setTimeout(() => {
-              void redirectAfterAuth('/onboarding');
+              void redirectAfterAuth('/onboarding', result?.data?.session ?? null);
             }, 1000);
           }
         } else {
@@ -605,7 +630,7 @@ export default function AuthPageClient() {
           }
 
           await syncSupabaseSession(loginResult?.data?.session ?? null);
-          await redirectAfterAuth(redirectTarget);
+          await redirectAfterAuth(redirectTarget, loginResult?.data?.session ?? null);
         } catch (loginError: unknown) {
           // Check if it's a rate limit error (429 status)
           const isRateLimit = loginError instanceof Error &&
