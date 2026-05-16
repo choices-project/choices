@@ -4,6 +4,11 @@ import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 
 import { finalizeAuthCookiesOnResponse } from '@/lib/auth/finalize-auth-cookies';
 import {
+  humanizeOAuthExchangeError,
+  isCorruptAuthCookieError,
+  sanitizeAuthCookiesForRoute,
+} from '@/lib/auth/request-auth-cookies';
+import {
   parsePostAuthRedirectFromSearchParams,
   resolvePostAuthRedirect,
 } from '@/lib/auth/resolve-post-auth-redirect';
@@ -41,6 +46,8 @@ export async function GET(request: Request) {
   try {
     const finishUrl = new URL('/auth/finish', origin);
     const redirectResponse = NextResponse.redirect(finishUrl.toString(), 303);
+    sanitizeAuthCookiesForRoute(nextRequest, redirectResponse);
+
     const supabase = await getSupabaseApiRouteClient(nextRequest, redirectResponse);
 
     const { data, error: exchangeError } =
@@ -48,8 +55,9 @@ export async function GET(request: Request) {
 
     if (exchangeError) {
       devLog('Session exchange error:', { error: exchangeError });
+      const message = humanizeOAuthExchangeError(exchangeError.message);
       return NextResponse.redirect(
-        `${origin}/auth?error=${encodeURIComponent(exchangeError.message)}`,
+        `${origin}/auth?error=${encodeURIComponent(message)}`,
       );
     }
 
@@ -78,7 +86,7 @@ export async function GET(request: Request) {
     if (setSessionError) {
       devLog('setSession on redirect failed:', { error: setSessionError });
       return NextResponse.redirect(
-        `${origin}/auth?error=${encodeURIComponent(setSessionError.message)}`,
+        `${origin}/auth?error=${encodeURIComponent(humanizeOAuthExchangeError(setSessionError.message))}`,
       );
     }
 
@@ -87,8 +95,13 @@ export async function GET(request: Request) {
     return redirectResponse;
   } catch (err) {
     devLog('Unexpected error in auth callback:', { error: err });
-    return NextResponse.redirect(
-      `${origin}/auth?error=${encodeURIComponent('Unexpected authentication error')}`,
+    const message = isCorruptAuthCookieError(err)
+      ? humanizeOAuthExchangeError('Invalid UTF-8 sequence')
+      : 'Unexpected authentication error';
+    const errorResponse = NextResponse.redirect(
+      `${origin}/auth?error=${encodeURIComponent(message)}`,
     );
+    sanitizeAuthCookiesForRoute(nextRequest, errorResponse);
+    return errorResponse;
   }
 }

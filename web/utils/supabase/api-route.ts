@@ -6,6 +6,7 @@
  */
 
 import { productionAuthCookieOptions } from '@/lib/auth/production-auth-cookies'
+import { sanitizeAuthCookiesForRoute } from '@/lib/auth/request-auth-cookies'
 import { getValidatedEnv } from '@/lib/config/env'
 import { logger } from '@/lib/utils/logger'
 
@@ -107,7 +108,7 @@ export async function getSupabaseApiRouteClient(
 
   const cookieAdapter = {
     getAll() {
-      return request.cookies.getAll()
+      return sanitizeAuthCookiesForRoute(request, response)
     },
     setAll(
       cookiesToSet: Array<{

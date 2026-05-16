@@ -4,6 +4,7 @@ import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 
 import { finalizeAuthCookiesOnResponse } from '@/lib/auth/finalize-auth-cookies';
 import { getCanonicalSiteOrigin } from '@/lib/auth/canonical-site-origin';
+import { clearStaleOAuthCookies } from '@/lib/auth/request-auth-cookies';
 import { normalizePostAuthRedirectPath } from '@/lib/auth/normalize-post-auth-redirect';
 import { logger } from '@/lib/utils/logger';
 
@@ -35,6 +36,7 @@ export async function GET(
   const callbackUrl = `${origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTarget)}`;
 
   const oauthResponse = new NextResponse(null, { status: 303 });
+  clearStaleOAuthCookies(request, oauthResponse);
 
   try {
     const supabase = await getSupabaseApiRouteClient(request, oauthResponse);

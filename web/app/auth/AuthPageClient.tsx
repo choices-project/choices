@@ -22,6 +22,8 @@ import {
 } from '@/lib/auth/normalize-post-auth-redirect';
 import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session';
 import { completeSignIn } from '@/lib/auth/complete-sign-in';
+import { messageFromAuthUrlError } from '@/lib/auth/oauth-url-error';
+import InstallAppCallout from '@/features/pwa/components/InstallAppCallout';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -92,6 +94,17 @@ export default function AuthPageClient() {
     setAuthLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot when opening the sign-in page
   }, []);
+
+  // Surface OAuth / callback failures from `?error=` (GitHub PKCE, stale cookies, etc.).
+  React.useEffect(() => {
+    const urlError = searchParams.get('error');
+    if (!urlError) {
+      return;
+    }
+    setAuthError(messageFromAuthUrlError(urlError));
+    setOauthProviderBusy(null);
+    setAuthLoading(false);
+  }, [searchParams, setAuthError, setAuthLoading]);
 
   // Supabase sometimes returns PKCE `code` to `/auth` instead of `/auth/callback`; forward server-side.
   React.useEffect(() => {
@@ -1051,6 +1064,8 @@ export default function AuthPageClient() {
             />
           </div>
         </details>
+
+        <InstallAppCallout />
       </div>
     </div>
   );
