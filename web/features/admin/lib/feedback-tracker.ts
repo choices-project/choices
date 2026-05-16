@@ -629,11 +629,15 @@ class FeedbackTracker {
 
   private isUserAuthenticated(): boolean {
     try {
-      const hasToken = typeof localStorage !== 'undefined' && localStorage.getItem('supabase.auth.token');
+      // Prefer Zustand store (httpOnly cookie sessions do not use localStorage tokens).
+      const { useUserStore } = require('@/lib/stores/userStore') as typeof import('@/lib/stores/userStore');
+      if (useUserStore.getState().isAuthenticated) {
+        return true;
+      }
       const hasAuthElement =
         this.hasDocument && !!document.querySelector('[data-auth="authenticated"]');
       const isAdminRoute = this.isBrowser && window.location.pathname.includes('/admin');
-      return Boolean(hasToken || hasAuthElement || isAdminRoute);
+      return Boolean(hasAuthElement || isAdminRoute);
     } catch {
       return false;
     }

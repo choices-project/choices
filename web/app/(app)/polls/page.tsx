@@ -334,11 +334,18 @@ function PollsPageContent() {
   );
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreInFlightRef = useRef(false);
   const handleLoadMore = useCallback(() => {
+    if (loadMoreInFlightRef.current || isLoadingMore || isLoading) {
+      return;
+    }
     const nextPage = pagination.currentPage + 1;
-    if (nextPage <= pagination.totalPages && !isLoadingMore && !isLoading) {
+    if (nextPage <= pagination.totalPages) {
+      loadMoreInFlightRef.current = true;
       setCurrentPageRef.current(nextPage);
-      void loadPollsRef.current({ page: nextPage, append: true });
+      void loadPollsRef.current({ page: nextPage, append: true }).finally(() => {
+        loadMoreInFlightRef.current = false;
+      });
     }
   }, [pagination.currentPage, pagination.totalPages, isLoadingMore, isLoading]);
 

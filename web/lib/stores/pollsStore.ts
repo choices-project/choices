@@ -849,10 +849,12 @@ export const createPollsActions = (
         throw new Error('Malformed polls response');
       }
 
+      let appendedCount = 0;
       if (append) {
         const existing = get().polls;
         const existingIds = new Set(existing.map((p) => p.id));
         const newPolls = polls.filter((p) => !existingIds.has(p.id));
+        appendedCount = newPolls.length;
         setPolls([...existing, ...newPolls]);
         setLoadingMore(false);
       } else {
@@ -870,7 +872,14 @@ export const createPollsActions = (
 
         state.search.totalResults = totalResults;
         state.search.totalPages = totalPages;
-        state.search.currentPage = paginationMeta?.page ?? page;
+        const resolvedPage = paginationMeta?.page ?? page;
+        // When offset/page was ignored server-side, append can return zero new rows
+        // while totalPages still looks > current — stop infinite scroll in that case.
+        if (append && appendedCount === 0) {
+          state.search.currentPage = totalPages;
+        } else {
+          state.search.currentPage = resolvedPage;
+        }
         if (options?.search !== undefined) {
           state.search.query = searchQuery;
         }

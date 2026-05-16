@@ -190,6 +190,7 @@ function parseCursor(cursor: string): { created_at: string; id: string } | null 
  * @param {string} [request.searchParams.search] - Search in poll titles and descriptions
  * @param {string} [request.searchParams.sort] - Sort order (newest, popular, trending, engagement)
  * @param {number} [request.searchParams.limit] - Number of polls to return (default: 20)
+ * @param {number} [request.searchParams.page] - 1-based page index (converted to offset when offset is omitted)
  * @param {number} [request.searchParams.offset] - Number of polls to skip (default: 0)
  * @param {string} [request.searchParams.cursor] - Opaque cursor for keyset pagination (format: created_at,id). Use when sort=newest for deep pagination.
  * @returns {Promise<NextResponse>} Poll data response
@@ -226,6 +227,19 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       return validationError({ limit: limitResult.error });
     }
 
+    const limit = limitResult.value;
+
+    const hasExplicitOffset = searchParams.has('offset');
+    const pageResult = parseNumberParam(searchParams.get('page'), {
+      paramName: 'page',
+      defaultValue: 1,
+      min: 1,
+      max: 500,
+    });
+    if ('error' in pageResult) {
+      return validationError({ page: pageResult.error });
+    }
+
     const offsetResult = parseNumberParam(searchParams.get('offset'), {
       paramName: 'offset',
       defaultValue: 0,
@@ -236,8 +250,10 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       return validationError({ offset: offsetResult.error });
     }
 
-    const limit = limitResult.value;
-    const offset = offsetResult.value;
+    // Client sends `page`; honor it when `offset` is not explicitly provided.
+    const offset = hasExplicitOffset
+      ? offsetResult.value
+      : (pageResult.value - 1) * limit;
     const cursorRaw = searchParams.get('cursor') ?? undefined;
 
     if (status && !ALLOWED_STATUSES.has(status)) {
