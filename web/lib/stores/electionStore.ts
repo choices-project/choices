@@ -159,14 +159,13 @@ export const createElectionActions = (
 
         return elections;
       } catch (error) {
-        const message =
-          error instanceof DOMException && error.name === 'AbortError'
-            ? 'Election lookup timed out'
-            : error instanceof Error
-              ? error.message
-              : 'Failed to fetch elections';
-        setKeyError(key, message);
-        setError(message);
+        const isAbort = error instanceof DOMException && error.name === 'AbortError';
+        if (!isAbort) {
+          const message =
+            error instanceof Error ? error.message : 'Failed to fetch elections';
+          setKeyError(key, message);
+          setError(message);
+        }
         return [];
       } finally {
         if (timeoutId) {

@@ -321,16 +321,25 @@ class FeedbackTracker {
       } catch (error) {
         const duration = Date.now() - startTime;
         const message = error instanceof Error ? error.message : 'Unknown error';
-        const errorDetails =
-          typeof error === 'object' && error !== null ? { error: error as Record<string, unknown> } : undefined;
+        const isAbort =
+          (error instanceof DOMException && error.name === 'AbortError') ||
+          message.toLowerCase().includes('signal is aborted') ||
+          message.toLowerCase().includes('user aborted');
 
-        this.recordError({
-          type: 'network',
-          message,
-          timestamp: new Date().toISOString(),
-          duration,
-          ...(errorDetails ? { details: errorDetails } : {}),
-        });
+        if (!isAbort) {
+          const errorDetails =
+            typeof error === 'object' && error !== null
+              ? { error: error as Record<string, unknown> }
+              : undefined;
+
+          this.recordError({
+            type: 'network',
+            message,
+            timestamp: new Date().toISOString(),
+            duration,
+            ...(errorDetails ? { details: errorDetails } : {}),
+          });
+        }
         throw error;
       }
     };

@@ -18,6 +18,7 @@ import { FEEDBACK_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { validateFeedbackContent } from '@/lib/feedback/content-validation';
 import { normalizeFeedbackScreenshot } from '@/lib/feedback/normalize-screenshot';
+import { sanitizeUserJourneyForPersistence } from '@/lib/feedback/sanitize-user-journey';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
@@ -126,9 +127,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     description,
     sentiment,
     screenshot,
-    userJourney,
+    userJourney: rawUserJourney,
     feedbackContext,
   } = validationResult.data;
+
+  const userJourney = sanitizeUserJourneyForPersistence(
+    rawUserJourney as Record<string, unknown> | null | undefined,
+  );
 
   // Additional content validation (spam detection, length).
   // Intentionally permissive: URLs, acronyms, and emphatic punctuation are

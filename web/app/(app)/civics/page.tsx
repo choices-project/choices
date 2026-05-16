@@ -322,8 +322,6 @@ function CivicsPageContent() {
         return mapped;
       });
 
-      await prefetchElectionsForRepresentatives(mapped);
-
       setTotal(resTotal);
       setHasMore(resHasMore);
       if (append) {
@@ -331,6 +329,7 @@ function CivicsPageContent() {
       } else {
         setRepresentatives(mapped);
       }
+      void prefetchElectionsForRepresentatives(mapped);
       logger.info('📊 Representatives updated', { count: mapped.length, append, total: resTotal, hasMore: resHasMore });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
