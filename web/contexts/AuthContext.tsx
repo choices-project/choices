@@ -349,10 +349,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
+        const supabase = await getSupabaseBrowserClient();
+        if (response.ok) {
+          await supabase.auth.signOut().catch((err) => {
+            logger.warn('Browser signOut after API logout failed:', err);
+          });
+        } else {
           logger.warn('Logout API call failed, attempting direct signOut');
-          // Fallback to direct Supabase signOut
-          const supabase = await getSupabaseBrowserClient();
           await supabase.auth.signOut().catch((err) => {
             logger.warn('Direct Supabase signOut also failed:', err);
           });
@@ -376,8 +379,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Use replace instead of href to prevent back button issues
         // This ensures users are taken back to sign-in after sign out
         // Use full URL to ensure proper redirect
-        const authUrl = window.location.origin + '/auth';
-        window.location.replace(authUrl);
+        window.location.replace(`${window.location.origin}/auth?loggedOut=1`);
       }
     } catch (error) {
       logger.error('Failed to sign out:', error);
@@ -389,7 +391,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof window !== 'undefined') {
         window.localStorage.clear();
         window.sessionStorage.clear();
-        window.location.replace('/auth');
+        window.location.replace(`${window.location.origin}/auth?loggedOut=1`);
       }
     }
   }, []) // Empty deps - uses refs for store actions

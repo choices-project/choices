@@ -37,6 +37,7 @@ export default function GlobalNavigation() {
   const authUser = user ?? storeUser ?? storeSession?.user ?? null;
   const isAuthenticated = storeIsAuthenticated || Boolean(authUser);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!authLoading) { setLoadingTimeout(false); return; }
@@ -58,13 +59,21 @@ export default function GlobalNavigation() {
   useEffect(() => { authSignOutRef.current = authSignOut; }, [authSignOut]);
 
   const handleLogout = useCallback(async () => {
+    if (loggingOut) {
+      return;
+    }
+    setLoggingOut(true);
     try {
-      void authSignOutRef.current();
+      await authSignOutRef.current();
     } catch (error) {
       logger.error('Logout failed:', error);
-      if (typeof window !== 'undefined') window.location.replace('/');
+      if (typeof window !== 'undefined') {
+        window.location.replace('/auth?loggedOut=1');
+      }
+    } finally {
+      setLoggingOut(false);
     }
-  }, []);
+  }, [loggingOut]);
 
   const isActive = useCallback(
     (path: string) => {
@@ -149,10 +158,12 @@ export default function GlobalNavigation() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleLogout}
+                    onClick={() => void handleLogout()}
+                    disabled={loggingOut}
                     className="text-muted-foreground hover:text-foreground"
                     data-testid="logout-button"
                     aria-label={t('navigation.logout')}
+                    aria-busy={loggingOut}
                   >
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                   </Button>
@@ -170,10 +181,12 @@ export default function GlobalNavigation() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleLogout}
+                    onClick={() => void handleLogout()}
+                    disabled={loggingOut}
                     className="p-2 text-muted-foreground"
                     data-testid="logout-button"
                     aria-label={t('navigation.logout')}
+                    aria-busy={loggingOut}
                   >
                     <LogOut className="h-4 w-4" />
                   </Button>

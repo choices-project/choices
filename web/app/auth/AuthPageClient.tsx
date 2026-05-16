@@ -121,7 +121,8 @@ export default function AuthPageClient() {
   React.useEffect(() => {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
-    if (code || error || sessionRecoveryAttemptedRef.current) {
+    const loggedOut = searchParams.get('loggedOut');
+    if (code || error || loggedOut || sessionRecoveryAttemptedRef.current) {
       return;
     }
     sessionRecoveryAttemptedRef.current = true;

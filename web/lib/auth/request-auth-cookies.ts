@@ -50,6 +50,36 @@ export function sanitizeAuthCookiesForRoute(
 }
 
 /** Remove stale PKCE verifier cookies before starting a new OAuth round trip. */
+/** Expire every Supabase auth cookie on the response (host + `.choices-app.com`). */
+export function clearAllAuthCookiesOnResponse(
+  request: NextRequest,
+  response: NextResponse,
+): void {
+  const hostname = getRequestHostname(request);
+  const names = new Set<string>([
+    'sb-access-token',
+    'sb-refresh-token',
+    'sb-session-expires',
+  ]);
+
+  for (const cookie of request.cookies.getAll()) {
+    if (cookie.name.startsWith('sb-')) {
+      names.add(cookie.name);
+    }
+  }
+
+  const header = request.headers.get('cookie') ?? '';
+  for (const match of header.matchAll(/(?:^|;\s*)(sb-[^=;]+)=/g)) {
+    if (match[1]) {
+      names.add(match[1].trim());
+    }
+  }
+
+  for (const name of names) {
+    clearCookieOnResponse(response, name, hostname);
+  }
+}
+
 export function clearStaleOAuthCookies(
   request: NextRequest,
   response: NextResponse,
