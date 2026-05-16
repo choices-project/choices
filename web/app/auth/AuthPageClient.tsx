@@ -111,6 +111,38 @@ export default function AuthPageClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot when opening the sign-in page
   }, []);
 
+  // Supabase sometimes returns PKCE `code` to `/auth` instead of `/auth/callback`; forward server-side.
+  React.useEffect(() => {
+    const code = searchParams.get('code');
+    if (!code || typeof window === 'undefined') {
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    window.location.replace(`/auth/callback?${params.toString()}`);
+  }, [searchParams]);
+
+  // Client already has a session (e.g. after password login) but navigation did not complete.
+  React.useEffect(() => {
+    if (searchParams.get('error') || searchParams.get('code')) {
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const supabase = await getSupabaseBrowserClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!cancelled && session?.user) {
+          redirectAfterAuth(redirectTarget);
+        }
+      } catch {
+        // ignore — user can still sign in manually
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, redirectTarget, redirectAfterAuth]);
+
   const OAUTH_START_TIMEOUT_MS = 25_000;
 
   // Social OAuth handler

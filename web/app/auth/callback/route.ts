@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
+import { copyResponseCookies } from '@/utils/supabase/copy-response-cookies';
 
 import {
   parsePostAuthRedirectFromSearchParams,
@@ -26,10 +27,11 @@ export async function GET(request: Request) {
   }
 
   if (code) {
-    const supabase = getSupabaseServerClient()
+    const nextRequest = new NextRequest(request)
+    const cookieResponse = new NextResponse()
 
     try {
-      const supabaseClient = await supabase;
+      const supabaseClient = await getSupabaseApiRouteClient(nextRequest, cookieResponse)
       const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code)
 
       if (exchangeError) {
@@ -49,7 +51,9 @@ export async function GET(request: Request) {
         )
 
         devLog(`Redirecting user to: ${finalRedirect}`, { redirectTo: finalRedirect })
-        return NextResponse.redirect(`${origin}${finalRedirect}`)
+        const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`)
+        copyResponseCookies(cookieResponse, redirectResponse)
+        return redirectResponse
       }
 
       devLog('No session returned from code exchange', {})

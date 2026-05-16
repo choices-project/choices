@@ -55,7 +55,10 @@ export async function getSupabaseApiRouteClient(
       try {
         // Determine production status
         const isProduction = process.env.NODE_ENV === 'production'
+        const host = request.headers.get('host') || ''
+        const isChoicesDomain = host.includes('choices-app.com')
         const requireSecure = isProduction
+        const cookieDomain = isProduction && isChoicesDomain ? '.choices-app.com' : undefined
 
         // Extract cookie options with secure defaults
         // For auth cookies, always use secure defaults if not explicitly provided
@@ -91,10 +94,10 @@ export async function getSupabaseApiRouteClient(
           cookieOptions.maxAge = options.maxAge
         }
 
-        // Set cookie on NextResponse (this works in API routes)
-        // IMPORTANT: Do NOT set domain attribute - let browser handle domain scoping
-        // This ensures cookies work correctly with middleware
-        response.cookies.set(name, value, cookieOptions)
+        response.cookies.set(name, value, {
+          ...cookieOptions,
+          ...(cookieDomain && isAuthCookie ? { domain: cookieDomain } : {}),
+        })
         
         // Log cookie setting for debugging (always log for auth cookies)
         if (isAuthCookie) {

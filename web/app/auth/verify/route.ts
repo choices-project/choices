@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
+import { copyResponseCookies } from '@/utils/supabase/copy-response-cookies';
 
 import {
   parsePostAuthRedirectFromSearchParams,
@@ -22,10 +23,11 @@ export async function GET(request: Request) {
     )
   }
 
-  const supabase = getSupabaseServerClient()
+  const nextRequest = new NextRequest(request)
+  const cookieResponse = new NextResponse()
 
   try {
-    const supabaseClient = await supabase;
+    const supabaseClient = await getSupabaseApiRouteClient(nextRequest, cookieResponse)
 
     const redirectAfterSession = async (userId: string) => {
       const finalRedirect = await resolvePostAuthRedirect(
@@ -33,10 +35,11 @@ export async function GET(request: Request) {
         userId,
         postAuthParams,
       )
-      return NextResponse.redirect(`${origin}${finalRedirect}`)
-    };
+      const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`)
+      copyResponseCookies(cookieResponse, redirectResponse)
+      return redirectResponse
+    }
 
-    // Handle different verification types
     if (type === 'signup' || type === 'email') {
       const { data, error } = await supabaseClient.auth.verifyOtp({
         token_hash: token,
