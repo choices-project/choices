@@ -21,6 +21,7 @@ import React, { Suspense, useMemo, useState, useEffect, useCallback, useRef } fr
 
 import { VirtualizedRepresentativeGrid, VIRTUALIZATION_THRESHOLD } from '@/features/civics/components/representative/VirtualizedRepresentativeGrid';
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/types/superior-types';
+import { prefetchElectionsForRepresentatives } from '@/features/civics/utils/prefetchCivicsElections';
 
 import { AnimatedCard } from '@/components/shared/AnimatedCard';
 import { BackToTop } from '@/components/shared/BackToTop';
@@ -320,6 +321,8 @@ function CivicsPageContent() {
 
         return mapped;
       });
+
+      await prefetchElectionsForRepresentatives(mapped);
 
       setTotal(resTotal);
       setHasMore(resHasMore);
@@ -737,6 +740,7 @@ function CivicsPageContent() {
                   <VirtualizedRepresentativeGrid
                     representatives={transformedRepsForVirtualization}
                     variant={cardVariant === 'default' ? 'default' : cardVariant}
+                    deferElectionFetch
                     onRepresentativeFollow={(rep) => handleFollow(rep.id.toString())}
                     onRepresentativeContact={(rep) => handleContact(rep.id.toString(), 'email')}
                     onRepresentativeClick={(rep) => router.push(`/representatives/${rep.id}`)}
@@ -784,6 +788,7 @@ function CivicsPageContent() {
                       <RepresentativeCard
                         representative={transformedRep}
                         variant={cardVariant === 'default' ? 'default' : cardVariant}
+                        deferElectionFetch
                         onFollow={(rep: Representative) => handleFollow(rep.id.toString())}
                         onContact={(rep: Representative) => handleContact(rep.id.toString(), 'email')}
                         className="group bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-border"

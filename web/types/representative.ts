@@ -256,6 +256,8 @@ export type RepresentativeCardProps = {
   representative: Representative;
   /** Layout density. Default/compact = minimal; detailed = + contact line + View full profile. */
   variant?: RepresentativeCardVariant;
+  /** When true, election data must be prefetched by the parent (e.g. civics list). */
+  deferElectionFetch?: boolean;
   showActions?: boolean;
   onFollow?: (representative: Representative) => void;
   onContact?: (representative: Representative) => void;

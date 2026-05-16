@@ -28,9 +28,13 @@ export {
 export {
   useElectionsForDivisions,
   useElectionLoading,
+  useElectionLoadingForDivisions,
   useElectionError,
+  useElectionErrorForDivisions,
   useFetchElectionsForDivisions,
-  useClearElections
+  useIndexElectionsForDivisionGroups,
+  useClearElections,
+  buildElectionKey,
 } from './electionStore';
 export {
   useVoterRegistration,

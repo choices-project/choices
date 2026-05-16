@@ -37,6 +37,7 @@ function getColumnCount(width: number): number {
 export type VirtualizedRepresentativeGridProps = {
   representatives: Representative[];
   variant?: 'default' | 'compact' | 'detailed';
+  deferElectionFetch?: boolean;
   showActions?: boolean;
   onRepresentativeContact?: (rep: Representative) => void;
   onRepresentativeFollow?: (rep: Representative) => void;
@@ -49,6 +50,7 @@ export type VirtualizedRepresentativeGridProps = {
 export function VirtualizedRepresentativeGrid({
   representatives,
   variant = 'default',
+  deferElectionFetch = false,
   showActions = false,
   onRepresentativeContact,
   onRepresentativeFollow,
@@ -136,6 +138,7 @@ export function VirtualizedRepresentativeGrid({
                   <RepresentativeCard
                     representative={representative}
                     variant={variant}
+                    deferElectionFetch={deferElectionFetch}
                     showActions={showActions}
                     onFollow={handleFollow}
                     onContact={handleContact}

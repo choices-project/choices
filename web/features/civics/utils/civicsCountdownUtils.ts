@@ -4,15 +4,14 @@ import { env } from '@/lib/config/env';
 import {
   useAnalyticsActions,
   useClearElections,
-  useElectionError,
-  useElectionLoading,
+  useElectionErrorForDivisions,
+  useElectionLoadingForDivisions,
   useElectionsForDivisions,
   useFetchElectionsForDivisions,
 } from '@/lib/stores';
+import { buildElectionKey, useElectionStore } from '@/lib/stores/electionStore';
 import { notificationStoreUtils } from '@/lib/stores/notificationStore';
 import type { ElectionNotificationContext , Notification as NotificationModel } from '@/lib/stores/types';
-import { logger } from '@/lib/utils/logger';
-
 import { useI18n } from '@/hooks/useI18n';
 
 import type { CivicElection } from '@/types/civic';
@@ -105,8 +104,9 @@ export const useElectionCountdown = (
   const fetchElections = useFetchElectionsForDivisions();
   const clearElections = useClearElections();
   const elections = useElectionsForDivisions(divisionIds);
-  const loading = useElectionLoading();
-  const error = useElectionError();
+  const loading = useElectionLoadingForDivisions(divisionIds);
+  const error = useElectionErrorForDivisions(divisionIds);
+  const divisionKey = buildElectionKey(divisionIds);
   const { trackEvent } = useAnalyticsActions();
 
   const upcomingElections = useMemo(() => {
@@ -259,40 +259,29 @@ export const useElectionCountdown = (
       return;
     }
 
-    // If we already have elections or hit an error, don't fetch again
-    if (upcomingElections.length > 0 || error) {
+    const cacheKey = divisionKey;
+    if (!cacheKey) {
       return;
     }
 
-    // Add timeout to prevent infinite loading
-    // If loading has been true for more than 15 seconds, reset it
-    let timeoutId: NodeJS.Timeout | null = null;
-    if (loading) {
-      timeoutId = setTimeout(() => {
-        // Force reset loading state if it's been stuck for too long
-        // This is a fallback in case the fetch promise never resolves/rejects
-        logger.warn('Election loading timeout - resetting loading state');
-      }, 15000);
+    const hasCache = useElectionStore
+      .getState()
+      .electionsByKey[cacheKey] !== undefined;
+    if (hasCache || error) {
+      return;
     }
 
-    // Only fetch if not currently loading
     if (!loading) {
       void fetchElections(divisionIds);
     }
-
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
   }, [
     autoFetch,
     clearOnEmpty,
     clearElections,
     divisionIds,
+    divisionKey,
     fetchElections,
     loading,
-    upcomingElections.length,
     error,
   ]);
 

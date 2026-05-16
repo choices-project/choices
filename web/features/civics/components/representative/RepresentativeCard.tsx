@@ -44,6 +44,7 @@ import type { RepresentativeCardProps } from '@/types/representative';
 export const RepresentativeCard = React.memo(function RepresentativeCard({
   representative,
   variant = 'default',
+  deferElectionFetch = false,
   showActions = true,
   onFollow,
   onContact,
@@ -65,7 +66,10 @@ export const RepresentativeCard = React.memo(function RepresentativeCard({
     error: electionError,
     repNextElectionDate,
     trackCtaEvent,
-  } = useRepresentativeCtaAnalytics(representative, { source: 'representative_card' });
+  } = useRepresentativeCtaAnalytics(representative, {
+    source: 'representative_card',
+    autoFetch: !deferElectionFetch,
+  });
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
