@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session';
+import { syncClientAuthSession } from '@/lib/auth/sync-client-auth-session';
 import { useIsAuthenticated, useUserLoading } from '@/lib/stores';
 import { logger } from '@/lib/utils/logger';
 
@@ -90,10 +91,12 @@ export function AuthGuard({
     setHydrating(true);
     void hydrateBrowserSessionFromServer()
       .then((session) => {
-        if (!session) {
-          logger.warn('AuthGuard - Unauthenticated user blocked, redirecting to login');
-          routerRef.current.push(redirectTo);
+        if (session) {
+          syncClientAuthSession(session);
+          return;
         }
+        logger.warn('AuthGuard - Unauthenticated user blocked, redirecting to login');
+        routerRef.current.push(redirectTo);
       })
       .finally(() => {
         setHydrating(false);

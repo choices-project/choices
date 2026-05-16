@@ -4,6 +4,7 @@ import {
   type SessionTokens,
 } from '@/lib/auth/browser-session';
 import { navigateAfterAuth } from '@/lib/auth/post-auth-navigation';
+import { syncClientAuthSession } from '@/lib/auth/sync-client-auth-session';
 
 /**
  * Canonical client finish after any sign-in path that set httpOnly cookies on the server.
@@ -23,6 +24,7 @@ export async function completeSignIn(
     return false;
   }
 
+  syncClientAuthSession(session);
   navigateAfterAuth(redirectTo);
   return true;
 }

@@ -37,9 +37,14 @@ jest.mock('@/lib/utils/logger', () => ({
 }));
 
 const mockHydrate = jest.fn().mockResolvedValue(null);
+const mockSyncClientAuthSession = jest.fn();
 
 jest.mock('@/lib/auth/browser-session', () => ({
   hydrateBrowserSessionFromServer: () => mockHydrate(),
+}));
+
+jest.mock('@/lib/auth/sync-client-auth-session', () => ({
+  syncClientAuthSession: (...args: unknown[]) => mockSyncClientAuthSession(...args),
 }));
 
 const setStoreState = (next: { isLoading: boolean; isAuthenticated: boolean }) => {
@@ -52,6 +57,7 @@ describe('AuthGuard', () => {
     jest.useFakeTimers();
     mockPush.mockReset();
     mockHydrate.mockReset().mockResolvedValue(null);
+    mockSyncClientAuthSession.mockReset();
     setStoreState({ isLoading: true, isAuthenticated: false });
   });
 
@@ -153,6 +159,31 @@ describe('AuthGuard', () => {
     );
 
     expect(screen.getByTestId('kids')).toBeTruthy();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('syncs the user store when hydration succeeds before denying access', async () => {
+    const session = { user: { id: 'u1' } };
+    mockHydrate.mockResolvedValue(session);
+
+    const { rerender } = render(
+      <AuthGuard>
+        <div data-testid="kids">protected content</div>
+      </AuthGuard>,
+    );
+
+    setStoreState({ isLoading: false, isAuthenticated: false });
+    rerender(
+      <AuthGuard>
+        <div data-testid="kids">protected content</div>
+      </AuthGuard>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockSyncClientAuthSession).toHaveBeenCalledWith(session);
     expect(mockPush).not.toHaveBeenCalled();
   });
 

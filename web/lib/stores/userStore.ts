@@ -692,10 +692,17 @@ export const useUserStore = create<UserStore>()(
         storage: createSafeStorage(),
         // Always skip hydration during SSR to prevent mismatches.
         skipHydration: true,
+        // Do not persist isAuthenticated — it goes stale after OAuth/logout and
+        // races AuthContext hydration, blocking profile/feed UI while cookies are valid.
         partialize: (state) => ({
           profile: state.profile,
-          isAuthenticated: state.isAuthenticated,
         }),
+        version: 2,
+        migrate: (persisted) => {
+          const next = { ...(persisted as Record<string, unknown>) };
+          delete next.isAuthenticated;
+          return next;
+        },
       }
     ),
     { name: 'user-store' }

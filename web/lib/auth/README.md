@@ -13,7 +13,8 @@ Shared helpers:
 
 - `normalize-post-auth-redirect.ts` — safe paths; `redirectTo` / `redirect` / `next` query params
 - `resolve-post-auth-redirect.ts` — profile-aware default (`/onboarding` vs `/feed`)
-- `complete-sign-in.ts` — `completeSignIn()`: hydrate browser client, then `navigateAfterAuth()`
+- `complete-sign-in.ts` — `completeSignIn()`: hydrate browser client, sync user store, then `navigateAfterAuth()`
+- `sync-client-auth-session.ts` — `syncClientAuthSession()`: mirror session into Zustand (OAuth / AuthGuard)
 - `browser-session.ts` — `hydrateBrowserSessionFromServer()` via `GET /api/auth/session`
 - `get-server-auth.ts` — per-request cached `getUser` / `getSession` for API routes
 - `canonical-site-origin.ts` — `NEXT_PUBLIC_SITE_URL` for OAuth callback URLs
