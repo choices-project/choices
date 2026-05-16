@@ -434,20 +434,17 @@ const EnhancedFeedbackWidget: React.FC = () => {
     try {
       if (feedbackTracker) {
         const screenshot = await feedbackTracker.captureScreenshot()
-        setFeedback(prev => {
-          const newFeedback = { ...prev };
-          if (screenshot !== undefined) {
-            newFeedback.screenshot = screenshot;
-          }
-          return newFeedback;
-        })
+        if (screenshot) {
+          setFeedback((prev) => ({ ...prev, screenshot }))
+        }
       }
     } catch (error) {
       devLog('Failed to capture screenshot:', error)
     } finally {
       setCapturingScreenshot(false)
     }
-    setStep('success')
+    // Always persist via the API — never show the thank-you screen without a real submit.
+    await handleSubmit()
   }
 
   const handleFileUpload = () => {
@@ -552,7 +549,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
 
       const result = await response.json().catch(() => ({ success: false, error: 'Server returned an invalid response.' }))
 
-      if (response.ok && result?.success) {
+      const feedbackId =
+        typeof result?.data?.feedbackId === 'string' ? result.data.feedbackId : null
+
+      if (response.ok && result?.success && feedbackId && !feedbackId.startsWith('mock-')) {
         setShowSuccess(true)
         setSubmitError(null)
         setStep('success')
@@ -587,7 +587,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
         }, 3000)
       } else {
         const fieldErrors = result?.fields ?? result?.metadata?.fields
-        let message: string = result?.error || `Failed to submit feedback (HTTP ${response.status}).`
+        let message: string =
+          feedbackId?.startsWith('mock-')
+            ? 'Feedback could not be saved. Please try again in a moment.'
+            : result?.error || `Failed to submit feedback (HTTP ${response.status}).`
         if (fieldErrors && typeof fieldErrors === 'object') {
           const firstField = Object.values(fieldErrors).find(
             (v): v is string => typeof v === 'string' && v.length > 0,
@@ -938,7 +941,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     </motion.div>
                   )}
 
-                  {step === 'success' && (
+                  {step === 'success' && showSuccess && (
                     <motion.div
                       key="success"
                       initial={prefersReducedMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
@@ -946,9 +949,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       transition={prefersReducedMotion ? { duration: 0 } : {}}
                       className="text-center py-8"
                     >
-                      {showSuccess && (
-                        <motion.div
-                          role="status"
+                      <motion.div
+                        role="status"
                           aria-live="polite"
                           initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -960,7 +962,6 @@ const EnhancedFeedbackWidget: React.FC = () => {
                             <span className="text-sm font-medium">Feedback submitted successfully!</span>
                           </div>
                         </motion.div>
-                      )}
                       <motion.div
                         initial={prefersReducedMotion ? { scale: 1 } : { scale: 0 }}
                         animate={{ scale: 1 }}

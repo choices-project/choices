@@ -105,6 +105,15 @@ const stubDailyLimitCount = (count: number) => {
   );
 };
 
+const stubAdminInsert = (id: string) => {
+  (mockAdminClient.from as jest.Mock).mockImplementationOnce(() =>
+    createPostgrestBuilder({
+      data: { id, created_at: '2026-05-14T14:00:00Z' },
+      error: null,
+    }),
+  );
+};
+
 const resetMocks = () => {
   jest.clearAllMocks();
   (mockServerClient.from as jest.Mock).mockReset();
@@ -120,12 +129,7 @@ describe('POST /api/feedback — content validation (no more silent drops)', () 
 
   it('accepts bug reports that contain a URL (most common shape)', async () => {
     stubDailyLimitCount(0);
-    (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
-      createPostgrestBuilder({
-        data: [{ id: 'fb-1', created_at: '2026-05-14T14:00:00Z' }],
-        error: null,
-      }),
-    );
+    stubAdminInsert('fb-1');
 
     const { response, body } = await postFeedback(baseBody());
     expect(response.status).toBe(200);
@@ -135,12 +139,7 @@ describe('POST /api/feedback — content validation (no more silent drops)', () 
 
   it('accepts bug reports that contain ALL-CAPS acronyms', async () => {
     stubDailyLimitCount(0);
-    (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
-      createPostgrestBuilder({
-        data: [{ id: 'fb-2', created_at: '2026-05-14T14:00:00Z' }],
-        error: null,
-      }),
-    );
+    stubAdminInsert('fb-2');
 
     const { response, body } = await postFeedback(
       baseBody({
@@ -162,92 +161,64 @@ describe('POST /api/feedback — content validation (no more silent drops)', () 
   });
 });
 
-describe('POST /api/feedback — schema-cache fallback is narrow', () => {
+describe('POST /api/feedback — persistence failures surface as 500 (no mock success)', () => {
   beforeEach(() => {
     resetMocks();
     stubAuthenticated();
   });
 
-  it('returns mock success only for true "relation feedback does not exist" failures', async () => {
-    stubDailyLimitCount(0);
+  const stubBothClientsFail = (message: string, code?: string) => {
+    (mockAdminClient.from as jest.Mock).mockImplementationOnce(() =>
+      createPostgrestBuilder({
+        data: null,
+        error: { message, code },
+      } as unknown as { data: any; error: null }),
+    );
     (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
       createPostgrestBuilder({
         data: null,
-        error: { message: 'relation "public.feedback" does not exist', code: '42P01' },
+        error: { message, code },
       } as unknown as { data: any; error: null }),
     );
+  };
 
-    const { response, body } = await postFeedback(baseBody());
-    expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(typeof body.data.feedbackId).toBe('string');
-    expect(body.data.feedbackId).toMatch(/^mock-/);
-  });
-
-  it('returns mock success for a PGRST205 schema cache miss', async () => {
+  it('returns 500 when the feedback table is missing (no fake success)', async () => {
     stubDailyLimitCount(0);
-    (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
-      createPostgrestBuilder({
-        data: null,
-        error: { message: 'Could not find the table in the schema cache', code: 'PGRST205' },
-      } as unknown as { data: any; error: null }),
-    );
-
-    const { response, body } = await postFeedback(baseBody());
-    expect(response.status).toBe(200);
-    expect(body.data.feedbackId).toMatch(/^mock-/);
-  });
-
-  it('does NOT swallow column-missing errors as schema-cache fallback', async () => {
-    stubDailyLimitCount(0);
-    (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
-      createPostgrestBuilder({
-        data: null,
-        error: { message: 'column "screenshot" does not exist', code: '42703' },
-      } as unknown as { data: any; error: null }),
-    );
+    stubBothClientsFail('relation "public.feedback" does not exist', '42P01');
 
     const { response, body } = await postFeedback(baseBody());
     expect(response.status).toBe(500);
     expect(body.success).toBe(false);
     expect(body.data?.feedbackId).toBeUndefined();
-    // Admin fallback must NOT be attempted for non-RLS/non-schema errors.
-    expect((mockAdminClient.from as jest.Mock)).not.toHaveBeenCalled();
   });
 
-  it('does NOT swallow function-missing errors as schema-cache fallback', async () => {
+  it('returns 500 for column-missing errors', async () => {
     stubDailyLimitCount(0);
-    (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
-      createPostgrestBuilder({
-        data: null,
-        error: { message: 'function update_x() does not exist', code: '42883' },
-      } as unknown as { data: any; error: null }),
-    );
+    stubBothClientsFail('column "screenshot" does not exist', '42703');
 
     const { response, body } = await postFeedback(baseBody());
     expect(response.status).toBe(500);
     expect(body.success).toBe(false);
-    expect((mockAdminClient.from as jest.Mock)).not.toHaveBeenCalled();
   });
 });
 
-describe('POST /api/feedback — RLS admin fallback still works', () => {
+describe('POST /api/feedback — session client fallback', () => {
   beforeEach(() => {
     resetMocks();
     stubAuthenticated();
   });
 
-  it('falls back to the admin client when the user client hits RLS', async () => {
+  it('falls back to the session client when admin insert fails', async () => {
     stubDailyLimitCount(0);
-    (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
-      createPostgrestBuilder({
-        data: null,
-        error: { message: 'new row violates row-level security policy', code: '42501' },
-      } as unknown as { data: any; error: null }),
-    );
     (mockAdminClient.from as jest.Mock).mockImplementationOnce(() =>
       createPostgrestBuilder({
-        data: { id: 'fb-rls-recovered', created_at: '2026-05-14T14:00:00Z' },
+        data: null,
+        error: { message: 'Admin client misconfigured', code: '500' },
+      } as unknown as { data: any; error: null }),
+    );
+    (mockServerClient.from as jest.Mock).mockImplementationOnce(() =>
+      createPostgrestBuilder({
+        data: { id: 'fb-session', created_at: '2026-05-14T14:00:00Z' },
         error: null,
       }),
     );
@@ -255,6 +226,6 @@ describe('POST /api/feedback — RLS admin fallback still works', () => {
     const { response, body } = await postFeedback(baseBody());
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(body.data.feedbackId).toBe('fb-rls-recovered');
+    expect(body.data.feedbackId).toBe('fb-session');
   });
 });

@@ -17,8 +17,8 @@ import {
 import { FEEDBACK_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { sanitizeInput } from '@/lib/core/auth/server-actions';
 import { validateFeedbackContent } from '@/lib/feedback/content-validation';
+import { normalizeFeedbackScreenshot } from '@/lib/feedback/normalize-screenshot';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
-import { isProductionDeploymentForBypasses } from '@/lib/security/deployment-bypass';
 import { stripUndefinedDeep } from '@/lib/util/clean';
 import { devLog, logger } from '@/lib/utils/logger';
 
@@ -34,7 +34,7 @@ const feedbackSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
   description: z.string().min(1, 'Description is required').max(1000, 'Description must be at most 1000 characters'),
   sentiment: z.enum(['positive', 'negative', 'neutral', 'mixed']),
-  screenshot: z.string().url().optional().nullable(),
+  screenshot: z.string().max(750_000).optional().nullable(),
   userJourney: z.record(z.string(), z.unknown()).optional().nullable(),
   feedbackContext: z.object({
     aiAnalysis: z.record(z.string(), z.unknown()).nullish(),
@@ -262,13 +262,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         ? 'high'
         : 'medium';
 
+  const normalizedScreenshot = normalizeFeedbackScreenshot(screenshot);
+
   const feedbackData = {
     user_id: user?.id ?? null,
     feedback_type: type,
     title: sanitizeInput(title.trim()),
     description: sanitizeInput(description.trim()),
     sentiment,
-    screenshot: screenshot ?? null,
+    screenshot: normalizedScreenshot,
     user_journey: (userJourney ?? {}) as Json,
     status: 'open',
     priority,
@@ -288,97 +290,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       : undefined,
   });
 
-  const { data, error } = await supabaseClient.from('feedback').insert([stripUndefinedDeep(feedbackData)]).select(FEEDBACK_SELECT_COLUMNS);
-
-  if (error) {
-    devLog('Database error inserting feedback:', { error });
-    const errorMessage = stringifySupabaseError(error);
-
-    // Only treat *specific* "table missing / schema cache stale" failures as
-    // recoverable. The previous version matched any error containing the
-    // substring "does not exist" — including `column "x" does not exist` and
-    // `function ... does not exist` — and returned a fake success, silently
-    // dropping the feedback. That mistake caused five months of lost reports.
-    const isSchemaCacheRecoverable =
-      /relation\s+"?(?:public\.)?feedback"?\s+does not exist/i.test(errorMessage) ||
-      /schema cache/i.test(errorMessage) ||
-      errorMessage === 'PGRST205' ||
-      (error as { code?: string } | null)?.code === 'PGRST205';
-
-    if (isSchemaCacheRecoverable) {
-      logger.warn('Feedback insert hit schema-cache fallback — table may be missing', {
-        error: errorMessage,
-      });
-      return successResponse(
-        buildFeedbackResponse(
-          `mock-${Date.now()}`,
-          userJourney,
-          'Feedback received (schema cache recovering)'
-        ),
-        { source: 'mock', fallback: 'schema-cache' }
-      );
-    }
-
-    const e2ePlaywrightHarness =
-      !isProductionDeploymentForBypasses() &&
-      process.env.PLAYWRIGHT_USE_MOCKS === '1' &&
-      process.env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
-
-    // If RLS or permissions blocked the insert, fall back to admin client so we
-    // still capture the feedback instead of dropping the user’s report.
-    // E2E harness: always try admin once (anon/session client often lacks insert policy wording we match).
-    if (
-      e2ePlaywrightHarness ||
-      errorMessage.includes('violates row-level security policy') ||
-      errorMessage.toLowerCase().includes('permission denied') ||
-      errorMessage.toLowerCase().includes('not authorized') ||
-      errorMessage.toLowerCase().includes('new row violates') ||
-      errorMessage.toLowerCase().includes('row-level security')
-    ) {
-      logger.error('Feedback insert blocked by RLS/permissions, attempting admin fallback', {
-        error: errorMessage,
-      });
-
-      try {
-        const adminClient = await getSupabaseAdminClient();
-        const { data: adminData, error: adminError } = await adminClient
-          .from('feedback')
-          .insert(stripUndefinedDeep(feedbackData))
-          .select(FEEDBACK_SELECT_COLUMNS)
-          .single();
-
-        if (adminError) {
-          logger.error('Admin fallback insert for feedback failed', {
-            error: stringifySupabaseError(adminError),
-          });
-        } else if (adminData && 'id' in adminData) {
-          devLog('Feedback stored via admin fallback', {
-            feedbackId: (adminData as { id: string }).id,
-          });
-          return successResponse(
-            buildFeedbackResponse((adminData as { id: string }).id, userJourney),
-            { source: 'admin-fallback', reason: 'rls-denied' }
-          );
-        }
-      } catch (adminFallbackError) {
-        logger.error('Error during admin fallback feedback insert', {
-          error: adminFallbackError instanceof Error ? adminFallbackError.message : adminFallbackError,
-        });
-      }
-    }
-
-    // Final safety net: surface a sanitized error but log details server-side
-    logger.error('Feedback insert failed without recoverable fallback', {
-      error: errorMessage,
-    });
-
+  const persistResult = await persistFeedbackRow(feedbackData);
+  if (!persistResult.ok) {
+    logger.error('Feedback insert failed', { error: persistResult.error });
     return errorResponse('Failed to save feedback', 500, 'Feedback persistence failed');
   }
 
-  const insertedRecord =
-    data && !('error' in data) && Array.isArray(data) && data[0] && 'id' in data[0]
-      ? (data[0] as { id: string }).id
-      : null;
+  const insertedRecord = persistResult.id;
 
   const journey = userJourney as Record<string, unknown> | null | undefined;
   const deviceInfo = journey?.deviceInfo && typeof journey.deviceInfo === 'object' && journey.deviceInfo !== null
@@ -513,6 +431,77 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     analytics: generateAnalytics(processedFeedback),
   });
 });
+
+type FeedbackInsertRow = {
+  user_id: string | null;
+  feedback_type: string;
+  title: string;
+  description: string;
+  sentiment: string;
+  screenshot: string | null;
+  user_journey: Json;
+  status: string;
+  priority: string;
+  tags: string[];
+  ai_analysis: Json;
+  metadata: Json;
+};
+
+async function persistFeedbackRow(
+  feedbackData: FeedbackInsertRow,
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const payload = stripUndefinedDeep(feedbackData);
+
+  const tryInsert = async (
+    label: 'admin' | 'session',
+    client: Awaited<ReturnType<typeof getSupabaseAdminClient>>,
+  ) => {
+    const { data, error } = await client
+      .from('feedback')
+      .insert(payload)
+      .select(FEEDBACK_SELECT_COLUMNS)
+      .single();
+    if (error) {
+      return { ok: false as const, error: stringifySupabaseError(error), label };
+    }
+    if (data && 'id' in data && typeof (data as { id: string }).id === 'string') {
+      return { ok: true as const, id: (data as { id: string }).id, label };
+    }
+    return { ok: false as const, error: 'Insert returned no id', label };
+  };
+
+  try {
+    const adminClient = await getSupabaseAdminClient();
+    const adminResult = await tryInsert('admin', adminClient);
+    if (adminResult.ok) {
+      devLog('Feedback stored', { feedbackId: adminResult.id, client: 'admin' });
+      return { ok: true, id: adminResult.id };
+    }
+    logger.warn('Admin feedback insert failed; retrying with session client', {
+      error: adminResult.error,
+    });
+  } catch (adminClientError) {
+    logger.warn('Admin client unavailable for feedback insert; retrying with session client', {
+      error:
+        adminClientError instanceof Error
+          ? adminClientError.message
+          : String(adminClientError),
+    });
+  }
+
+  const sessionClient = await getSupabaseServerClient();
+  if (!sessionClient) {
+    return { ok: false, error: 'Database not configured' };
+  }
+
+  const sessionResult = await tryInsert('session', sessionClient);
+  if (sessionResult.ok) {
+    devLog('Feedback stored', { feedbackId: sessionResult.id, client: 'session' });
+    return { ok: true, id: sessionResult.id };
+  }
+
+  return { ok: false, error: sessionResult.error };
+}
 
 function buildFeedbackResponse(
   feedbackId: string | null,
