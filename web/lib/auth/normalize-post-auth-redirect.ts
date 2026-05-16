@@ -1,3 +1,6 @@
+/** Default destination when no deep link was requested and onboarding is complete. */
+export const DEFAULT_POST_AUTH_PATH = '/feed';
+
 /**
  * First non-empty post-auth path from common query param names on `/auth`.
  *

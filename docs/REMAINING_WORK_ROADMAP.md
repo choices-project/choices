@@ -1,6 +1,6 @@
 # Remaining work (consolidated roadmap)
 
-_Last updated: May 14, 2026_
+_Last updated: May 16, 2026_
 
 This is the **single prioritized backlog** for the Choices monorepo (primarily `web/` + `supabase/` + CI). It merges open items from [`ROADMAP.md`](./ROADMAP.md), [`DOCUMENTATION_AUDIT_ROADMAP.md`](./DOCUMENTATION_AUDIT_ROADMAP.md), [`TESTING.md`](./TESTING.md), [`STATE_MANAGEMENT.md`](./STATE_MANAGEMENT.md), and recent engineering triage—without duplicating full execution checklists already spelled out in the doc-audit file.
 
@@ -29,6 +29,7 @@ This is the **single prioritized backlog** for the Choices monorepo (primarily `
 | P0-6 | **Manual production verification** — password reset; OAuth; passkeys on device; full onboarding; profile save; contact admin flows; push subscribe + delivery; reps + poll analytics; admin; **rate-limit runbook** (429 on abuse) | `ROADMAP.md` §1.2 |
 | P0-7 | **Production E2E (`npm run test:e2e:production`)** — needs `E2E_*` secrets; close auth/session regressions on live (`/auth` lockout, session continuity). Evidence: two consecutive green runs per release policy in `TESTING.md` / `ROADMAP.md` §1.3 | `ROADMAP.md` §1.3 |
 | P0-8 | **Post-deploy smoke** — `deploy.yml` `workflow_dispatch` path; keep parity with live smoke expectations | `ROADMAP.md` §1.3 |
+| **P0-9** | **Post-auth redirect correctness (all sign-in methods)** — **Active (May 2026).** None of the sign-in paths consistently sent users to the intended page after login (deep links lost, `/login` loops, OAuth defaulting to `/dashboard`, signed-in users stuck on `/auth`). **Goal:** one secure, predictable rule set across email/password, OAuth, magic links / verify, passkeys, and password reset. **Code:** `web/lib/auth/normalize-post-auth-redirect.ts`, `web/lib/auth/resolve-post-auth-redirect.ts`, `web/app/auth/callback/route.ts`, `web/app/auth/verify/route.ts`, `web/app/auth/AuthPageClient.tsx`, `web/middleware.ts` (handshake routes + signed-in `/auth` exit). **Log evidence (Supabase auth, May 16):** OAuth starts with `redirectTo=%2Ffeed` on callback URL; intermittent `400` PKCE (`code` + `code_verifier` empty) when callback runs twice or preview/prod origins mix; successful password/OAuth at Supabase layer while app still lands on `/` or `/auth`. **Operator checks:** Supabase → Auth → URL configuration: Site URL + redirect allow list must include only canonical production (`https://www.choices-app.com`) and required preview patterns; avoid signing in from a preview URL when OAuth `redirectTo` targets production. **Done when:** (1) middleware `redirectTo` preserved through every method; (2) explicit deep link always wins; (3) no explicit link → `/onboarding` if no profile else `/feed`; (4) production manual matrix green (password from `/auth?redirectTo=…`, OAuth, passkey, reset confirm); (5) targeted unit tests + production E2E auth specs pass. | Engineering triage + production UX |
 
 ---
 
@@ -52,6 +53,7 @@ This is the **single prioritized backlog** for the Choices monorepo (primarily `
 | P1-T3 | **Full Playwright + Axe jobs** — `DOCUMENTATION_AUDIT_ROADMAP.md` deploy log notes failures (a11y-critical specs, `fetch failed` from dev server); reproduce with narrowed specs, fix root cause vs env | `DOCUMENTATION_AUDIT_ROADMAP.md` § deploy log |
 | P1-T4 | **E2E manual gap** — `/polls/create?representative_id=...` from civics | `ROADMAP.md` §2.1 table |
 | P1-T5 | **Store harness** — `voterRegistrationStore`: add harness when CTA analytics work starts | `STATE_MANAGEMENT.md` |
+| P1-T6 | **Post-auth redirect E2E** — extend `tests/e2e/specs/auth/auth-redirects.spec.ts` (or production curated auth) for `redirectTo` on password, OAuth, and passkey when not in harness mode; complements **P0-9** | P0-9 follow-up |
 
 ### Accessibility & performance (post-MVP bar)
 
@@ -114,6 +116,9 @@ npm run test:contracts
 npm run test:e2e:smoke
 npm run test:e2e:critical
 npm run test:e2e:axe
+
+# Post-auth redirect unit tests
+npm run test -- tests/unit/lib/auth/normalize-post-auth-redirect.test.ts tests/unit/lib/auth/resolve-post-auth-redirect.test.ts
 ```
 
 ---

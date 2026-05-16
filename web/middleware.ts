@@ -14,6 +14,11 @@ import {
   LOCALE_COOKIE_NAME,
   resolveLocale
 } from '@/lib/i18n/config'
+import {
+  DEFAULT_POST_AUTH_PATH,
+  normalizePostAuthRedirectPath,
+  pickRedirectQueryParam,
+} from '@/lib/auth/normalize-post-auth-redirect'
 import logger from '@/lib/utils/logger'
 
 
@@ -659,6 +664,20 @@ export async function middleware(request: NextRequest) {
 
         return clearCorruptAuthCookies(NextResponse.redirect(authUrl, 307), request)
       }
+    }
+  }
+
+  // Signed-in users should not remain on `/auth` (e.g. after password login or a stale tab).
+  if (pathname === '/auth') {
+    const { isAuthenticated } = checkAuthInMiddleware(request)
+
+    if (isAuthenticated) {
+      const redirectParams = new URL(request.url).searchParams
+      const rawTarget = pickRedirectQueryParam(redirectParams)
+      const target = rawTarget
+        ? normalizePostAuthRedirectPath(rawTarget)
+        : DEFAULT_POST_AUTH_PATH
+      return NextResponse.redirect(new URL(target, request.url), 307)
     }
   }
 

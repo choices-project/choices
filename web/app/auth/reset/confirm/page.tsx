@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import React, { Suspense } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
@@ -10,11 +10,15 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import {
+  normalizePostAuthRedirectPath,
+  pickRedirectQueryParam,
+} from '@/lib/auth/normalize-post-auth-redirect';
+
 import { useI18n } from '@/hooks/useI18n';
 
 function ResetPasswordConfirmPageInner() {
   const { t } = useI18n();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -105,6 +109,11 @@ function ResetPasswordConfirmPageInner() {
       }
 
       setIsSuccess(true);
+      const rawTarget = pickRedirectQueryParam(searchParams);
+      const target = normalizePostAuthRedirectPath(rawTarget ?? '/feed');
+      window.setTimeout(() => {
+        window.location.assign(target);
+      }, 1500);
     } catch (err) {
       const message = err instanceof Error ? err.message : t('auth.reset.error');
       setError(message || t('auth.reset.error'));
@@ -145,10 +154,14 @@ function ResetPasswordConfirmPageInner() {
           <p className="text-sm text-muted-foreground">{t('auth.reset.confirm.successBody')}</p>
           <Button
             type="button"
-            onClick={() => router.push('/auth')}
+            onClick={() => {
+              const rawTarget = pickRedirectQueryParam(searchParams);
+              const target = normalizePostAuthRedirectPath(rawTarget ?? '/feed');
+              window.location.assign(target);
+            }}
             className="min-h-[44px]"
           >
-            {t('auth.reset.backToSignIn')}
+            {t('auth.reset.confirm.continue') || t('auth.reset.backToSignIn')}
           </Button>
         </div>
       </div>
