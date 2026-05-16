@@ -16,14 +16,16 @@ export function PageTransition({ children }: PageTransitionProps) {
     return <>{children}</>;
   }
 
+  // mode="sync" — "wait" blocked route changes when exit animations did not finish
+  // (users saw prefetches in network tab but URL/content stayed on the previous page).
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="sync" initial={false}>
       <motion.div
         key={pathname}
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.15, ease: 'easeOut' }}
+        transition={{ duration: 0.12, ease: 'easeOut' }}
       >
         {children}
       </motion.div>

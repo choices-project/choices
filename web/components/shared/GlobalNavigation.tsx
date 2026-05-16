@@ -10,6 +10,7 @@ import { PrefetchLink } from '@/components/shared/PrefetchLink';
 import ThemeSelector from '@/components/shared/ThemeSelector';
 import { Button } from '@/components/ui/button';
 
+import { isNavItemActive } from '@/lib/navigation/is-nav-active';
 import { useSession, useUser as useUserStore, useIsAuthenticated as useIsAuthenticatedStore } from '@/lib/stores';
 import logger from '@/lib/utils/logger';
 
@@ -22,13 +23,12 @@ export default function GlobalNavigation() {
   useEffect(() => { tRef.current = t; }, [t]);
 
   const [isMountedForNavRender, setIsMountedForNavRender] = useState(false);
-  const [pathname, setPathname] = useState<string>('');
   const pathnameFromHook = usePathname();
+  const pathname = isMountedForNavRender ? (pathnameFromHook ?? '') : '';
 
   useEffect(() => {
     setIsMountedForNavRender(true);
-    setPathname(pathnameFromHook);
-  }, [pathnameFromHook]);
+  }, []);
 
   const { user, isLoading: authLoading, logout: authSignOut } = useAuth();
   const storeSession = useSession();
@@ -78,7 +78,7 @@ export default function GlobalNavigation() {
   const isActive = useCallback(
     (path: string) => {
       if (!isMountedForNavRender) return false;
-      return pathname === path || (path !== '/feed' && pathname.startsWith(path));
+      return isNavItemActive(pathname, path);
     },
     [pathname, isMountedForNavRender],
   );
@@ -107,7 +107,7 @@ export default function GlobalNavigation() {
   return (
     <>
       {/* Desktop top nav */}
-      <div className="sticky top-0 z-50 bg-card shadow-sm border-b border-border" data-testid="global-navigation">
+      <div className="sticky top-0 z-[60] bg-card shadow-sm border-b border-border" data-testid="global-navigation">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded focus:bg-primary focus:px-4 focus:py-2 focus:text-white"
@@ -203,7 +203,7 @@ export default function GlobalNavigation() {
 
       {/* Mobile Bottom Navigation (Instagram-style 5-icon bar) */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-card border-t border-border safe-area-bottom"
+        className="md:hidden fixed bottom-0 inset-x-0 z-[60] bg-card border-t border-border safe-area-bottom"
         aria-label="Mobile navigation"
         data-testid="mobile-bottom-nav"
       >
