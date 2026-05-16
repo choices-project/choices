@@ -142,7 +142,9 @@ curl https://your-project.supabase.co/rest/v1/
 
 **Symptom:** Supabase **Auth logs** show a successful sign-in, but the browser **stays on `/auth`** with no error. Often the session cookie was set on the `/api/auth/login` response, but the next **client-side** navigation did not yet attach that cookie for **Edge middleware**, which redirected back to `/auth`. After a **deploy** with the fix in `web/app/auth/AuthPageClient.tsx`, password / passkey / post-register flows use a **full page** redirect (`location.assign`) so the next request is a **document** load and cookies are visible. If you still see the issue on an older deploy, try a **hard refresh** after login or confirm `NEXT_PUBLIC_SUPABASE_URL` matches the project ref used in `sb-<ref>-auth-token` cookies (see middleware auth diagnostics with `DEBUG_MIDDLEWARE=1` in non-production).
 
-**Code reference:** The browser client reads `env.NEXT_PUBLIC_SUPABASE_URL` from `web/utils/supabase/client.ts`; OAuth uses `signInWithOAuth` against that host (`web/app/auth/AuthPageClient.tsx`).
+**Code reference:** OAuth starts from `web/app/auth/AuthPageClient.tsx` (`signInWithOAuth`) and completes on the **server** at `web/app/auth/callback/route.ts` (PKCE exchange + httpOnly cookies + redirect). See `web/lib/auth/README.md` for the full matrix. The browser client reads `env.NEXT_PUBLIC_SUPABASE_URL` from `web/utils/supabase/client.ts`.
+
+**Symptom:** `/auth?error=Could%20not%20establish%20session` after OAuth on an older deploy. That came from a removed client callback page calling `POST /api/auth/sync-session` via `fetch` (browsers hide redirect headers). Current OAuth does not use that path.
 
 #### Login redirects intermittently, only the first attempt is stuck on `/auth`
 

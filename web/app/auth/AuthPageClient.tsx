@@ -20,7 +20,7 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
-import { syncServerSessionAndNavigate } from '@/lib/auth/sync-server-session';
+import { navigateAfterAuth } from '@/lib/auth/post-auth-navigation';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -74,43 +74,10 @@ export default function AuthPageClient() {
     return normalizePostAuthRedirectPath(raw);
   }, [searchParams]);
 
-  /** Set httpOnly cookies and navigate in one server redirect (middleware-safe). */
-  const redirectAfterAuth = React.useCallback(
-    async (
-      path: string,
-      session?: { access_token: string; refresh_token: string } | null,
-    ) => {
-      let tokens = session;
-      if (!tokens?.access_token || !tokens.refresh_token) {
-        try {
-          const supabase = await getSupabaseBrowserClient();
-          const { data: { session: current } } = await supabase.auth.getSession();
-          if (current) {
-            tokens = {
-              access_token: current.access_token,
-              refresh_token: current.refresh_token,
-            };
-          }
-        } catch {
-          // fall through to direct navigation
-        }
-      }
-
-      if (tokens?.access_token && tokens.refresh_token) {
-        const navigated = await syncServerSessionAndNavigate(tokens, path);
-        if (navigated) {
-          return;
-        }
-      }
-
-      if (typeof window !== 'undefined') {
-        window.location.assign(path);
-        return;
-      }
-      router.replace(path);
-    },
-    [router],
-  );
+  /** Navigate after httpOnly cookies are set (login, passkey, OAuth). */
+  const finishAuthNavigation = React.useCallback((path: string) => {
+    navigateAfterAuth(path);
+  }, []);
 
   const resetPasswordHref = `/auth/reset?redirectTo=${encodeURIComponent(redirectTarget)}`;
 
@@ -597,7 +564,7 @@ export default function AuthPageClient() {
           setMessage(t('auth.success.accountCreated'));
           if (result?.data?.session) {
             setTimeout(() => {
-              void redirectAfterAuth('/onboarding', result?.data?.session ?? null);
+              finishAuthNavigation('/onboarding');
             }, 1000);
           }
         } else {
@@ -630,7 +597,7 @@ export default function AuthPageClient() {
           }
 
           await syncSupabaseSession(loginResult?.data?.session ?? null);
-          await redirectAfterAuth(redirectTarget, loginResult?.data?.session ?? null);
+          finishAuthNavigation(redirectTarget);
         } catch (loginError: unknown) {
           // Check if it's a rate limit error (429 status)
           const isRateLimit = loginError instanceof Error &&
@@ -1135,7 +1102,12 @@ export default function AuthPageClient() {
             />
           </summary>
           <div className="border-t border-border px-4 pb-4 pt-2">
-            <PasskeyControls onLoginSuccess={() => void redirectAfterAuth(redirectTarget)} />
+            <PasskeyControls
+              onLoginSuccess={async () => {
+                await syncSupabaseSession();
+                finishAuthNavigation(redirectTarget);
+              }}
+            />
           </div>
         </details>
       </div>

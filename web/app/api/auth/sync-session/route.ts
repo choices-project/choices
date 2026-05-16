@@ -16,8 +16,8 @@ type SyncSessionBody = {
 };
 
 /**
- * Establish httpOnly Supabase cookies, then redirect in one response so the
- * browser applies Set-Cookie before loading the protected page.
+ * Fallback: establish httpOnly Supabase cookies, then redirect (303).
+ * Primary flows set cookies on login/register/OAuth server routes instead.
  */
 export async function POST(request: NextRequest) {
   try {

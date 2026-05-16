@@ -1,7 +1,9 @@
 
+import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server'
+import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route'
+import { getSupabaseAdminClient } from '@/utils/supabase/server'
 
 import {
   withErrorHandling,
@@ -81,12 +83,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const normalizedUsername = username.trim()
     const displayName = (display_name ?? username).trim()
 
-    // Use Supabase Auth for registration
-    const supabaseClient = await getSupabaseServerClient()
+    const response = successResponse({
+      user: null,
+      session: null,
+      token: null,
+    })
 
-    // Always use real Supabase authentication - no E2E bypasses
+    const supabaseClient = await getSupabaseApiRouteClient(request, response)
 
-    // Sign up with Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
       email: normalizedEmail,
       password: password,
@@ -160,17 +164,38 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       username: normalizedUsername
     })
 
-    return successResponse({
-      user: {
-        id: authData.user.id,
-        email: authData.user.email,
-        username: profile.username,
-        trust_tier: profile.trust_tier,
-        display_name: profile.display_name,
-        is_active: profile.is_active
+    const responseData = {
+      success: true,
+      data: {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          username: profile.username,
+          trust_tier: profile.trust_tier,
+          display_name: profile.display_name,
+          is_active: profile.is_active,
+        },
+        session: authData.session,
+        token: authData.session?.access_token,
+        message: 'Registration successful. Please check your email to verify your account.',
       },
-      session: authData.session,
-      token: authData.session?.access_token, // Add token field for E2E compatibility
-      message: 'Registration successful. Please check your email to verify your account.'
-    }, undefined, 201);
+    }
+
+    const finalResponse = new NextResponse(JSON.stringify(responseData), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    for (const cookie of response.cookies.getAll()) {
+      finalResponse.cookies.set(cookie.name, cookie.value, {
+        path: cookie.path ?? '/',
+        maxAge: cookie.maxAge,
+        domain: cookie.domain,
+        sameSite: cookie.sameSite as 'lax' | 'strict' | 'none' | undefined,
+        secure: cookie.secure,
+        httpOnly: cookie.httpOnly ?? undefined,
+      })
+    }
+
+    return finalResponse
 });
