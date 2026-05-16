@@ -10,6 +10,7 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
+import { syncServerSessionCookies } from '@/lib/auth/sync-server-session';
 
 function CallbackLoading({ message }: { message: string }) {
   return (
@@ -24,8 +25,14 @@ function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [message, setMessage] = React.useState('Completing sign-in…');
+  const handledRef = React.useRef(false);
 
   React.useEffect(() => {
+    if (handledRef.current) {
+      return;
+    }
+    handledRef.current = true;
+
     let cancelled = false;
 
     const finish = async () => {
@@ -46,25 +53,49 @@ function AuthCallbackInner() {
         const supabase = await getSupabaseBrowserClient();
         const code = searchParams.get('code');
 
-        if (code) {
+        let {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session && code) {
           setMessage('Verifying with provider…');
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
           if (exchangeError) {
-            router.replace(`/auth?error=${encodeURIComponent(exchangeError.message)}`);
-            return;
+            // Code may already be consumed; recover if a session exists anyway.
+            ({
+              data: { session },
+            } = await supabase.auth.getSession());
+            if (!session) {
+              router.replace(`/auth?error=${encodeURIComponent(exchangeError.message)}`);
+              return;
+            }
+          } else {
+            session = data.session;
           }
+
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('code');
+          const query = params.toString();
+          const cleanUrl = query
+            ? `${window.location.pathname}?${query}`
+            : window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+
+        if (!session) {
+          router.replace(
+            `/auth?error=${encodeURIComponent('Sign-in did not complete. Please try again.')}`,
+          );
+          return;
         }
 
         setMessage('Securing your session…');
-        const syncResponse = await fetch('/api/auth/sync-session', {
-          method: 'POST',
-          credentials: 'include',
-        });
+        const synced = await syncServerSessionCookies();
 
-        if (!syncResponse.ok) {
-          const body = (await syncResponse.json().catch(() => ({}))) as { error?: string };
+        if (!synced) {
           router.replace(
-            `/auth?error=${encodeURIComponent(body.error ?? 'Could not establish session')}`,
+            `/auth?error=${encodeURIComponent('Could not establish session. Please try again.')}`,
           );
           return;
         }

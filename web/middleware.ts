@@ -162,8 +162,14 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
     const isNextInternal = isNextInternalRequest(request)
 
     // Require proper content type for POST requests
-    if (method === 'POST' && !isNextInternal && !SECURITY_CONFIG.validation.allowedContentTypes.some(type =>
-        contentType?.includes(type))) {
+    if (
+      method === 'POST' &&
+      !isNextInternal &&
+      pathname !== '/api/auth/sync-session' &&
+      !SECURITY_CONFIG.validation.allowedContentTypes.some((type) =>
+        contentType?.includes(type),
+      )
+    ) {
       return { valid: false, reason: 'Invalid content type' }
     }
 

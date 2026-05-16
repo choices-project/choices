@@ -6,6 +6,10 @@ export async function syncServerSessionCookies(): Promise<boolean> {
   const response = await fetch('/api/auth/sync-session', {
     method: 'POST',
     credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: '{}',
   });
   return response.ok;
 }

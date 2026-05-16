@@ -33,6 +33,12 @@ export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Databas
 
     client = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
       isSingleton: true,
+      auth: {
+        flowType: 'pkce',
+        // We exchange the OAuth code exactly once on `/auth/callback`.
+        // Leaving this enabled causes a race/double exchange → PKCE 400 in Supabase logs.
+        detectSessionInUrl: false,
+      },
     })
   }
   return client
