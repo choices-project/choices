@@ -1,18 +1,18 @@
 import { getValidatedEnv } from '@/lib/config/env';
 
-/** Apex host for production OAuth callbacks and PWA scope (matches marketing domain). */
-export const CHOICES_APEX_ORIGIN = 'https://choices-app.com';
+/** Canonical production origin (matches Vercel primary domain). */
+export const CHOICES_CANONICAL_ORIGIN = 'https://www.choices-app.com';
 
 /**
- * Normalize production host to apex so OAuth/PWA share one origin family.
- * Env may still say www until Vercel vars are updated.
+ * Normalize production host to www so OAuth/PWA match Vercel's primary domain.
+ * Apex requests are redirected to www at the edge; callbacks must target www.
  */
 export function normalizeChoicesProductionOrigin(origin: string): string {
   const trimmed = origin.replace(/\/+$/, '');
   try {
     const url = new URL(trimmed);
-    if (url.hostname === 'www.choices-app.com') {
-      url.hostname = 'choices-app.com';
+    if (url.hostname === 'choices-app.com') {
+      url.hostname = 'www.choices-app.com';
       return url.origin;
     }
   } catch {
@@ -30,3 +30,6 @@ export function getCanonicalSiteOrigin(requestUrl: string): string {
     : new URL(requestUrl).origin;
   return normalizeChoicesProductionOrigin(raw);
 }
+
+/** @deprecated Use CHOICES_CANONICAL_ORIGIN */
+export const CHOICES_APEX_ORIGIN = CHOICES_CANONICAL_ORIGIN;

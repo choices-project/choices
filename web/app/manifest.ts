@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-import { CHOICES_APEX_ORIGIN } from '@/lib/auth/canonical-site-origin';
+import { CHOICES_CANONICAL_ORIGIN } from '@/lib/auth/canonical-site-origin';
 
 /**
  * Next.js App Router web app manifest (served at the framework manifest URL).
@@ -15,8 +15,8 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'Choices',
     description:
       'A privacy-first civic engagement platform for polls, actions, and local democracy.',
-    start_url: `${CHOICES_APEX_ORIGIN}/`,
-    scope: `${CHOICES_APEX_ORIGIN}/`,
+    start_url: `${CHOICES_CANONICAL_ORIGIN}/`,
+    scope: `${CHOICES_CANONICAL_ORIGIN}/`,
     display: 'standalone',
     orientation: 'portrait-primary',
     background_color: '#ffffff',
