@@ -14,6 +14,9 @@ Shared helpers:
 - `normalize-post-auth-redirect.ts` — safe paths; `redirectTo` / `redirect` / `next` query params
 - `resolve-post-auth-redirect.ts` — profile-aware default (`/onboarding` vs `/feed`)
 - `post-auth-navigation.ts` — `navigateAfterAuth()` for full-page navigation after cookies exist
+- `GET /api/auth/session` — server reads httpOnly cookies; client `AuthContext` calls this to `setSession`
 - `POST /api/auth/sync-session` — fallback only (legacy callers / edge cases)
+
+**Client vs middleware:** Edge middleware trusts httpOnly `sb-*` cookies. The browser Supabase client cannot read those cookies until `AuthContext` hydrates via `/api/auth/session`. Without that step, `AuthGuard` shows “Access Denied” even when login succeeded.
 
 Do not add a second OAuth callback or duplicate cookie writers without updating this table.

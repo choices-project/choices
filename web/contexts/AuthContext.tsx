@@ -172,6 +172,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }
 
+    /** Mirror httpOnly cookies into the browser Supabase client (OAuth / API login). */
+    const hydrateFromServerCookies = async (
+      supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>,
+    ): Promise<Session | null> => {
+      try {
+        const res = await fetch('/api/auth/session', {
+          credentials: 'include',
+          cache: 'no-store',
+        })
+        if (!res.ok) {
+          return null
+        }
+        const body = (await res.json()) as {
+          data?: { session?: { access_token: string; refresh_token: string } }
+        }
+        const tokens = body.data?.session
+        if (!tokens?.access_token || !tokens.refresh_token) {
+          return null
+        }
+        const { data, error } = await supabase.auth.setSession({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+        })
+        if (error) {
+          logger.warn('AuthContext: setSession from server session failed', {
+            message: error.message,
+          })
+          return null
+        }
+        return data.session ?? null
+      } catch (error) {
+        logger.warn('AuthContext: failed to hydrate session from server cookies', { error })
+        return null
+      }
+    }
+
     const bootstrapAuth = async (): Promise<(() => void) | undefined> => {
       if (process.env.DEBUG_DASHBOARD === '1' || (typeof window !== 'undefined' && window.localStorage.getItem('e2e-dashboard-bypass') === '1')) {
         logger.debug('🚨 AuthContext: Starting auth bootstrap', {
@@ -226,29 +262,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return () => subscription.unsubscribe()
 
         if (raceResult.kind === 'resolved') {
-          adoptSession(raceResult.session, supabase)
+          let session = raceResult.session
+          if (!session) {
+            session = await hydrateFromServerCookies(supabase)
+          }
+          adoptSession(session, supabase)
         } else if (raceResult.kind === 'error') {
-          logger.warn(
-            'AuthContext: getSession() rejected — unblocking UI; preserving any persisted auth state',
-            { error: raceResult.error },
-          )
-          setStoreLoadingRef.current(false)
-          setLoading(false)
+          const session = await hydrateFromServerCookies(supabase)
+          if (session) {
+            adoptSession(session, supabase)
+          } else {
+            logger.warn(
+              'AuthContext: getSession() rejected — unblocking UI; preserving any persisted auth state',
+              { error: raceResult.error },
+            )
+            setStoreLoadingRef.current(false)
+            setLoading(false)
+          }
         } else {
-          // Timeout: unblock UI without changing auth state. Persisted
-          // `isAuthenticated` (set by the previous successful login and
-          // validated by middleware on the current request) stays intact, so
-          // AuthGuard renders children. If getSession() eventually completes
-          // we still adopt the real session via the late .then() below.
-          logger.error(
-            `AuthContext: getSession() did not resolve within ${GET_SESSION_HARD_TIMEOUT_MS}ms — unblocking UI; will adopt real session if/when it arrives`,
-          )
-          setStoreLoadingRef.current(false)
-          setLoading(false)
-          void sessionPromise.then((late) => {
-            if (!mounted || late.kind !== 'resolved') return
-            adoptSession(late.session, supabase)
-          })
+          const serverSession = await hydrateFromServerCookies(supabase)
+          if (serverSession) {
+            adoptSession(serverSession, supabase)
+          } else {
+            logger.error(
+              `AuthContext: getSession() did not resolve within ${GET_SESSION_HARD_TIMEOUT_MS}ms — unblocking UI; will adopt real session if/when it arrives`,
+            )
+            setStoreLoadingRef.current(false)
+            setLoading(false)
+            void sessionPromise.then(async (late) => {
+              if (!mounted || late.kind !== 'resolved') return
+              let session = late.session
+              if (!session) {
+                session = await hydrateFromServerCookies(supabase)
+              }
+              adoptSession(session, supabase)
+            })
+          }
         }
 
         return () => subscription.unsubscribe()
