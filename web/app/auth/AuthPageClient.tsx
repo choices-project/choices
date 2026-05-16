@@ -20,6 +20,7 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
+import { syncServerSessionCookies } from '@/lib/auth/sync-server-session';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -73,9 +74,10 @@ export default function AuthPageClient() {
     return normalizePostAuthRedirectPath(raw);
   }, [searchParams]);
 
-  /** Full navigation after credential login so middleware sees httpOnly cookies on a document request. */
+  /** Full navigation after login once httpOnly session cookies are synced for middleware. */
   const redirectAfterAuth = React.useCallback(
-    (path: string) => {
+    async (path: string) => {
+      await syncServerSessionCookies();
       if (typeof window !== 'undefined') {
         window.location.assign(path);
         return;
@@ -120,28 +122,6 @@ export default function AuthPageClient() {
     const params = new URLSearchParams(searchParams.toString());
     window.location.replace(`/auth/callback?${params.toString()}`);
   }, [searchParams]);
-
-  // Client already has a session (e.g. after password login) but navigation did not complete.
-  React.useEffect(() => {
-    if (searchParams.get('error') || searchParams.get('code')) {
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const supabase = await getSupabaseBrowserClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!cancelled && session?.user) {
-          redirectAfterAuth(redirectTarget);
-        }
-      } catch {
-        // ignore — user can still sign in manually
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [searchParams, redirectTarget, redirectAfterAuth]);
 
   const OAUTH_START_TIMEOUT_MS = 25_000;
 
@@ -592,7 +572,7 @@ export default function AuthPageClient() {
           setMessage(t('auth.success.accountCreated'));
           if (result?.data?.session) {
             setTimeout(() => {
-              redirectAfterAuth('/onboarding');
+              void redirectAfterAuth('/onboarding');
             }, 1000);
           }
         } else {
@@ -625,7 +605,7 @@ export default function AuthPageClient() {
           }
 
           await syncSupabaseSession(loginResult?.data?.session ?? null);
-          redirectAfterAuth(redirectTarget);
+          await redirectAfterAuth(redirectTarget);
         } catch (loginError: unknown) {
           // Check if it's a rate limit error (429 status)
           const isRateLimit = loginError instanceof Error &&
@@ -1130,7 +1110,7 @@ export default function AuthPageClient() {
             />
           </summary>
           <div className="border-t border-border px-4 pb-4 pt-2">
-            <PasskeyControls onLoginSuccess={() => redirectAfterAuth(redirectTarget)} />
+            <PasskeyControls onLoginSuccess={() => void redirectAfterAuth(redirectTarget)} />
           </div>
         </details>
       </div>

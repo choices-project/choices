@@ -19,19 +19,68 @@ const assertRunningOnServer = (fnName: string) => {
   }
 }
 
+function applyAuthCookieOptions(
+  name: string,
+  value: string,
+  options: Record<string, unknown>,
+  response: NextResponse,
+): void {
+  const isProduction = process.env.NODE_ENV === 'production'
+  const isAuthCookie =
+    name.includes('auth') || name.includes('session') || name.startsWith('sb-')
+
+  const cookieOptions: {
+    httpOnly?: boolean
+    secure?: boolean
+    sameSite?: 'strict' | 'lax' | 'none'
+    path?: string
+    maxAge?: number
+  } = {
+    sameSite: (typeof options.sameSite === 'string' ? options.sameSite : 'lax') as
+      | 'strict'
+      | 'lax'
+      | 'none',
+    path: typeof options.path === 'string' ? options.path : '/',
+  }
+
+  if (isAuthCookie) {
+    cookieOptions.httpOnly = true
+    cookieOptions.secure = isProduction
+  } else {
+    if (typeof options.httpOnly === 'boolean') {
+      cookieOptions.httpOnly = options.httpOnly
+    }
+    if (typeof options.secure === 'boolean') {
+      cookieOptions.secure = options.secure
+    }
+  }
+
+  if (typeof options.maxAge === 'number') {
+    cookieOptions.maxAge = options.maxAge
+  }
+
+  response.cookies.set(name, value, cookieOptions)
+
+  if (isAuthCookie) {
+    logger.info('Setting auth cookie in API route (cookie adapter)', {
+      name,
+      valueLength: value.length,
+      httpOnly: cookieOptions.httpOnly,
+      secure: cookieOptions.secure,
+      path: cookieOptions.path,
+    })
+  }
+}
+
 /**
  * Create a Supabase client for API routes with proper cookie handling
  *
- * This function creates a Supabase client that uses NextResponse for cookie management,
- * which is required for API routes (next/headers doesn't work in API routes).
- *
- * @param request - The Next.js request object
- * @param response - The Next.js response object (will be modified with cookies)
- * @returns Supabase client configured for API routes
+ * Pass the final `NextResponse` (including redirects) so `Set-Cookie` headers are
+ * attached to the response the browser actually receives.
  */
 export async function getSupabaseApiRouteClient(
   request: NextRequest,
-  response: NextResponse
+  response: NextResponse,
 ): Promise<SupabaseClient<Database>> {
   assertRunningOnServer('getSupabaseApiRouteClient')
   const cfg = getValidatedEnv()
@@ -45,113 +94,35 @@ export async function getSupabaseApiRouteClient(
     throw new Error('Missing required Supabase environment variables')
   }
 
-  // Create cookie adapter that uses NextResponse for API routes
   const cookieAdapter = {
-    get: (name: string) => {
-      const cookie = request.cookies.get(name)
-      return cookie?.value
+    getAll() {
+      return request.cookies.getAll()
     },
-    set: (name: string, value: string, options: Record<string, unknown>) => {
+    setAll(
+      cookiesToSet: Array<{
+        name: string
+        value: string
+        options: Record<string, unknown>
+      }>,
+    ) {
       try {
-        // Determine production status
-        const isProduction = process.env.NODE_ENV === 'production'
-        const host = request.headers.get('host') || ''
-        const isChoicesDomain = host.includes('choices-app.com')
-        const requireSecure = isProduction
-        const cookieDomain = isProduction && isChoicesDomain ? '.choices-app.com' : undefined
-
-        // Extract cookie options with secure defaults
-        // For auth cookies, always use secure defaults if not explicitly provided
-        const isAuthCookie = name.includes('auth') || name.includes('session') || name.startsWith('sb-')
-        
-        const cookieOptions: {
-          httpOnly?: boolean
-          secure?: boolean
-          sameSite?: 'strict' | 'lax' | 'none'
-          path?: string
-          maxAge?: number
-        } = {
-          // For auth cookies, FORCE secure values regardless of what Supabase SSR passes
-          // This ensures cookies are always set with proper security attributes
-          sameSite: (typeof options.sameSite === 'string' ? options.sameSite : 'lax') as 'strict' | 'lax' | 'none',
-          path: typeof options.path === 'string' ? options.path : '/',
-        }
-
-        const httpOnly =
-          isAuthCookie ? true : (typeof options.httpOnly === 'boolean' ? options.httpOnly : undefined)
-        const secure =
-          isAuthCookie ? requireSecure : (typeof options.secure === 'boolean' ? options.secure : undefined)
-
-        if (typeof httpOnly === 'boolean') {
-          cookieOptions.httpOnly = httpOnly
-        }
-
-        if (typeof secure === 'boolean') {
-          cookieOptions.secure = secure
-        }
-
-        if (typeof options.maxAge === 'number') {
-          cookieOptions.maxAge = options.maxAge
-        }
-
-        response.cookies.set(name, value, {
-          ...cookieOptions,
-          ...(cookieDomain && isAuthCookie ? { domain: cookieDomain } : {}),
-        })
-        
-        // Log cookie setting for debugging (always log for auth cookies)
-        if (isAuthCookie) {
-          logger.info('Setting auth cookie in API route (cookie adapter)', {
-            name,
-            valueLength: value.length,
-            httpOnly: cookieOptions.httpOnly,
-            secure: cookieOptions.secure,
-            path: cookieOptions.path,
-            isProduction,
-            requireSecure,
-            optionsReceived: {
-              httpOnly: typeof options.httpOnly === 'boolean' ? options.httpOnly : 'not provided',
-              secure: typeof options.secure === 'boolean' ? options.secure : 'not provided',
-            },
-          })
+        for (const { name, value, options } of cookiesToSet) {
+          if (value) {
+            applyAuthCookieOptions(name, value, options, response)
+          } else {
+            response.cookies.set(name, '', {
+              path: typeof options.path === 'string' ? options.path : '/',
+              maxAge: 0,
+            })
+          }
         }
       } catch (error) {
-        logger.warn('Failed to set cookie in API route', { name, error })
-      }
-    },
-    remove: (name: string, options: Record<string, unknown>) => {
-      try {
-        const isProduction = process.env.NODE_ENV === 'production'
-        const host = request.headers.get('host') || ''
-        const isChoicesDomain = host.includes('choices-app.com')
-        const domain = isProduction && isChoicesDomain ? '.choices-app.com' : undefined
-        const cookieOptions: {
-          httpOnly?: boolean
-          secure?: boolean
-          sameSite?: 'strict' | 'lax' | 'none'
-          path?: string
-          maxAge?: number
-          domain?: string
-        } = {
-          maxAge: 0, // Expire immediately
-          secure: isProduction,
-          sameSite: 'lax',
-          path: typeof options.path === 'string' ? options.path : '/',
-          ...(domain ? { domain } : {}),
-        }
-
-        // Remove both httpOnly and non-httpOnly variants defensively.
-        response.cookies.set(name, '', { ...cookieOptions, httpOnly: true })
-        response.cookies.set(name, '', { ...cookieOptions, httpOnly: false })
-      } catch (error) {
-        logger.warn('Failed to remove cookie in API route', { name, error })
+        logger.warn('Failed to set cookies in API route', { error })
       }
     },
   }
 
-  // Create Supabase client with API route cookie adapter
   return createServerClient<Database>(url, key, {
     cookies: cookieAdapter,
   })
 }
-

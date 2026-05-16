@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
-import { copyResponseCookies } from '@/utils/supabase/copy-response-cookies';
 
 import {
   parsePostAuthRedirectFromSearchParams,
@@ -16,6 +15,7 @@ export async function GET(request: Request) {
   const token = searchParams.get('token')
   const type = searchParams.get('type')
   const postAuthParams = parsePostAuthRedirectFromSearchParams(searchParams)
+  const nextRequest = new NextRequest(request)
 
   if (!token) {
     return NextResponse.redirect(
@@ -23,25 +23,14 @@ export async function GET(request: Request) {
     )
   }
 
-  const nextRequest = new NextRequest(request)
-  const cookieResponse = new NextResponse()
-
   try {
-    const supabaseClient = await getSupabaseApiRouteClient(nextRequest, cookieResponse)
-
-    const redirectAfterSession = async (userId: string) => {
-      const finalRedirect = await resolvePostAuthRedirect(
-        supabaseClient,
-        userId,
-        postAuthParams,
-      )
-      const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`)
-      copyResponseCookies(cookieResponse, redirectResponse)
-      return redirectResponse
-    }
+    const bootstrapClient = await getSupabaseApiRouteClient(
+      nextRequest,
+      new NextResponse(),
+    )
 
     if (type === 'signup' || type === 'email') {
-      const { data, error } = await supabaseClient.auth.verifyOtp({
+      const { data, error } = await bootstrapClient.auth.verifyOtp({
         token_hash: token,
         type: 'signup',
       })
@@ -55,10 +44,21 @@ export async function GET(request: Request) {
 
       if (data.session && data.user) {
         devLog('Email verified successfully for:', { email: data.user.email })
-        return redirectAfterSession(data.user.id)
+        const finalRedirect = await resolvePostAuthRedirect(
+          bootstrapClient,
+          data.user.id,
+          postAuthParams,
+        )
+        const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`)
+        const client = await getSupabaseApiRouteClient(nextRequest, redirectResponse)
+        await client.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })
+        return redirectResponse
       }
     } else {
-      const { data, error } = await supabaseClient.auth.exchangeCodeForSession(token)
+      const { data, error } = await bootstrapClient.auth.exchangeCodeForSession(token)
 
       if (error) {
         devLog('Token exchange error:', { error })
@@ -69,7 +69,18 @@ export async function GET(request: Request) {
 
       if (data.session && data.user) {
         devLog('Session created successfully for:', { email: data.user.email })
-        return redirectAfterSession(data.user.id)
+        const finalRedirect = await resolvePostAuthRedirect(
+          bootstrapClient,
+          data.user.id,
+          postAuthParams,
+        )
+        const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`)
+        const client = await getSupabaseApiRouteClient(nextRequest, redirectResponse)
+        await client.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })
+        return redirectResponse
       }
     }
 
