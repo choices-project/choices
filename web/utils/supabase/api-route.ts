@@ -5,6 +5,7 @@
  * using NextResponse instead of next/headers (which doesn't work in API routes).
  */
 
+import { productionAuthCookieOptions } from '@/lib/auth/production-auth-cookies'
 import { getValidatedEnv } from '@/lib/config/env'
 import { logger } from '@/lib/utils/logger'
 
@@ -26,11 +27,9 @@ function applyAuthCookieOptions(
   response: NextResponse,
   requestHostname: string,
 ): void {
-  const isProduction = process.env.NODE_ENV === 'production'
-  const requireSecure =
-    isProduction && requestHostname.includes('choices-app.com')
   const isAuthCookie =
     name.includes('auth') || name.includes('session') || name.startsWith('sb-')
+  const prodAuth = productionAuthCookieOptions(requestHostname)
 
   const cookieOptions: {
     httpOnly?: boolean
@@ -38,6 +37,7 @@ function applyAuthCookieOptions(
     sameSite?: 'strict' | 'lax' | 'none'
     path?: string
     maxAge?: number
+    domain?: string
   } = {
     sameSite: (typeof options.sameSite === 'string' ? options.sameSite : 'lax') as
       | 'strict'
@@ -47,8 +47,11 @@ function applyAuthCookieOptions(
   }
 
   if (isAuthCookie) {
-    cookieOptions.httpOnly = true
-    cookieOptions.secure = requireSecure
+    cookieOptions.httpOnly = prodAuth.httpOnly
+    cookieOptions.secure = prodAuth.secure
+    if (prodAuth.domain) {
+      cookieOptions.domain = prodAuth.domain
+    }
   } else {
     if (typeof options.httpOnly === 'boolean') {
       cookieOptions.httpOnly = options.httpOnly

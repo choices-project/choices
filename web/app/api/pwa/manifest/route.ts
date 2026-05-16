@@ -1,4 +1,5 @@
 
+import { CHOICES_APEX_ORIGIN } from '@/lib/auth/canonical-site-origin';
 import { successResponse, withErrorHandling, forbiddenError } from '@/lib/api';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
@@ -13,8 +14,8 @@ const PWA_MANIFEST = {
   short_name: 'Choices',
   description:
     'A privacy-first civic engagement platform for polls, actions, and local democracy.',
-  start_url: '/',
-  scope: '/',
+  start_url: `${CHOICES_APEX_ORIGIN}/`,
+  scope: `${CHOICES_APEX_ORIGIN}/`,
   display: 'standalone' as const,
   background_color: '#ffffff',
   theme_color: '#3b82f6',

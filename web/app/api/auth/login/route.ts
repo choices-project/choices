@@ -12,6 +12,7 @@ import {
   authError,
   parseBody,
 } from '@/lib/api';
+import { productionAuthCookieOptions } from '@/lib/auth/production-auth-cookies'
 import { shouldBypassAuthRateLimitsInTestModes } from '@/lib/auth/rate-limit-test-bypass'
 import { env } from '@/lib/config/env'
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
@@ -271,26 +272,32 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
 
     // Copy all cookies from the original response (set by Supabase SSR)
     // Ensure proper security attributes, especially for auth cookies
-    const isProduction = process.env.NODE_ENV === 'production'
-    const hostname = request.headers.get('host') || ''
-    const isProductionDomain = hostname.includes('choices-app.com')
-    const requireSecure = isProduction && isProductionDomain
+    const hostname =
+      request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? ''
+    const authCookieOptions = productionAuthCookieOptions(hostname)
 
     allCookies.forEach((cookie) => {
       const isAuthCookie = cookie.name.includes('auth') || cookie.name.includes('session') || cookie.name.startsWith('sb-')
 
-      // For auth cookies, FORCE correct attributes regardless of what was set before
-      // This ensures cookies are always secure even if Supabase SSR set them incorrectly
-      finalResponse.cookies.set(cookie.name, cookie.value, {
-        // Force secure values for auth cookies
-        httpOnly: isAuthCookie ? true : (cookie.httpOnly ?? undefined),
-        secure: isAuthCookie ? requireSecure : (cookie.secure ?? undefined),
-        sameSite: (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ?? 'lax',
-        path: cookie.path ?? '/',
-        maxAge: cookie.maxAge,
-        // IMPORTANT: Do NOT set domain attribute - let browser handle domain scoping
-        // This ensures cookies work correctly with middleware
-      })
+      finalResponse.cookies.set(
+        cookie.name,
+        cookie.value,
+        isAuthCookie
+          ? {
+              ...authCookieOptions,
+              sameSite:
+                (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ??
+                authCookieOptions.sameSite,
+              maxAge: cookie.maxAge,
+            }
+          : {
+              httpOnly: cookie.httpOnly ?? undefined,
+              secure: cookie.secure ?? undefined,
+              sameSite: (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ?? 'lax',
+              path: cookie.path ?? '/',
+              maxAge: cookie.maxAge,
+            },
+      )
     })
 
     // If Supabase SSR didn't set the auth cookie, manually set it
@@ -305,28 +312,18 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
         user: authData.user
       }
 
-      const isProduction = process.env.NODE_ENV === 'production'
-      const hostname = request.headers.get('host') || ''
-      const isProductionDomain = hostname.includes('choices-app.com')
-      const requireSecure = isProduction && isProductionDomain
       const maxAge = 60 * 60 * 24 * 7 // 7 days
 
-      // Set cookie directly on final response
-      // IMPORTANT: Do NOT set domain attribute - let browser handle domain scoping
-      // This ensures cookies work correctly with middleware
       finalResponse.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
-        httpOnly: true,
-        secure: requireSecure,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: maxAge,
-        // Explicitly omit domain - browser will handle domain scoping automatically
+        ...authCookieOptions,
+        maxAge,
       })
 
       logger.info('Manually set auth cookie on final response', {
         cookieName: authTokenCookieName,
         userId: authData.user.id,
-        secure: requireSecure,
+        secure: authCookieOptions.secure,
+        domain: authCookieOptions.domain,
       })
     }
 

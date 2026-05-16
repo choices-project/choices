@@ -8,9 +8,9 @@ jest.mock('@/lib/config/env', () => ({
 }));
 
 describe('getCanonicalSiteOrigin', () => {
-  it('prefers NEXT_PUBLIC_SITE_URL without trailing slash', () => {
+  it('normalizes www env URL to apex for OAuth callbacks', () => {
     expect(getCanonicalSiteOrigin('https://preview.vercel.app/auth')).toBe(
-      'https://www.choices-app.com',
+      'https://choices-app.com',
     );
   });
 
@@ -24,6 +24,19 @@ describe('getCanonicalSiteOrigin', () => {
     });
     expect(getCanonicalSiteOrigin('https://preview.vercel.app/auth')).toBe(
       'https://preview.vercel.app',
+    );
+  });
+
+  it('keeps apex when env already uses apex', () => {
+    const { getValidatedEnv } = require('@/lib/config/env') as {
+      getValidatedEnv: jest.Mock;
+    };
+    getValidatedEnv.mockReturnValueOnce({
+      NEXT_PUBLIC_SITE_URL: 'https://choices-app.com',
+      NEXT_PUBLIC_BASE_URL: undefined,
+    });
+    expect(getCanonicalSiteOrigin('https://choices-app.com/auth')).toBe(
+      'https://choices-app.com',
     );
   });
 });

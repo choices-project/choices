@@ -626,16 +626,16 @@ const nextConfig = {
   // Redirects for performance
   async redirects() {
     return [
-      // Canonical domain redirect - redirect non-www to www
+      // Canonical domain: www → apex (PWA install + OAuth cookies use choices-app.com)
       {
         source: '/:path*',
         has: [
           {
             type: 'host',
-            value: 'choices-app.com',
+            value: 'www.choices-app.com',
           },
         ],
-        destination: 'https://www.choices-app.com/:path*',
+        destination: 'https://choices-app.com/:path*',
         permanent: true, // 308 redirect
       },
       {

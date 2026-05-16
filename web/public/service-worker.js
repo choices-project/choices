@@ -11,7 +11,7 @@
 // pre-auth-redirect-fix bundles and middleware-redirected pages. The activate
 // handler below deletes every cache that is not in CACHE_NAMES, so bumping the
 // version is sufficient to evict all previous caches at install time.
-const SW_VERSION = 'v1.1.3';
+const SW_VERSION = 'v1.1.4';
 const CACHE_PREFIX = 'choices-pwa';
 const CACHE_NAMES = {
   static: `${CACHE_PREFIX}-${SW_VERSION}-static`,
