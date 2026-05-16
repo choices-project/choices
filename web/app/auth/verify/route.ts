@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 
+import { finalizeAuthCookiesOnResponse } from '@/lib/auth/finalize-auth-cookies';
 import {
   parsePostAuthRedirectFromSearchParams,
   resolvePostAuthRedirect,
@@ -55,6 +56,8 @@ export async function GET(request: Request) {
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
         })
+        finalizeAuthCookiesOnResponse(redirectResponse, nextRequest)
+        redirectResponse.headers.set('cache-control', 'no-store')
         return redirectResponse
       }
     } else {
@@ -80,6 +83,8 @@ export async function GET(request: Request) {
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
         })
+        finalizeAuthCookiesOnResponse(redirectResponse, nextRequest)
+        redirectResponse.headers.set('cache-control', 'no-store')
         return redirectResponse
       }
     }

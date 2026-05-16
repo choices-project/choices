@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * OAuth PKCE callback: exchange code on the server, attach httpOnly cookies to the
- * redirect response, then send the user to their post-auth destination.
+ * redirect response, then send the user to /auth/finish for client hydration.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -39,12 +39,12 @@ export async function GET(request: Request) {
   const nextRequest = new NextRequest(request);
 
   try {
-    const bootstrapClient = await getSupabaseApiRouteClient(
-      nextRequest,
-      new NextResponse(),
-    );
+    const finishUrl = new URL('/auth/finish', origin);
+    const redirectResponse = NextResponse.redirect(finishUrl.toString(), 303);
+    const supabase = await getSupabaseApiRouteClient(nextRequest, redirectResponse);
+
     const { data, error: exchangeError } =
-      await bootstrapClient.auth.exchangeCodeForSession(code);
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
       devLog('Session exchange error:', { error: exchangeError });
@@ -63,17 +63,14 @@ export async function GET(request: Request) {
     devLog('Successfully authenticated user:', { email: data.user.email });
 
     const finalRedirect = await resolvePostAuthRedirect(
-      bootstrapClient,
+      supabase,
       data.user.id,
       postAuthParams,
     );
-
-    const finishUrl = new URL('/auth/finish', origin);
     finishUrl.searchParams.set('redirectTo', finalRedirect);
+    redirectResponse.headers.set('Location', finishUrl.toString());
 
-    const redirectResponse = NextResponse.redirect(finishUrl.toString(), 303);
-    const sessionClient = await getSupabaseApiRouteClient(nextRequest, redirectResponse);
-    const { error: setSessionError } = await sessionClient.auth.setSession({
+    const { error: setSessionError } = await supabase.auth.setSession({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
     });

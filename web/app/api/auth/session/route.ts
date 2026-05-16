@@ -1,6 +1,11 @@
-import { getServerAuthSession } from '@/lib/auth/get-server-auth';
+import { NextResponse } from 'next/server';
 
+import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
+
+import { finalizeAuthCookiesOnResponse } from '@/lib/auth/finalize-auth-cookies';
 import { authError, successResponse, withErrorHandling } from '@/lib/api';
+
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,10 +13,15 @@ export const dynamic = 'force-dynamic';
  * Read the httpOnly Supabase session on the server and return tokens so the
  * browser client can call `setSession`. Same-origin + credentials only.
  */
-export const GET = withErrorHandling(async () => {
-  const session = await getServerAuthSession();
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const cookieCarrier = new NextResponse();
+  const supabase = await getSupabaseApiRouteClient(request, cookieCarrier);
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
 
-  if (!session) {
+  if (error || !session) {
     return authError('Not authenticated');
   }
 
@@ -25,6 +35,11 @@ export const GET = withErrorHandling(async () => {
       user: session.user,
     },
   });
+
+  for (const cookie of cookieCarrier.cookies.getAll()) {
+    response.cookies.set(cookie.name, cookie.value);
+  }
+  finalizeAuthCookiesOnResponse(response, request);
 
   response.headers.set('Cache-Control', 'no-store, max-age=0');
   return response;

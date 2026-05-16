@@ -13,12 +13,21 @@ export type SessionTokens = {
  * Mirror httpOnly Supabase cookies into the browser client (`setSession`).
  * Required because middleware reads cookies the JS client cannot see until hydrated.
  */
+async function fetchSessionFromServer(): Promise<Response> {
+  return fetch('/api/auth/session', {
+    credentials: 'include',
+    cache: 'no-store',
+  });
+}
+
 export async function hydrateBrowserSessionFromServer(): Promise<Session | null> {
   try {
-    const res = await fetch('/api/auth/session', {
-      credentials: 'include',
-      cache: 'no-store',
-    });
+    let res = await fetchSessionFromServer();
+    // PWA service worker can briefly return 503 on transient fetch failures.
+    if (res.status === 503) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      res = await fetchSessionFromServer();
+    }
     if (!res.ok) {
       return null;
     }

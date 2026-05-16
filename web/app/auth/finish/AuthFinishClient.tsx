@@ -28,7 +28,16 @@ export default function AuthFinishClient() {
       return;
     }
     startedRef.current = true;
-    void completeSignIn(redirectTarget);
+    void completeSignIn(redirectTarget).then((ok) => {
+      if (!ok && typeof window !== 'undefined') {
+        const params = new URLSearchParams({
+          error:
+            'Sign-in could not be completed in this app. Try Update Now on the banner, or sign in again. If it keeps failing, remove and reinstall the Choices app.',
+          redirectTo: redirectTarget,
+        });
+        window.location.replace(`/auth?${params.toString()}`);
+      }
+    });
   }, [redirectTarget]);
 
   return (

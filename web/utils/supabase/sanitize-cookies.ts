@@ -29,16 +29,34 @@ type CookieLike = { name: string; value: string };
 
 const AUTH_TOKEN_RE = /^(sb-.+-auth-token)(?:\.(\d+))?$/;
 
+const AUTH_TOKEN_NAME_RE = /^sb-.+-auth-token(?:\.\d+)?$/;
+
+function authCookieScore(name: string, value: string): number {
+  if (!AUTH_TOKEN_NAME_RE.test(name)) {
+    return value.length;
+  }
+  const combined = value.startsWith('base64-') ? value : `base64-${value}`;
+  const payload = combined.slice('base64-'.length);
+  const valid = isValidBase64UrlUtf8(payload) ? 1_000_000 : 0;
+  return valid + value.length;
+}
+
 /** Edge middleware merges Cookie header + `request.cookies`; dedupe before chunk assembly. */
 export function dedupeCookiesByName(cookies: Iterable<CookieLike>): CookieLike[] {
-  const byName = new Map<string, string>();
+  const byName = new Map<string, CookieLike>();
   for (const cookie of cookies) {
     if (!cookie?.name) continue;
-    if (!byName.has(cookie.name)) {
-      byName.set(cookie.name, cookie.value ?? '');
+    const next: CookieLike = { name: cookie.name, value: cookie.value ?? '' };
+    const existing = byName.get(cookie.name);
+    if (!existing) {
+      byName.set(cookie.name, next);
+      continue;
+    }
+    if (authCookieScore(next.name, next.value) >= authCookieScore(existing.name, existing.value)) {
+      byName.set(cookie.name, next);
     }
   }
-  return [...byName.entries()].map(([name, value]) => ({ name, value }));
+  return [...byName.values()];
 }
 const BASE64_PREFIX = 'base64-';
 

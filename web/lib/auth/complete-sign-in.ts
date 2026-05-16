@@ -13,11 +13,16 @@ import { navigateAfterAuth } from '@/lib/auth/post-auth-navigation';
 export async function completeSignIn(
   redirectTo: string,
   tokens?: SessionTokens | null,
-): Promise<void> {
-  if (tokens?.access_token && tokens.refresh_token) {
-    await applySessionTokensToBrowser(tokens);
-  } else {
-    await hydrateBrowserSessionFromServer();
+): Promise<boolean> {
+  const session =
+    tokens?.access_token && tokens.refresh_token
+      ? await applySessionTokensToBrowser(tokens)
+      : await hydrateBrowserSessionFromServer();
+
+  if (!session) {
+    return false;
   }
+
   navigateAfterAuth(redirectTo);
+  return true;
 }

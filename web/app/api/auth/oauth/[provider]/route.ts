@@ -34,7 +34,7 @@ export async function GET(
   const redirectTarget = normalizePostAuthRedirectPath(rawRedirect);
   const callbackUrl = `${origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTarget)}`;
 
-  const oauthResponse = NextResponse.redirect(`${origin}/auth`, 303);
+  const oauthResponse = new NextResponse(null, { status: 303 });
 
   try {
     const supabase = await getSupabaseApiRouteClient(request, oauthResponse);
