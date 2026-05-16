@@ -2,7 +2,7 @@
 
 | Flow | Mechanism | Entry |
 |------|-----------|--------|
-| OAuth (Google, GitHub, …) | Server `GET /auth/callback` exchanges PKCE, sets httpOnly cookies, redirects | `AuthPageClient` → provider → `/auth/callback` |
+| OAuth (Google, GitHub, …) | `GET /api/auth/oauth/[provider]` → provider → `GET /auth/callback` (exchange + `setSession` on redirect) | `AuthPageClient` → `/api/auth/oauth/google?redirectTo=…` |
 | Email / password sign-in | `POST /api/auth/login` sets cookies; client finishes | `AuthPageClient` → `completeSignIn()` |
 | Passkey sign-in | `POST …/webauthn/…/verify` sets cookies; client finishes | `PasskeyLogin` → `completeSignIn()` |
 | Sign-up (auth tab) | `POST /api/auth/register` sets cookies when session returned | `completeSignIn()` |
@@ -16,6 +16,7 @@ Shared helpers:
 - `complete-sign-in.ts` — `completeSignIn()`: hydrate browser client, then `navigateAfterAuth()`
 - `browser-session.ts` — `hydrateBrowserSessionFromServer()` via `GET /api/auth/session`
 - `get-server-auth.ts` — per-request cached `getUser` / `getSession` for API routes
+- `canonical-site-origin.ts` — `NEXT_PUBLIC_SITE_URL` for OAuth callback URLs
 - `post-auth-navigation.ts` — `navigateAfterAuth()` for full-page navigation after cookies exist
 - `GET /api/auth/session` — server reads httpOnly cookies; client `setSession`
 

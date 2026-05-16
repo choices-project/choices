@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
-import { copyResponseCookies } from '@/utils/supabase/copy-response-cookies';
 
 import {
   parsePostAuthRedirectFromSearchParams,
@@ -37,11 +36,14 @@ export async function GET(request: Request) {
   }
 
   const nextRequest = new NextRequest(request);
-  const cookieResponse = new NextResponse();
 
   try {
-    const supabaseClient = await getSupabaseApiRouteClient(nextRequest, cookieResponse);
-    const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code);
+    const bootstrapClient = await getSupabaseApiRouteClient(
+      nextRequest,
+      new NextResponse(),
+    );
+    const { data, error: exchangeError } =
+      await bootstrapClient.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
       devLog('Session exchange error:', { error: exchangeError });
@@ -60,13 +62,25 @@ export async function GET(request: Request) {
     devLog('Successfully authenticated user:', { email: data.user.email });
 
     const finalRedirect = await resolvePostAuthRedirect(
-      supabaseClient,
+      bootstrapClient,
       data.user.id,
       postAuthParams,
     );
 
-    const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`);
-    copyResponseCookies(cookieResponse, redirectResponse);
+    const redirectResponse = NextResponse.redirect(`${origin}${finalRedirect}`, 303);
+    const sessionClient = await getSupabaseApiRouteClient(nextRequest, redirectResponse);
+    const { error: setSessionError } = await sessionClient.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
+
+    if (setSessionError) {
+      devLog('setSession on redirect failed:', { error: setSessionError });
+      return NextResponse.redirect(
+        `${origin}/auth?error=${encodeURIComponent(setSessionError.message)}`,
+      );
+    }
+
     redirectResponse.headers.set('cache-control', 'no-store');
     return redirectResponse;
   } catch (err) {

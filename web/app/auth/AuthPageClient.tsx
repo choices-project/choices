@@ -86,24 +86,6 @@ export default function AuthPageClient() {
 
   const resetPasswordHref = `/auth/reset?redirectTo=${encodeURIComponent(redirectTarget)}`;
 
-  /**
-   * Canonical origin for OAuth redirects. We always prefer the build-time
-   * `NEXT_PUBLIC_SITE_URL` / `NEXT_PUBLIC_BASE_URL` so the OAuth flow returns
-   * users to the production domain (e.g., `https://www.choices-app.com`) even
-   * if they somehow loaded `/auth` from a non-canonical origin like a Vercel
-   * preview URL. We strip a trailing slash so the joined path stays clean.
-   */
-  const canonicalSiteOrigin = React.useMemo(() => {
-    const fromEnv = env.NEXT_PUBLIC_SITE_URL ?? env.NEXT_PUBLIC_BASE_URL ?? '';
-    if (fromEnv) {
-      return fromEnv.replace(/\/+$/, '');
-    }
-    if (typeof window !== 'undefined') {
-      return window.location.origin;
-    }
-    return '';
-  }, []);
-
   // Heal stale global loading (e.g. OAuth started, redirect never fired, SPA navigation back to /auth).
   React.useEffect(() => {
     setAuthLoading(false);
@@ -120,61 +102,15 @@ export default function AuthPageClient() {
     window.location.replace(`/auth/callback?${params.toString()}`);
   }, [searchParams]);
 
-  const OAUTH_START_TIMEOUT_MS = 25_000;
-
-  // Social OAuth handler
-  const handleSocialAuth = async (provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok') => {
+  /** Server route sets PKCE cookies and redirects to the provider (see /api/auth/oauth/[provider]). */
+  const handleSocialAuth = (provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok') => {
     if (oauthProviderBusy) {
       return;
     }
     clearAuthError();
     setOauthProviderBusy(provider);
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-    try {
-      const supabase = await getSupabaseBrowserClient();
-      if (!supabase) {
-        setAuthError(t('auth.errors.serviceUnavailable') || 'Service unavailable');
-        return;
-      }
-
-      const redirectTo = `${canonicalSiteOrigin}/auth/callback?redirectTo=${encodeURIComponent(redirectTarget)}`;
-
-      const oauthPromise = supabase.auth.signInWithOAuth({
-        provider: provider as never,
-        options: {
-          redirectTo,
-        },
-      });
-
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(new Error(t('auth.errors.oauthTimeout') || 'Sign-in timed out. Check your connection and try again.'));
-        }, OAUTH_START_TIMEOUT_MS);
-      });
-
-      const { data, error } = await Promise.race([oauthPromise, timeoutPromise]);
-
-      if (error) {
-        setAuthError(error.message);
-        return;
-      }
-
-      // Backup redirect if the client did not navigate (extensions, rare browser quirks).
-      const url = data?.url;
-      if (typeof window !== 'undefined' && url && window.location.href !== url) {
-        window.location.assign(url);
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : t('auth.errors.socialSignInFailed') || 'Social sign-in failed';
-      setAuthError(errorMessage);
-    } finally {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      setOauthProviderBusy(null);
-    }
+    const startUrl = `/api/auth/oauth/${provider}?redirectTo=${encodeURIComponent(redirectTarget)}`;
+    window.location.assign(startUrl);
   };
 
   // Get available OAuth providers
