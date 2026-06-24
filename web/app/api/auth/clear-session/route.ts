@@ -9,13 +9,12 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 /**
- * Server-side session reset: clears httpOnly Supabase cookies (invisible to
- * `document.cookie` on `/clear-session`) and redirects to `/` with a cache-busting
- * query param so browsers do not replay a cached 307 to `/polls`.
+ * Server-side sign-out: clears httpOnly Supabase cookies (invisible to JS) and
+ * redirects to the marketing home. Used by nav logout and `/clear-session`.
  */
 export async function GET(request: NextRequest) {
   const redirectUrl = new URL('/', request.url);
-  redirectUrl.searchParams.set('session-cleared', String(Date.now()));
+  redirectUrl.searchParams.set('loggedOut', '1');
 
   const response = NextResponse.redirect(redirectUrl, 302);
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');

@@ -13,8 +13,6 @@ import React, {
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
-import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token'
-
 import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session'
 import { PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders'
 import { env } from '@/lib/config/env'
@@ -67,6 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearUserErrorRef = useRef(clearUserError)
   const storeSignOutRef = useRef(storeSignOut)
   const setStoreLoadingRef = useRef(setStoreLoading)
+  /** Prevents onAuthStateChange / hydration from re-adopting a session mid-logout. */
+  const signOutInProgressRef = useRef(false)
 
   useEffect(() => { initializeAuthRef.current = initializeAuth }, [initializeAuth])
   useEffect(() => { setSessionAndDerivedRef.current = setSessionAndDerived }, [setSessionAndDerived])
@@ -110,6 +110,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabaseClient: Awaited<ReturnType<typeof getSupabaseBrowserClient>>,
       nextSession: Session | null,
     ) => {
+      if (signOutInProgressRef.current) {
+        return
+      }
       if (nextSession?.user) {
         initializeAuthRef.current(nextSession.user, nextSession, true)
         setSessionAndDerivedRef.current(nextSession)
@@ -165,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const GET_SESSION_HARD_TIMEOUT_MS = 10_000
 
     const adoptSession = (session: Session | null, supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>) => {
-      if (!mounted) return
+      if (!mounted || signOutInProgressRef.current) return
       setSession(session)
       setUser(session?.user ?? null)
       applySession(supabase, session)
@@ -290,7 +293,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fallback: if the auth form updated the user store, sync it into context state.
   useEffect(() => {
-    if (session || !storeSession) {
+    if (signOutInProgressRef.current || session || !storeSession) {
       return
     }
     setSession(storeSession)
@@ -300,100 +303,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [session, storeSession, storeUser])
 
   const signOut = useCallback(async () => {
-    if (IS_E2E_HARNESS) {
-      storeSignOutRef.current()
-      initializeAuthRef.current(null, null, false)
-      setSession(null)
-      setUser(null)
-      // Redirect to marketing home after logout
-      if (typeof window !== 'undefined') {
-        window.location.replace('/')
-      }
+    if (signOutInProgressRef.current) {
+      return
+    }
+    signOutInProgressRef.current = true
+
+    storeSignOutRef.current()
+    initializeAuthRef.current(null, null, false)
+    setSession(null)
+    setUser(null)
+
+    if (typeof window === 'undefined') {
       return
     }
 
     try {
-      // Clear local state first to prevent any UI flicker
-      storeSignOutRef.current();
-      initializeAuthRef.current(null, null, false);
-      setSession(null);
-      setUser(null);
-
-      // Clear localStorage and sessionStorage
-      if (typeof window !== 'undefined') {
-        window.localStorage.clear();
-        window.sessionStorage.clear();
-      }
-
-      // Call logout API endpoint to properly clear cookies
-      // Use a timeout to prevent hanging
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5_000); // 5 second timeout
-
-      try {
-        const csrf = await fetchAuthCsrfToken();
-        const response = await fetch('/api/auth/logout', {
-          method: 'POST',
-          credentials: 'include',
-          signal: controller.signal,
-          headers: csrf
-            ? {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrf,
-              }
-            : {
-                'Content-Type': 'application/json',
-              },
-          body: JSON.stringify({}),
-        });
-
-        clearTimeout(timeoutId);
-
-        const supabase = await getSupabaseBrowserClient();
-        if (response.ok) {
-          await supabase.auth.signOut().catch((err) => {
-            logger.warn('Browser signOut after API logout failed:', err);
-          });
-        } else {
-          logger.warn('Logout API call failed, attempting direct signOut');
-          await supabase.auth.signOut().catch((err) => {
-            logger.warn('Direct Supabase signOut also failed:', err);
-          });
-        }
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        // If fetch fails (network error, timeout, etc.), try direct Supabase signOut
-        if (fetchError instanceof Error && fetchError.name !== 'AbortError') {
-          logger.warn('Logout API fetch failed, attempting direct signOut', fetchError);
-          try {
-            const supabase = await getSupabaseBrowserClient();
-            await supabase.auth.signOut();
-          } catch (supabaseError) {
-            logger.warn('Direct Supabase signOut also failed:', supabaseError);
-          }
-        }
-      }
-
-      // Always redirect to the auth page, even if API calls fail
-      if (typeof window !== 'undefined') {
-        // Use replace instead of href to prevent back button issues
-        // This ensures users are taken back to sign-in after sign out
-        // Use full URL to ensure proper redirect
-        window.location.replace(`${window.location.origin}/auth?loggedOut=1`);
-      }
+      const supabase = await getSupabaseBrowserClient()
+      await supabase.auth.signOut({ scope: 'local' })
     } catch (error) {
-      logger.error('Failed to sign out:', error);
-      // Still clear state and redirect even if logout fails
-      storeSignOutRef.current();
-      initializeAuthRef.current(null, null, false);
-      setSession(null);
-      setUser(null);
-      if (typeof window !== 'undefined') {
-        window.localStorage.clear();
-        window.sessionStorage.clear();
-        window.location.replace(`${window.location.origin}/auth?loggedOut=1`);
-      }
+      logger.warn('Local Supabase signOut during logout failed', { error })
     }
+
+    try {
+      window.localStorage.clear()
+      window.sessionStorage.clear()
+    } catch {
+      // Private browsing / disabled storage
+    }
+
+    // Server route clears httpOnly Supabase cookies, then redirects to `/`.
+    // A full navigation avoids races with onAuthStateChange re-hydrating cookies.
+    window.location.replace('/api/auth/clear-session')
   }, []) // Empty deps - uses refs for store actions
 
   const refreshSession = useCallback(async () => {
@@ -415,7 +355,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fallback: if a Supabase token exists in localStorage but context is empty, refresh.
   const hasRefreshedFromStorageRef = useRef(false)
   useEffect(() => {
-    if (hasRefreshedFromStorageRef.current || session || loading || IS_E2E_HARNESS) {
+    if (
+      signOutInProgressRef.current ||
+      hasRefreshedFromStorageRef.current ||
+      session ||
+      loading ||
+      IS_E2E_HARNESS
+    ) {
       return
     }
     if (typeof window === 'undefined') {
@@ -432,7 +378,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fallback: if refresh fails to populate, hydrate from localStorage token shape.
   useEffect(() => {
-    if (session || loading || IS_E2E_HARNESS) {
+    if (signOutInProgressRef.current || session || loading || IS_E2E_HARNESS) {
       return
     }
     if (typeof window === 'undefined') {
