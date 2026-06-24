@@ -1,45 +1,55 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { clearAllCaches } from '@/features/pwa/lib/cache-strategies';
+import { unregisterAllServiceWorkers } from '@/features/pwa/lib/service-worker-registration';
+
 /**
- * Debug page to clear all auth cookies and reset session
- * Useful when auth state gets corrupted
+ * Debug page to clear auth (including httpOnly cookies via API), service worker
+ * caches, and local storage. Use when auth or cached redirects get stuck.
  */
 export default function ClearSessionPage() {
-  const router = useRouter();
-  const [status, setStatus] = useState('Clearing session...');
+  const [status, setStatus] = useState('Resetting local session...');
 
   useEffect(() => {
-    // Clear all auth-related cookies
-    const cookies = document.cookie.split(';');
-    
-    cookies.forEach(cookie => {
-      const [name] = cookie.split('=');
-      const cleanName = name?.trim();
-      
-      if (cleanName) {
-        // Clear with multiple path/domain combinations to ensure deletion
-        document.cookie = `${cleanName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        document.cookie = `${cleanName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
-        document.cookie = `${cleanName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname}`;
+    let cancelled = false;
+
+    async function reset() {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+
+        document.cookie.split(';').forEach((cookie) => {
+          const name = cookie.split('=')[0]?.trim();
+          if (!name) return;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        });
+
+        if (!cancelled) {
+          setStatus('Clearing service worker caches...');
+        }
+
+        await unregisterAllServiceWorkers();
+        await clearAllCaches();
+
+        if (!cancelled) {
+          setStatus('Clearing server session...');
+          window.location.replace('/api/auth/clear-session');
+        }
+      } catch {
+        if (!cancelled) {
+          window.location.replace('/api/auth/clear-session');
+        }
       }
-    });
+    }
 
-    // Clear localStorage
-    localStorage.clear();
-    
-    // Clear sessionStorage
-    sessionStorage.clear();
+    void reset();
 
-    setStatus('Session cleared! Redirecting to home...');
-    
-    // Redirect after a short delay
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 2000);
-  }, [router]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -50,4 +60,3 @@ export default function ClearSessionPage() {
     </div>
   );
 }
-

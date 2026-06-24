@@ -5,6 +5,11 @@ import {
   detectCorruptSupabaseAuthCookies,
 } from '@/utils/supabase/sanitize-cookies'
 
+import {
+  DEFAULT_POST_AUTH_PATH,
+  normalizePostAuthRedirectPath,
+  pickRedirectQueryParam,
+} from '@/lib/auth/normalize-post-auth-redirect'
 import { env } from '@/lib/config/env'
 import {
   getSecurityConfig,
@@ -17,11 +22,6 @@ import {
   LOCALE_COOKIE_NAME,
   resolveLocale
 } from '@/lib/i18n/config'
-import {
-  DEFAULT_POST_AUTH_PATH,
-  normalizePostAuthRedirectPath,
-  pickRedirectQueryParam,
-} from '@/lib/auth/normalize-post-auth-redirect'
 import logger from '@/lib/utils/logger'
 
 
@@ -400,7 +400,7 @@ function checkAuthInMiddleware(
       if (!cookie.name.startsWith('sb-')) return false
       const lowerName = cookie.name.toLowerCase()
       // Do not treat a single chunked fragment as a full session.
-      if (/\-auth-token\.\d+$/.test(lowerName)) return false
+      if (/ -auth-token\.\d+$/.test(lowerName)) return false
       const isAuthTokenLike =
         lowerName.endsWith('-auth-token') || lowerName === 'sb-access-token'
       return isAuthTokenLike && isValidCookieValue(cookie.value)
@@ -483,24 +483,10 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // Define protected routes that require authentication
+  // Minimal core v0.1: only routes that require authentication
   const protectedRoutes = [
-    '/feed',
-    '/dashboard',
     '/profile',
-    '/settings',
-    '/onboarding',
-    '/admin',
-    '/analytics',
-    '/account',
-    '/candidate',
-    '/contact',
-    '/polls/analytics',
     '/polls/create',
-    '/polls/templates',
-    '/representatives/my',
-    '/representatives/self',
-    '/e2e',
   ];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register');
@@ -515,66 +501,17 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/auth/device-flow/') ||
     pathname.startsWith('/auth/reset/confirm')
 
-  // Legacy marketing URL: consolidate to `/` (or `/feed` when signed in), including `/landing/*`
+  // Legacy marketing URL: consolidate to `/` (including `/landing/*`)
   if (pathname === '/landing' || pathname.startsWith('/landing/')) {
-    const { isAuthenticated } = checkAuthInMiddleware(request)
-    const targetPath = isAuthenticated ? '/feed' : '/'
-    const redirectUrl = new URL(targetPath, request.url)
+    const redirectUrl = new URL('/', request.url)
     redirectUrl.search = request.nextUrl.search
     return NextResponse.redirect(redirectUrl, 308)
   }
 
-  // Root path: authenticated users go to feed; unauthenticated users stay on `/` (marketing home)
-  if (pathname === '/') {
-    const { isAuthenticated, diagnostics } = checkAuthInMiddleware(request)
-
-    if (isAuthenticated) {
-      const redirectPath = '/feed'
-      const redirectUrl = new URL(redirectPath, request.url)
-
-      if (env.DEBUG_MIDDLEWARE === '1') {
-        console.warn('[middleware] Root path redirect:', {
-          pathname,
-          isAuthenticated,
-          redirectPath,
-          redirectUrl: redirectUrl.toString(),
-          cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
-          authCookieFound: diagnostics?.authCookieFound,
-          timestamp: new Date().toISOString(),
-        })
-      }
-
-      const redirectResponse = NextResponse.redirect(redirectUrl, 307)
-      redirectResponse.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
-
-      if (process.env.NODE_ENV !== 'production' && diagnostics) {
-        redirectResponse.headers.set('X-Auth-Debug-IsAuthenticated', String(isAuthenticated))
-        redirectResponse.headers.set('X-Auth-Debug-RedirectPath', redirectPath)
-        redirectResponse.headers.set('X-Auth-Debug-CookieHeaderPresent', String(diagnostics.cookieHeaderPresent))
-        redirectResponse.headers.set('X-Auth-Debug-CookieHeaderLength', String(diagnostics.cookieHeaderLength || 0))
-        redirectResponse.headers.set('X-Auth-Debug-HasSbInHeader', String(diagnostics.hasSbInHeader))
-        redirectResponse.headers.set('X-Auth-Debug-AuthCookieFound', String(diagnostics.authCookieFound))
-        redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesCount', String(diagnostics.parsedCookiesCount || 0))
-        redirectResponse.headers.set('X-Auth-Debug-ParsedCookiesHasSb', String(diagnostics.parsedCookiesHasSb))
-        if (diagnostics.authCookieName) {
-          redirectResponse.headers.set('X-Auth-Debug-AuthCookieName', String(diagnostics.authCookieName))
-          redirectResponse.headers.set('X-Auth-Debug-AuthCookieValueLength', String(diagnostics.authCookieValueLength || 0))
-        }
-      }
-
-      return redirectResponse
-    }
-
-    if (env.DEBUG_MIDDLEWARE === '1') {
-      console.warn('[middleware] Root path: unauthenticated, serving marketing home', {
-        pathname,
-        isAuthenticated,
-        cookieHeaderPresent: diagnostics?.cookieHeaderPresent,
-        authCookieFound: diagnostics?.authCookieFound,
-        timestamp: new Date().toISOString(),
-      })
-    }
-  }
+  // Minimal core v0.1: `/` is always the marketing home (no auto-redirect to /polls).
+  // Post-login still lands on /polls via resolve-post-auth-redirect; nav links polls for signed-in users.
+  // Never cache `/` in the browser: a prior middleware build redirected signed-in users to
+  // `/polls` with `Cache-Control: public, max-age=3600`, which trapped external browsers.
 
   // SECURITY: Protect routes that require authentication
   // This is a critical security check - unauthenticated users must be blocked
@@ -701,8 +638,8 @@ export async function middleware(request: NextRequest) {
     const { isAuthenticated } = checkAuthInMiddleware(request)
 
     if (isAuthenticated) {
-      // Authenticated users trying to access login/register should go to feed
-      return NextResponse.redirect(new URL('/feed', request.url), 307)
+      // Authenticated users trying to access login/register should go to polls
+      return NextResponse.redirect(new URL('/polls', request.url), 307)
     }
     // If not authenticated, allow access to login/register pages
   }
@@ -750,6 +687,12 @@ export async function middleware(request: NextRequest) {
 
   // Create response
   const response = NextResponse.next()
+
+  if (pathname === '/') {
+    response.headers.set('Cache-Control', 'private, no-store, must-revalidate')
+    response.headers.set('Vary', 'Cookie')
+    response.headers.set('X-Choices-Page', 'marketing-home')
+  }
 
   if (!pathname.startsWith('/api/')) {
     const cookieLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value

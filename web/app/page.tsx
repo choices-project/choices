@@ -65,10 +65,8 @@ export function generateMetadata(): Metadata {
  * Root marketing home (`/`).
  *
  * Middleware behavior:
- * - Authenticated users are redirected to `/feed` before this page runs.
- * - Unauthenticated users reach this page (no redirect to `/landing`).
- *
- * `/landing` requests are consolidated to `/` or `/feed` via middleware (308).
+ * - `/` always serves the marketing home (minimal core v0.1).
+ * - `/landing` requests are consolidated to `/` via middleware (308).
  */
 export default function RootPage() {
   return <LandingPage />;

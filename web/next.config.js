@@ -642,7 +642,31 @@ const nextConfig = {
         source: '/home',
         destination: '/',
         permanent: true
-      }
+      },
+      // Minimal core v0.1: archived routes → polls home
+      { source: '/feed', destination: '/polls', permanent: false },
+      { source: '/feed/:path*', destination: '/polls', permanent: false },
+      { source: '/dashboard', destination: '/polls', permanent: false },
+      { source: '/dashboard/:path*', destination: '/polls', permanent: false },
+      { source: '/onboarding', destination: '/polls', permanent: false },
+      { source: '/onboarding/:path*', destination: '/polls', permanent: false },
+      { source: '/civics', destination: '/polls', permanent: false },
+      { source: '/civics/:path*', destination: '/polls', permanent: false },
+      { source: '/contact', destination: '/polls', permanent: false },
+      { source: '/contact/:path*', destination: '/polls', permanent: false },
+      { source: '/admin', destination: '/polls', permanent: false },
+      { source: '/admin/:path*', destination: '/polls', permanent: false },
+      { source: '/analytics', destination: '/polls', permanent: false },
+      { source: '/candidate', destination: '/polls', permanent: false },
+      { source: '/candidate/:path*', destination: '/polls', permanent: false },
+      { source: '/e2e', destination: '/polls', permanent: false },
+      { source: '/e2e/:path*', destination: '/polls', permanent: false },
+      { source: '/polls/templates', destination: '/polls/create', permanent: false },
+      { source: '/polls/analytics', destination: '/polls', permanent: false },
+      { source: '/profile/biometric-setup', destination: '/profile/edit', permanent: false },
+      { source: '/profile/biometric-setup/:path*', destination: '/profile/edit', permanent: false },
+      { source: '/profile/preferences', destination: '/profile/edit', permanent: false },
+      { source: '/profile/preferences/:path*', destination: '/profile/edit', permanent: false },
     ]
   },
 

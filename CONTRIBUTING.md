@@ -2,7 +2,17 @@
 
 We welcome contributions! This project is licensed under MIT and uses the Developer Certificate of Origin (DCO) for inbound contributions.
 
-_Documentation last reviewed: April 19, 2026._
+_Documentation last reviewed: June 22, 2026._
+
+## Minimal core (new contributors)
+
+If you are joining during the **v0.1 rebuild**, check out **`refactor/minimal-core`** and read **[`docs/MINIMAL_CORE.md`](docs/MINIMAL_CORE.md)** before the full platform docs. That branch keeps only: landing, email/password auth, polls (list/view/vote/create), basic profile, and legal pages.
+
+Suggested **`good first issue`** tasks (file as GitHub issues with label `minimal-core`):
+
+- Fix nav active state on `/polls/create`
+- Add validation messages to `CreatePollForm`
+- Extend `minimal-core-smoke.spec.ts` with authenticated poll vote flow
 
 ## Quick Start (~15 minutes to first local run)
 

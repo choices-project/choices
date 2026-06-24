@@ -11,7 +11,7 @@
 // pre-auth-redirect-fix bundles and middleware-redirected pages. The activate
 // handler below deletes every cache that is not in CACHE_NAMES, so bumping the
 // version is sufficient to evict all previous caches at install time.
-const SW_VERSION = 'v1.1.9';
+const SW_VERSION = 'v1.3.0';
 const CACHE_PREFIX = 'choices-pwa';
 const CACHE_NAMES = {
   static: `${CACHE_PREFIX}-${SW_VERSION}-static`,
@@ -26,6 +26,7 @@ const CACHE_NAMES = {
 // middleware 307 redirect to /auth cached and replayed after login). Always
 // bypass the cache for these and go to the network.
 const AUTH_GATED_PAGE_PREFIXES = [
+  '/',
   '/feed',
   '/admin',
   '/profile',
@@ -39,7 +40,6 @@ const AUTH_GATED_PAGE_PREFIXES = [
 ];
 
 const STATIC_ASSETS = [
-  '/',
   '/offline.html',
   '/manifest.json',
   '/icons/icon-192x192.svg',

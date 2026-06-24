@@ -12,7 +12,7 @@ import { env } from '@/lib/config/env';
  * Service worker version
  * Increment this to force service worker update across all clients
  */
-export const SW_VERSION = 'v1.0.1';
+export const SW_VERSION = 'v1.3.0';
 
 /**
  * Cache names configuration

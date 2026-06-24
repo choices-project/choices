@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { devLog } from '@/lib/utils/logger';
 
@@ -7,6 +6,8 @@ import {
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from './normalize-post-auth-redirect';
+
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export { DEFAULT_POST_AUTH_PATH };
 
@@ -29,7 +30,7 @@ export function parsePostAuthRedirectFromSearchParams(
  * Choose where to send the user after a successful sign-in.
  *
  * - Explicit `redirectTo` / `redirect` / `next` (already normalized) is always honored.
- * - Otherwise, users without a profile go to onboarding; everyone else goes to `/feed`.
+ * - Otherwise, users without a profile still go to `/polls` in minimal core (onboarding archived).
  */
 export async function resolvePostAuthRedirect(
   supabase: SupabaseClient,
@@ -53,8 +54,7 @@ export async function resolvePostAuthRedirect(
     }
 
     if (!profile) {
-      devLog('User has no profile, redirecting to onboarding');
-      return '/onboarding';
+      devLog('User has no profile; minimal core sends to polls (profile auto-provision may apply)');
     }
 
     return DEFAULT_POST_AUTH_PATH;

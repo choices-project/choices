@@ -44,6 +44,7 @@
     "**/scripts.disabled/**",
     "**/tests.disabled/**",
     "**/_archived/**",
+    "**/_archive/**",
     "**/_deprecated/**",
     "archive/**",
     "archive-*/**",

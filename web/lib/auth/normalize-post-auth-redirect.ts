@@ -1,5 +1,5 @@
-/** Default destination when no deep link was requested and onboarding is complete. */
-export const DEFAULT_POST_AUTH_PATH = '/feed';
+/** Default destination when no deep link was requested (minimal core v0.1). */
+export const DEFAULT_POST_AUTH_PATH = '/polls';
 
 /**
  * First non-empty post-auth path from common query param names on `/auth`.
@@ -27,14 +27,28 @@ export function pickRedirectQueryParam(params: URLSearchParams): string | null {
 export function normalizePostAuthRedirectPath(candidate: string): string {
   const trimmed = candidate.trim();
   if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
-    return '/feed';
+    return '/polls';
   }
   if (trimmed.startsWith('/auth')) {
-    return '/feed';
+    return '/polls';
   }
   const pathOnly = (trimmed.split('?')[0] ?? '').replace(/\/+$/, '') || '/';
   if (pathOnly === '/login') {
-    return '/feed';
+    return '/polls';
+  }
+  // Archived routes redirect to polls home in minimal core
+  const archivedPrefixes = [
+    '/feed',
+    '/dashboard',
+    '/onboarding',
+    '/civics',
+    '/contact',
+    '/admin',
+    '/analytics',
+    '/e2e',
+  ];
+  if (archivedPrefixes.some((prefix) => pathOnly === prefix || pathOnly.startsWith(`${prefix}/`))) {
+    return '/polls';
   }
   return trimmed;
 }

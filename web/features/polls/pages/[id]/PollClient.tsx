@@ -1,17 +1,14 @@
 'use client';
 
-import { AlertCircle, BarChart3, Lock, Printer, Scale, Share2, Shield, Trash2, Trophy } from 'lucide-react';
+import { AlertCircle, Share2, Shield, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
-import { formatRepresentativeLocation } from '@/features/civics/utils/formatRepresentativeLocation';
-import ReportModal from '@/features/moderation/components/ReportModal';
 import { IntegrityBadge } from '@/features/polls/components/IntegrityBadge';
 import { PollActivitySparkline } from '@/features/polls/components/PollActivitySparkline';
 import { PollOptionComparison } from '@/features/polls/components/PollOptionComparison';
-import { VoteAuditPanel } from '@/features/polls/components/VoteAuditPanel';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
 // Vote Milestones - Commented out per user request
 // import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
@@ -27,16 +24,6 @@ import { AnimatedVoteBar } from '@/components/shared/AnimatedVoteBar';
 import { BackToTop } from '@/components/shared/BackToTop';
 import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -138,66 +125,16 @@ export default function PollClient({ poll }: PollClientProps) {
   const { announce } = useLiveAnnouncer();
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { isAdmin, trustTier } = useProfileDisplay();
-  const isAdminFlag = isAdmin ?? false;
+  const { trustTier } = useProfileDisplay();
   const { addNotification } = useNotificationActions();
   const { setCurrentRoute, setSidebarActiveSection, setBreadcrumbs } = useAppActions();
   const pathname = usePathname();
 
   const [isMounted, setIsMounted] = useState(false);
-  const [representativeData, setRepresentativeData] = useState<{
-    name?: string;
-    party?: string;
-    office?: string;
-    state?: string;
-    office_city?: string | null;
-    district?: string | null;
-  } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  const repId = poll.representativeId ?? null;
-  useEffect(() => {
-    if (!repId || typeof repId !== 'number') return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`/api/v1/civics/representative/${repId}?fields=id,name,party,office,state,office_city,district`);
-        if (!res.ok || cancelled) return;
-        const json = (await res.json()) as {
-          data?: {
-            representative?: {
-              name?: string;
-              party?: string;
-              office?: string;
-              state?: string;
-              office_city?: string | null;
-              district?: string | null;
-            };
-            name?: string;
-            party?: string;
-            office?: string;
-            state?: string;
-            office_city?: string | null;
-            district?: string | null;
-          };
-          name?: string;
-          party?: string;
-          office?: string;
-          state?: string;
-          office_city?: string | null;
-          district?: string | null;
-        };
-        const rep = json?.data?.representative ?? json?.data ?? json ?? null;
-        if (!cancelled && rep) setRepresentativeData(rep);
-      } catch {
-        if (!cancelled) setRepresentativeData(null);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [repId]);
 
   const PRIVACY_LABELS: Record<string, string> = useMemo(() => ({
     public: t('polls.view.privacy.public'),
@@ -251,38 +188,9 @@ export default function PollClient({ poll }: PollClientProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasVoteAttempted, setHasVoteAttempted] = useState(false);
-  const [isReportOpen, setIsReportOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const [localPollStatus, setLocalPollStatus] = useState(poll.status ?? 'active');
+  const pollStatus = poll.status ?? 'active';
   const [integrityVerifiedOnly, setIntegrityVerifiedOnly] = useState(false);
-
-  const isPollCreator = Boolean(user?.id && poll.createdBy && String(user.id) === String(poll.createdBy));
-  const pollStatus = localPollStatus ?? poll.status ?? 'active';
-  const canClosePoll = (isPollCreator || isAdminFlag) && pollStatus === 'active';
   const canVote = poll.canVote ?? (pollStatus === 'active');
-
-  // Debug logging for close/delete button visibility and voting status
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('PollClient: Button visibility and voting status', {
-        pollId: poll.id,
-        userId: user?.id,
-        pollCreatedBy: poll.createdBy,
-        isPollCreator,
-        isAdmin: isAdminFlag,
-        pollStatus,
-        canClosePoll,
-        canVote,
-        hasUser: !!user,
-        authLoading,
-        hasCloseButton: canClosePoll,
-        hasDeleteButton: isPollCreator,
-      });
-    }
-  }, [poll.id, user?.id, poll.createdBy, isPollCreator, isAdminFlag, pollStatus, canClosePoll, canVote, user, authLoading]);
 
   // Use refs for stable app store actions to prevent infinite re-renders
   const setCurrentRouteRef = useRef(setCurrentRoute);
@@ -641,19 +549,6 @@ export default function PollClient({ poll }: PollClientProps) {
   // Guard window access to prevent hydration mismatch
   const shareUrl = isMounted && typeof window !== 'undefined' ? `${window.location.origin}/polls/${poll.id}` : '';
 
-  const handlePrintSummary = () => {
-    if (!isMounted || typeof window === 'undefined') return;
-    recordPollEvent('detail_print_summary', {
-      label: poll.id,
-      value: totalRecordedVotes,
-      metadata: {
-        totalVotes: totalRecordedVotes,
-        options: normalizedOptions.length,
-      },
-    });
-    window.print();
-  };
-
   const handleVote = useCallback(async (submission: VoteSubmission): Promise<{ ok: boolean; id?: string; error?: string }> => {
     if (!user || !canVote || pollStatus !== 'active' || storeIsVoting) {
       return { ok: false, error: 'Cannot vote at this time' };
@@ -908,109 +803,10 @@ export default function PollClient({ poll }: PollClientProps) {
     }
   };
 
-  const handleOpenAnalytics = () => {
-    recordPollEvent('detail_view_analytics', {
-      label: poll.id,
-      value: 1,
-    });
-    router.push(`/polls/analytics?pollId=${poll.id}`);
-  };
-
   const getVotePercentage = (votes: number) => {
     if (displayTotalVotes === 0) return 0;
     return Math.round((votes / displayTotalVotes) * 100);
   };
-
-  const handleDeletePoll = useCallback(async () => {
-    if (!isPollCreator || !poll.id) return;
-
-    setIsDeleting(true);
-    try {
-      const csrf = await fetchAuthCsrfToken();
-      if (!csrf) {
-        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
-      }
-      const response = await fetch(`/api/polls/${poll.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'X-CSRF-Token': csrf,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error ?? `Failed to delete poll: ${response.status}`);
-      }
-
-      addNotification({
-        type: 'success',
-        title: 'Poll deleted',
-        message: 'Your poll has been deleted successfully.',
-        duration: 4000,
-      });
-
-      recordPollEvent('poll_deleted', {
-        label: poll.id,
-        value: 1,
-      });
-
-      // Redirect to polls page
-      router.push('/polls');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete poll';
-      addNotification({
-        type: 'error',
-        title: 'Delete failed',
-        message: errorMessage,
-        duration: 6000,
-      });
-      logger.error('Failed to delete poll:', error);
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-    }
-  }, [isPollCreator, poll.id, addNotification, recordPollEvent, router]);
-
-  const handleClosePoll = useCallback(async () => {
-    if (!canClosePoll || !poll.id || pollStatus !== 'active') return;
-    setIsClosing(true);
-    try {
-      const csrf = await fetchAuthCsrfToken();
-      if (!csrf) {
-        throw new Error('Unable to obtain CSRF token. Please refresh and try again.');
-      }
-      const response = await fetch(`/api/polls/${poll.id}/close`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'X-CSRF-Token': csrf,
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error ?? `Failed to close poll (${response.status})`);
-      }
-      // Update local state immediately
-      setLocalPollStatus('closed');
-      setShowCloseConfirm(false);
-      addNotification({
-        type: 'success',
-        title: 'Poll closed',
-        message: 'This poll is now closed. You can view advanced analytics.',
-        duration: 4000,
-      });
-      recordPollEvent('poll_closed', { label: poll.id, value: 1 });
-      // Refresh to get latest data from server
-      router.refresh();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to close poll';
-      addNotification({ type: 'error', title: 'Close failed', message: msg, duration: 6000 });
-      logger.error('Failed to close poll', { pollId: poll.id, error: msg });
-    } finally {
-      setIsClosing(false);
-    }
-  }, [canClosePoll, poll.id, pollStatus, addNotification, recordPollEvent, router]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6" aria-busy={loading} data-testid="poll-details">
@@ -1029,40 +825,6 @@ export default function PollClient({ poll }: PollClientProps) {
           <Button type="button" variant="outline" onClick={handleCopyShareLink}>
             <Share2 className="mr-2 h-4 w-4" /> {t('polls.view.buttons.share')}
           </Button>
-          <Button type="button" variant="secondary" onClick={handleOpenAnalytics}>
-            <BarChart3 className="mr-2 h-4 w-4" /> {t('polls.view.buttons.analytics')}
-          </Button>
-          <Button type="button" variant="ghost" onClick={handlePrintSummary}>
-            <Printer className="mr-2 h-4 w-4" /> {t('polls.view.buttons.printSummary')}
-          </Button>
-          <Button type="button" variant="ghost" onClick={() => setIsReportOpen(true)}>
-            <AlertCircle className="mr-2 h-4 w-4" /> Report
-          </Button>
-          {canClosePoll && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCloseConfirm(true)}
-              className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-900/20"
-              disabled={isClosing}
-              aria-label="Close poll"
-            >
-              <Lock className="h-4 w-4" aria-hidden="true" />
-              Close Poll
-            </Button>
-          )}
-          {isPollCreator && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              disabled={isDeleting}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </Button>
-          )}
         </div>
       </div>
 
@@ -1076,46 +838,6 @@ export default function PollClient({ poll }: PollClientProps) {
         <p className="text-foreground font-medium leading-relaxed mb-6" data-testid="poll-description">
           {poll.description}
         </p>
-      )}
-
-      {repId != null && (
-        <div className="mb-6 p-4 rounded-lg border border-border bg-card">
-          <p className="text-xs uppercase font-semibold text-muted-foreground mb-2">Poll about</p>
-          <Link
-            href={`/representatives/${repId}`}
-            className="block hover:opacity-80 transition-opacity"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="space-y-1">
-              <p className="text-lg font-semibold text-foreground">
-                {representativeData?.name ?? `Representative #${repId}`}
-              </p>
-              {representativeData?.party && (
-                <p className="text-sm text-foreground/80">{representativeData.party}</p>
-              )}
-              {representativeData?.office && (
-                <p className="text-sm text-foreground/80">{representativeData.office}</p>
-              )}
-              {representativeData?.state && (
-                <p className="text-sm text-foreground/60">
-                  {formatRepresentativeLocation({
-                    state: representativeData.state,
-                    office_city: representativeData.office_city ?? null,
-                    district: representativeData.district ?? null,
-                  })}
-                </p>
-              )}
-            </div>
-          </Link>
-          {poll.pollType === 'constituent_will' && repId != null && poll.billId && (
-            <Button asChild variant="outline" size="sm" className="mt-3 gap-2 min-h-[2.25rem]">
-              <Link href={`/representatives/${repId}/accountability`} onClick={(e) => e.stopPropagation()}>
-                <Scale className="w-4 h-4 shrink-0" aria-hidden />
-                {t('polls.view.buttons.compareToVote')}
-              </Link>
-            </Button>
-          )}
-        </div>
       )}
 
       {/* Quick Stats - Compact summary */}
@@ -1204,7 +926,16 @@ export default function PollClient({ poll }: PollClientProps) {
         <Alert variant="default" className="border border-amber-500/20 bg-amber-500/10 text-foreground mb-6">
           <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
           <AlertTitle className="text-foreground">{votingStatusMessage.title}</AlertTitle>
-          <AlertDescription className="text-foreground/90">{votingStatusMessage.description}</AlertDescription>
+          <AlertDescription className="text-foreground/90 space-y-3">
+            <p>{votingStatusMessage.description}</p>
+            {!authLoading && !user ? (
+              <Button asChild size="sm" variant="default">
+                <Link href={`/auth?redirectTo=${encodeURIComponent(pathname ?? `/polls/${poll.id}`)}`}>
+                  Sign in to vote
+                </Link>
+              </Button>
+            ) : null}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -1473,14 +1204,6 @@ export default function PollClient({ poll }: PollClientProps) {
 
       <Separator />
 
-      {isAdminFlag && (
-        <div className="mt-4">
-          <VoteAuditPanel pollId={pollId} />
-        </div>
-      )}
-
-      <Separator />
-
       <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-foreground/80">
         <span className="inline-flex items-center gap-1">
           <Shield className="h-4 w-4" /> {privacyLabel}
@@ -1500,58 +1223,6 @@ export default function PollClient({ poll }: PollClientProps) {
           </>
         )}
       </div>
-
-      <ReportModal
-        isOpen={isReportOpen}
-        onClose={() => setIsReportOpen(false)}
-        targetType="poll"
-        targetId={pollId}
-        targetLabel={pollTitle}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent aria-describedby="delete-poll-description">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Poll</AlertDialogTitle>
-            <AlertDialogDescription id="delete-poll-description">
-              Are you sure you want to delete &ldquo;{poll.title}&rdquo;? This action cannot be undone and will permanently remove the poll and all associated votes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeletePoll}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Poll'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Close Poll Confirmation Dialog */}
-      <AlertDialog open={showCloseConfirm} onOpenChange={setShowCloseConfirm}>
-        <AlertDialogContent aria-describedby="close-poll-description">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Close Poll</AlertDialogTitle>
-            <AlertDialogDescription id="close-poll-description">
-              Are you sure you want to close &ldquo;{poll.title}&rdquo;? Once closed, users will no longer be able to vote, but you&apos;ll be able to view advanced analytics. You can still delete the poll later if needed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isClosing}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleClosePoll}
-              disabled={isClosing}
-              className="bg-orange-600 text-white hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600"
-            >
-              {isClosing ? 'Closing...' : 'Close Poll'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <BackToTop />
     </div>

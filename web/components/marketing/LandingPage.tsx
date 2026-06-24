@@ -187,7 +187,10 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-muted dark:to-background">
+    <div
+      className="min-h-screen overflow-x-hidden bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-muted dark:to-background"
+      data-testid="marketing-home"
+    >
       <nav
         className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50"
         role="navigation"

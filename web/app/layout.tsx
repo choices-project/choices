@@ -8,6 +8,7 @@ import { LocaleSkipNavLink } from '@/components/accessibility/LocaleSkipNavLink'
 import { SkipNavTarget } from '@/components/accessibility/SkipNavLink';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { ScrollRestoration } from '@/components/shared/ScrollRestoration';
+import { StaleHomeRecovery } from '@/components/shared/StaleHomeRecovery';
 import { ThemeScript } from '@/components/shared/ThemeScript';
 
 import { env } from '@/lib/config/env';
@@ -220,6 +221,7 @@ export default async function RootLayout({
       <body className="bg-background text-foreground">
         <ScrollRestoration />
         <ServiceWorkerProvider debug={process.env.NODE_ENV === 'development'}>
+          <StaleHomeRecovery />
           <Providers locale={locale} messages={messages}>
             <LocaleSkipNavLink />
             <SkipNavTarget>

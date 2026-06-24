@@ -1,29 +1,28 @@
 'use client';
 
-import { ChevronDown, Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
-import PasskeyControls from '@/features/auth/components/PasskeyControls';
+
 import { loginWithPassword, registerUser } from '@/features/auth/lib/api';
-import { getAvailableProviders } from '@/features/auth/lib/social-auth-config';
 import { useUserActions, useUserLoading, useUserError } from '@/features/auth/lib/store';
 
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session';
+import { completeSignIn } from '@/lib/auth/complete-sign-in';
 import {
+  DEFAULT_POST_AUTH_PATH,
   normalizePostAuthRedirectPath,
   pickRedirectQueryParam,
 } from '@/lib/auth/normalize-post-auth-redirect';
-import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session';
-import { completeSignIn } from '@/lib/auth/complete-sign-in';
 import { messageFromAuthUrlError } from '@/lib/auth/oauth-url-error';
-import InstallAppCallout from '@/features/pwa/components/InstallAppCallout';
 import { env } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
 
@@ -43,13 +42,10 @@ export default function AuthPageClient() {
   }, []);
   const searchParams = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
-  const [passkeySectionOpen, setPasskeySectionOpen] = useState(() => searchParams.get('mode') !== 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isRateLimited, setIsRateLimited] = useState(false);
-  /** OAuth uses local busy state so a stuck Google/GitHub round-trip never wedges the email/password button. */
-  const [oauthProviderBusy, setOauthProviderBusy] = useState<string | null>(null);
   const emailRef = React.useRef<HTMLInputElement | null>(null);
   const passwordRef = React.useRef<HTMLInputElement | null>(null);
   const displayNameRef = React.useRef<HTMLInputElement | null>(null);
@@ -73,7 +69,7 @@ export default function AuthPageClient() {
 
   /** Post-login destination: middleware uses `redirectTo`; many routes use legacy `redirect`; `next` also supported. */
   const redirectTarget = React.useMemo(() => {
-    const raw = pickRedirectQueryParam(searchParams) ?? '/feed';
+    const raw = pickRedirectQueryParam(searchParams) ?? DEFAULT_POST_AUTH_PATH;
     return normalizePostAuthRedirectPath(raw);
   }, [searchParams]);
 
@@ -102,7 +98,6 @@ export default function AuthPageClient() {
       return;
     }
     setAuthError(messageFromAuthUrlError(urlError));
-    setOauthProviderBusy(null);
     setAuthLoading(false);
   }, [searchParams, setAuthError, setAuthLoading]);
 
@@ -132,20 +127,6 @@ export default function AuthPageClient() {
       }
     });
   }, [searchParams, redirectTarget, finishAuthNavigation]);
-
-  /** Server route sets PKCE cookies and redirects to the provider (see /api/auth/oauth/[provider]). */
-  const handleSocialAuth = (provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok') => {
-    if (oauthProviderBusy) {
-      return;
-    }
-    clearAuthError();
-    setOauthProviderBusy(provider);
-    const startUrl = `/api/auth/oauth/${provider}?redirectTo=${encodeURIComponent(redirectTarget)}`;
-    window.location.assign(startUrl);
-  };
-
-  // Get available OAuth providers
-  const availableProviders = React.useMemo(() => getAvailableProviders(), []);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -384,7 +365,7 @@ export default function AuthPageClient() {
     const urlParams = new URLSearchParams(window.location.search);
     const redirectTo = pickRedirectQueryParam(urlParams);
 
-    if (redirectTo === '/dashboard' || redirectTo === '/feed') {
+    if (redirectTo === '/polls' || redirectTo === '/dashboard' || redirectTo === '/feed') {
       try {
         const bypassFlag = window.localStorage.getItem('e2e-dashboard-bypass') === '1';
         if (bypassFlag) {
@@ -412,10 +393,6 @@ export default function AuthPageClient() {
 
   // Note: Removed user/isLoading checks to avoid hydration mismatch
   // User authentication will be handled by the form submission
-
-  React.useEffect(() => {
-    setPasskeySectionOpen(!isSignUp);
-  }, [isSignUp]);
 
   // Native DOM event handler as workaround for Playwright onClick issues
   const handleToggle = (e: Event) => {
@@ -529,7 +506,7 @@ export default function AuthPageClient() {
           setMessage(t('auth.success.accountCreated'));
           if (result?.data?.session) {
             setTimeout(() => {
-              finishAuthNavigation('/onboarding', result.data.session);
+              finishAuthNavigation(DEFAULT_POST_AUTH_PATH, result.data.session);
             }, 1000);
           }
         } else {
@@ -970,103 +947,17 @@ export default function AuthPageClient() {
           ) : null}
         </form>
 
-        {/* Social OAuth Buttons */}
-        {availableProviders.length > 0 && (
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-muted-foreground">
-                  {t('auth.form.orContinueWith') || 'Or continue with'}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              {availableProviders.map((provider) => {
-                const socialBusy = oauthProviderBusy === provider.provider;
-                const isSocialDisabled = Boolean(oauthProviderBusy) || safeIsLoading;
-                return (
-                <Button
-                  key={provider.provider}
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleSocialAuth(provider.provider as never)}
-                  disabled={isSocialDisabled}
-                  className={`w-full min-h-[44px] ${provider.bgColor} ${provider.borderColor} ${provider.textColor} ${provider.hoverBgColor} ${provider.hoverTextColor}`}
-                  data-testid={`social-auth-${provider.provider}`}
-                  aria-label={provider.label}
-                  aria-busy={socialBusy}
-                >
-                  {socialBusy ? (
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin shrink-0" aria-hidden="true" />
-                  ) : (
-                    <>
-                  {provider.provider === 'google' && (
-                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                  )}
-                  {provider.provider === 'github' && (
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                  )}
-                  {provider.provider === 'apple' && (
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                    </svg>
-                  )}
-                    </>
-                  )}
-                  <span>{provider.label}</span>
-                </Button>
-                );
-              })}
-            </div>
-            {!isSignUp && (
-              <div className="mt-2 flex justify-end">
-                <Link
-                  href={resetPasswordHref}
-                  className="text-sm text-primary hover:text-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded"
-                  data-testid="auth-reset-link"
-                >
-                  {t('auth.form.forgotPassword')}
-                </Link>
-              </div>
-            )}
+        {!isSignUp && (
+          <div className="mt-2 flex justify-center">
+            <Link
+              href={resetPasswordHref}
+              className="text-sm text-primary hover:text-primary/90"
+              data-testid="auth-reset-link"
+            >
+              {t('auth.form.forgotPassword')}
+            </Link>
           </div>
         )}
-
-        {/* Passkey: collapsed by default on sign-up to shorten the page; sign-in opens the section */}
-        <details
-          open={passkeySectionOpen}
-          onToggle={(event) => setPasskeySectionOpen(event.currentTarget.open)}
-          className="group mt-6 rounded-lg border border-border bg-muted/10 open:bg-muted/20 dark:bg-muted/5"
-        >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground outline-none marker:content-none [&::-webkit-details-marker]:hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900">
-            <span>{t('auth.form.passkeySectionSummary')}</span>
-            <ChevronDown
-              className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
-              aria-hidden
-            />
-          </summary>
-          <div className="border-t border-border px-4 pb-4 pt-2">
-            <PasskeyControls
-              onLoginSuccess={async () => {
-                await syncSupabaseSession();
-                finishAuthNavigation(redirectTarget);
-              }}
-            />
-          </div>
-        </details>
-
-        <InstallAppCallout />
       </div>
     </div>
   );

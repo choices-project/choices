@@ -39,6 +39,8 @@
 
 ---
 
+> **Minimal core rebuild (June 2026):** Active development for a slim, navigable app happens on branch **`refactor/minimal-core`**. Production still deploys from **`main`**. New contributors should read **[`docs/MINIMAL_CORE.md`](./docs/MINIMAL_CORE.md)** first.
+
 ## At a glance
 
 | | |

@@ -313,17 +313,23 @@ export async function activateUpdate(): Promise<void> {
  * logger.info('Service worker unregistered');
  * ```
  */
-export async function unregister(): Promise<boolean> {
+export async function unregisterAllServiceWorkers(): Promise<number> {
   if (!isServiceWorkerSupported()) {
-    return false;
+    return 0;
   }
-  
+
   try {
-    const registration = await navigator.serviceWorker.ready;
-    const success = await registration.unregister();
-    
-    if (success) {
-      logger.info('[SW] Unregistered successfully');
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    let unregistered = 0;
+
+    for (const registration of registrations) {
+      if (await registration.unregister()) {
+        unregistered += 1;
+      }
+    }
+
+    if (unregistered > 0) {
+      logger.info('[SW] Unregistered service workers', { count: unregistered });
       if (updateIntervalId) {
         clearInterval(updateIntervalId);
         updateIntervalId = null;
@@ -332,12 +338,17 @@ export async function unregister(): Promise<boolean> {
       state.isRegistered = false;
       state.isUpdateAvailable = false;
     }
-    
-    return success;
+
+    return unregistered;
   } catch (error) {
-    logger.error('[SW] Unregister failed:', error);
-    return false;
+    logger.error('[SW] Unregister all failed:', error);
+    return 0;
   }
+}
+
+export async function unregister(): Promise<boolean> {
+  const count = await unregisterAllServiceWorkers();
+  return count > 0;
 }
 
 /**

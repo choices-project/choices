@@ -4,7 +4,6 @@ import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
 import Link from 'next/link';
 import React, { Suspense, useEffect, useCallback, useMemo, useRef } from 'react';
 
-import { PollFiltersPanel } from '@/features/polls/components/PollFiltersPanel';
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
 
 import { AnimatedCard } from '@/components/shared/AnimatedCard';
@@ -13,7 +12,6 @@ import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
-import { PrefetchLink } from '@/components/shared/PrefetchLink';
 import { PollListSkeleton } from '@/components/shared/Skeletons';
 import { Button } from '@/components/ui/button';
 
@@ -394,9 +392,6 @@ function PollsPageContent() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data" role="status" aria-busy="true" aria-live="polite" aria-label="Loading polls">
-        <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40 mb-4">
-          <PollFiltersPanel />
-        </div>
         <div className="mt-6">
           <PollListSkeleton count={6} />
         </div>
@@ -449,10 +444,6 @@ function PollsPageContent() {
             />
           </div>
         )}
-
-        <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40 mb-4">
-          <PollFiltersPanel />
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {polls.length === 0 ? (
@@ -541,22 +532,24 @@ function PollsPageContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <PrefetchLink
+                  <Link
                     href={`/polls/${poll.id}`}
+                    prefetch={false}
                     className="inline-flex items-center justify-center w-full px-4 py-2 min-h-[44px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     aria-label={`View poll: ${poll.title}`}
                   >
                     <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.view')}
-                  </PrefetchLink>
-                  <PrefetchLink
+                  </Link>
+                  <Link
                     href={`/polls/${poll.id}/results`}
+                    prefetch={false}
                     className="inline-flex items-center justify-center w-full px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     aria-label={`View results for poll: ${poll.title}`}
                   >
                     <BarChart3 className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.results')}
-                  </PrefetchLink>
+                  </Link>
                 </div>
                 </div>
               </AnimatedCard>

@@ -1,8 +1,20 @@
 # Getting Started with Choices
 
-_Last updated: April 19, 2026_
+_Last updated: June 22, 2026_
 
 Welcome to the Choices platform! This guide targets **about 15 minutes** from clone to a running dev server (longer if you are new to Supabase).
+
+## Minimal core branch (recommended for new contributors)
+
+```bash
+git clone https://github.com/choices-project/choices.git
+cd choices
+git checkout refactor/minimal-core
+cd web && npm install && cp .env.local.example .env.local
+npm run dev
+```
+
+See **[`MINIMAL_CORE.md`](MINIMAL_CORE.md)** for v0.1 scope, architecture rules, and the manual QA checklist. Smoke tests: `npm run test:e2e:smoke` (runs `minimal-core-smoke.spec.ts`).
 
 ## Prerequisites
 

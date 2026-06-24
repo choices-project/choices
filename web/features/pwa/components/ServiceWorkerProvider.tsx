@@ -21,7 +21,7 @@ import { logger } from '@/lib/utils/logger';
 import { clearAllCaches } from '../lib/cache-strategies';
 import {
   register,
-  unregister,
+  unregisterAllServiceWorkers,
   activateUpdate,
   isServiceWorkerSupported,
   isUpdateAvailable as checkUpdateAvailable
@@ -94,7 +94,7 @@ export function ServiceWorkerProvider({
 
     if (process.env.NODE_ENV !== 'production' && !DEV_CONFIG.enableInDev) {
       logger.info('Skipping service worker registration in development');
-      void unregister()
+      void unregisterAllServiceWorkers()
         .then(() => clearAllCaches())
         .then((cleared) => {
           if (cleared > 0) {
