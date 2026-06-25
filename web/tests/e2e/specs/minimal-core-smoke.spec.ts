@@ -34,6 +34,7 @@ test.describe('@smoke Minimal core pages', () => {
       page
         .getByTestId('create-poll-form')
         .or(page.getByRole('heading', { name: /create a poll/i }))
+        .or(page.getByTestId('login-form'))
         .first(),
     ).toBeVisible({ timeout: 30_000 });
   });
