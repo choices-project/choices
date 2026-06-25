@@ -2,7 +2,7 @@ import {
   validateCsrfProtection,
   createCsrfErrorResponse,
 } from '@/app/api/auth/_shared';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { withErrorHandling, successResponse, authError, errorResponse } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
@@ -67,16 +67,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     });
   }
 
-    // Create user in user_profiles table
-    const { data: newUser, error: createError } = await (supabaseClient as any)
+    // Profile creation + initial trust tier: service role only (not user JWT).
+    const adminClient = await getSupabaseAdminClient();
+    const { data: newUser, error: createError } = await adminClient
       .from('user_profiles')
       .insert({
+        id: user.id,
         user_id: user.id,
-        email: user.email ?? undefined,
-        trust_tier: 'T1'
+        email: user.email ?? `${user.id}@sync.local`,
+        username: user.email?.split('@')[0] ?? `user_${user.id.slice(0, 8)}`,
+        trust_tier: 'T1',
       })
       .select()
-      .single()
+      .single();
 
   if (createError) {
     devLog('Error creating user in user_profiles:', createError)

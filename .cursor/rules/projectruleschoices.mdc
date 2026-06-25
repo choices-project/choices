@@ -16,18 +16,21 @@ When working in this codebase, use the following guidance so agents apply consis
 ## Postgres / Supabase (SQL, migrations, RLS)
 
 - Use the **Postgres Best Practices** skill: `.agents/skills/supabase-postgres-best-practices`
+- **Auth / profile / trust tier / admin:** follow [`.agents/AUTH_SECURITY_HANDOFF.md`](../../.agents/AUTH_SECURITY_HANDOFF.md) — `getUser()` for gates; trust tier **server-only** via `trust-tier-admin.ts`; MCP for schema/migrations
 - See [INDEX_OPTIMIZATION_GUIDE](docs/INDEX_OPTIMIZATION_GUIDE.md) for index review and Supabase Index Advisor
 - See [RLS_VERIFICATION_GUIDE](../../RLS_VERIFICATION_GUIDE.md) for RLS policy verification
 
 ## Database inspection and ad-hoc queries
 
-- Use **Supabase MCP** tools for schema discovery, ad-hoc queries, and migration reasoning
+- Use **Supabase MCP** (`project-0-Choices-supabase`) for schema discovery, ad-hoc queries, and migration reasoning
 - Prefer MCP over hand-written SQL when exploring the database or validating schema
 - See [RLS_API_ALIGNMENT](docs/RLS_API_ALIGNMENT.md) for API ↔ RLS setup and client usage (admin vs server)
+- See [AGENT_SETUP](docs/AGENT_SETUP.md) §2.0–§2.1 for server id, smoke tests, and OAuth recovery
 
 ## Application audit and deployment
 
-- Use **Vercel MCP** (when configured) for deployment context, project/deployment info, logs, and Vercel docs during Next.js/Vercel best-practices audit
+- Use **Vercel MCP** (`project-0-Choices-vercel`) for deployment context, project/deployment info, logs, and Vercel docs during Next.js/Vercel best-practices audit
+- See [AGENT_SETUP](docs/AGENT_SETUP.md) §2.2 for preferred tools and project ids
 - **Do not use `deploy_to_vercel`.** Deployments are triggered by pushes to `main` (CI/CD). Keep the `deploy_to_vercel` tool disabled in Cursor Settings → Tools & MCP → Vercel.
 - **Vercel AI Gateway** (optional, for **terminal** agents such as Claude Code or Codex—not Cursor’s built-in chat) routes model traffic through `https://ai-gateway.vercel.sh` for unified spend and model choice; see [Vercel: Coding agents](https://vercel.com/docs/agent-resources/coding-agents). Do not commit API keys; this is separate from **Vercel MCP**.
 - See [AGENT_SETUP](docs/AGENT_SETUP.md) for MCP servers, skills paths, and operational habits

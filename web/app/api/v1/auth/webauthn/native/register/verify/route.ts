@@ -19,6 +19,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { getRPIDAndOrigins, resolveExpectedWebauthnOrigin } from '@/features/auth/lib/webauthn/config';
 
+import { promoteUserTrustTierAdmin } from '@/lib/auth/trust-tier-admin';
 import { withErrorHandling, authError, forbiddenError, errorResponse, validationError, successResponse, rateLimitError } from '@/lib/api';
 import { WEBAUTHN_CHALLENGE_SELECT_COLUMNS } from '@/lib/api/response-builders';
 import { shouldBypassAuthRateLimitsInTestModes } from '@/lib/auth/rate-limit-test-bypass';
@@ -195,10 +196,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     const tierRank: Record<string, number> = { T0: 0, T1: 1, T2: 2, T3: 3, T4: 4 };
     const targetRank = tierRank['T2'] ?? 2;
     if (profile && tierRank[currentTier] !== undefined && tierRank[currentTier] < targetRank) {
-      await supabase
-        .from('user_profiles')
-        .update(stripUndefinedDeep({ trust_tier: 'T2' }))
-        .eq('user_id', user.id);
+      await promoteUserTrustTierAdmin(user.id, 'T2', {
+        reason: 'webauthn_passkey_registered',
+      });
     }
 
     logger.info('WebAuthn registration verified', { userId: user.id });

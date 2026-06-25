@@ -93,7 +93,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
 export const PUT = withErrorHandling(async (request: NextRequest) => {
   // Single admin gate - returns 401 if not admin
-  const authGate = await requireAdminOr401()
+  const authGate = await requireAdminOr401(request)
   if (authGate) return authGate
   
   const supabase = await getSupabaseServerClient();

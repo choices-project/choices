@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
  * refresh to stay current with underlying data changes.
  */
 export const POST = withErrorHandling(async (_request: NextRequest) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(_request);
   if (authGate) {
     return authGate;
   }

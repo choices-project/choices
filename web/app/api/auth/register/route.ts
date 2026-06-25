@@ -13,6 +13,7 @@ import {
   errorResponse,
   parseBody,
 } from '@/lib/api';
+import { productionAuthCookieOptions } from '@/lib/auth/production-auth-cookies';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter'
 import { logger } from '@/lib/utils/logger'
 
@@ -175,8 +176,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           display_name: profile.display_name,
           is_active: profile.is_active,
         },
-        session: authData.session,
-        token: authData.session?.access_token,
         message: 'Registration successful. Please check your email to verify your account.',
       },
     }
@@ -186,15 +185,36 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       headers: { 'Content-Type': 'application/json' },
     })
 
+    const hostname =
+      request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? ''
+    const authCookieOptions = productionAuthCookieOptions(hostname)
+
     for (const cookie of response.cookies.getAll()) {
-      finalResponse.cookies.set(cookie.name, cookie.value, {
-        path: cookie.path ?? '/',
-        maxAge: cookie.maxAge,
-        domain: cookie.domain,
-        sameSite: cookie.sameSite as 'lax' | 'strict' | 'none' | undefined,
-        secure: cookie.secure,
-        httpOnly: cookie.httpOnly ?? undefined,
-      })
+      const isAuthCookie =
+        cookie.name.includes('auth') ||
+        cookie.name.includes('session') ||
+        cookie.name.startsWith('sb-')
+
+      finalResponse.cookies.set(
+        cookie.name,
+        cookie.value,
+        isAuthCookie
+          ? {
+              ...authCookieOptions,
+              sameSite:
+                (cookie.sameSite as 'strict' | 'lax' | 'none' | undefined) ??
+                authCookieOptions.sameSite,
+              maxAge: cookie.maxAge,
+            }
+          : {
+              path: cookie.path ?? '/',
+              maxAge: cookie.maxAge,
+              domain: cookie.domain,
+              sameSite: cookie.sameSite as 'lax' | 'strict' | 'none' | undefined,
+              secure: cookie.secure,
+              httpOnly: cookie.httpOnly ?? undefined,
+            },
+      )
     }
 
     return finalResponse

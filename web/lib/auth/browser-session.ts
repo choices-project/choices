@@ -1,5 +1,7 @@
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
+import { fetchAuthCsrfToken } from '@/features/auth/lib/csrf-token';
+
 import { logger } from '@/lib/utils/logger';
 
 import type { Session } from '@supabase/supabase-js';
@@ -14,9 +16,17 @@ export type SessionTokens = {
  * Required because middleware reads cookies the JS client cannot see until hydrated.
  */
 async function fetchSessionFromServer(): Promise<Response> {
+  const csrfToken = await fetchAuthCsrfToken();
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken;
+  }
+
   return fetch('/api/auth/session', {
+    method: 'POST',
     credentials: 'include',
     cache: 'no-store',
+    headers,
   });
 }
 
@@ -32,7 +42,7 @@ export async function hydrateBrowserSessionFromServer(): Promise<Session | null>
       return null;
     }
     const body = (await res.json()) as {
-      data?: { session?: SessionTokens };
+      data?: { session?: SessionTokens & { user?: Session['user'] } };
     };
     const tokens = body.data?.session;
     if (!tokens?.access_token || !tokens.refresh_token) {

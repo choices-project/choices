@@ -20,35 +20,32 @@ export const GET = withErrorHandling(async () => {
 
   const supabaseClient = await supabase
 
-  // Get current user session
-  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
   
-  if (sessionError || !session?.user) {
+  if (userError || !user) {
     return authError('Not authenticated');
   }
 
-  // Get user profile from user_profiles table
   const { data: profile, error: profileError } = await supabaseClient
     .from('user_profiles')
-    .select('username, email, trust_tier, display_name, avatar_url, bio, is_active')
-    .eq('user_id', session.user.id)
+    .select('username, email, trust_tier, display_name, avatar_url, bio')
+    .eq('user_id', user.id)
     .single()
 
   if (profileError || !profile) {
-    logger.warn('User profile not found', { userId: session.user.id })
+    logger.warn('User profile not found', { userId: user.id })
     return notFoundError('User profile not found');
   }
 
   const response = successResponse({
     user: {
-      id: session.user.id,
-      email: session.user.email,
+      id: user.id,
+      email: user.email,
       username: profile.username,
       trust_tier: profile.trust_tier,
       display_name: profile.display_name,
       avatar_url: profile.avatar_url,
       bio: profile.bio,
-      is_active: profile.is_active
     }
   });
 

@@ -20,7 +20,13 @@ import {
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError, errorResponse, successResponse, validationError, withErrorHandling, parseBody } from '@/lib/api';
-import { createProfilePayload, PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders';
+import {
+  OWNER_PROFILE_SELECT_COLUMNS,
+  parsePartialProfileOwnerUpdate,
+  parseProfileOwnerUpdate,
+  stripPrivilegedProfileFields,
+} from '@/lib/auth/profile-write-schema';
+import { createOwnerProfilePayload } from '@/lib/auth/safe-profile-response';
 import { apiRateLimiter } from '@/lib/rate-limiting/api-rate-limiter';
 import { undefinedToNull } from '@/lib/util/clean';
 import { logger } from '@/lib/utils/logger';
@@ -29,33 +35,7 @@ import type { NextRequest } from 'next/server';
 
 
 
-// Validation schemas
-const profileSchema = z.object({
-  // Required fields for database
-  email: z.string().email(),
-
-  // Optional profile fields that match database schema
-  avatar_url: z.string().url().optional().or(z.literal('')),
-  bio: z.string().max(500).optional(),
-  display_name: z.string().max(100).optional(),
-  username: z.string().min(3).max(50).optional(),
-  trust_tier: z.string().optional(),
-  is_admin: z.boolean().optional(),
-  is_active: z.boolean().optional(),
-  // onboarding_completed removed - determined by presence of key fields
-  // Additional fields that exist in database
-  community_focus: z.array(z.string()).optional(),
-  primary_concerns: z.array(z.string()).optional(),
-  primary_hashtags: z.array(z.string()).optional(),
-  followed_hashtags: z.array(z.string()).optional(),
-  preferences: z.any().optional(),
-  demographics: z.any().optional(),
-  location_data: z.any().optional(),
-  privacy_settings: z.any().optional(),
-});
-
-type ProfileRecord = Record<string, unknown> | null;
-
+// Validation schemas — owner writes never accept privilege fields (see profile-write-schema.ts)
 const preferencesSchema = z.object({
   email_notifications: z.boolean().optional(),
   push_notifications: z.boolean().optional(),
@@ -73,6 +53,8 @@ const preferencesSchema = z.object({
   }).optional(),
   // Allow any additional preferences for extensibility
 }).passthrough();
+
+type ProfileRecord = Record<string, unknown> | null;
 
 const interestsSchema = z.object({
   categories: z.array(z.string()).optional(),
@@ -114,7 +96,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
-    .select(PROFILE_SELECT_COLUMNS)
+    .select(OWNER_PROFILE_SELECT_COLUMNS)
     .eq('user_id', user.id)
     .single();
 
@@ -123,7 +105,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
     return errorResponse('Error fetching profile', 500, undefined, 'PROFILE_FETCH_FAILED');
   }
 
-  const responseData = createProfilePayload(profile);
+  const responseData = createOwnerProfilePayload(profile as Record<string, unknown> | null);
 
   logger.info('Profile data fetched successfully', { userId: user.id });
   return successResponse(responseData);
@@ -198,7 +180,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const { data: existingProfile, error: profileFetchError } = await supabase
     .from('user_profiles')
-    .select(PROFILE_SELECT_COLUMNS)
+    .select(OWNER_PROFILE_SELECT_COLUMNS)
     .eq('user_id', user.id)
     .single();
 
@@ -223,10 +205,10 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Handle profile updates
     if (body.profile) {
-      const parsedProfile = profileSchema.safeParse(body.profile);
+      const parsedProfile = parseProfileOwnerUpdate(body.profile);
       if (!parsedProfile.success) {
         logger.warn('Invalid profile data', parsedProfile.error.issues);
-        const errorDetails = parsedProfile.error.issues.reduce((acc, issue) => {
+        const errorDetails = parsedProfile.error.issues.reduce((acc: Record<string, string>, issue) => {
           acc[issue.path.join('.')] = issue.message;
           return acc;
         }, {} as Record<string, string>);
@@ -234,9 +216,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       }
     const { data, error } = await supabase
       .from('user_profiles')
-      .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
+      .update(undefinedToNull(stripPrivilegedProfileFields(parsedProfile.data)) as Record<string, unknown>)
       .eq('user_id', user.id)
-      .select(PROFILE_SELECT_COLUMNS);
+      .select(OWNER_PROFILE_SELECT_COLUMNS);
     if (error) {
         logger.error('Error upserting profile', error);
         return errorResponse('Error updating profile', 500);
@@ -286,7 +268,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
-        .select(PROFILE_SELECT_COLUMNS);
+        .select(OWNER_PROFILE_SELECT_COLUMNS);
 
       if (error) {
         logger.error('Error updating preferences', error);
@@ -320,7 +302,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         .from('user_profiles')
         .update(updateData)
         .eq('user_id', user.id)
-        .select(PROFILE_SELECT_COLUMNS);
+        .select(OWNER_PROFILE_SELECT_COLUMNS);
       if (error) {
         logger.error('Error upserting interests', error);
         return errorResponse('Error updating interests', 500);
@@ -346,14 +328,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       .from('user_profiles')
       .update({
         demographics: parsedOnboarding.data,
-        trust_tier: 'T1', // Promote to canonical trust tier after onboarding
         participation_style: 'balanced',
         primary_concerns: [],
         community_focus: [],
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id)
-      .select(PROFILE_SELECT_COLUMNS);
+      .select(OWNER_PROFILE_SELECT_COLUMNS);
     if (error) {
         logger.error('Error upserting onboarding progress', error);
         return errorResponse('Error updating onboarding progress', 500);
@@ -389,7 +370,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           .from('user_profiles')
           .update({ avatar_url: avatarUrl })
           .eq('user_id', user.id)
-          .select(PROFILE_SELECT_COLUMNS)
+          .select(OWNER_PROFILE_SELECT_COLUMNS)
           .single();
 
         if (updateProfileError) {
@@ -404,7 +385,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const message = actionMessages.length ? actionMessages.join(' | ') : 'No profile changes applied';
   return successResponse({
-    ...createProfilePayload(currentProfile),
+    ...createOwnerProfilePayload(currentProfile),
     message,
   });
 });
@@ -459,10 +440,10 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
     return parsedBody.error;
   }
 
-  const parsedProfile = profileSchema.safeParse(parsedBody.data);
+  const parsedProfile = parseProfileOwnerUpdate(parsedBody.data);
   if (!parsedProfile.success) {
     logger.warn('Invalid profile data for PUT', parsedProfile.error.issues);
-    const errorDetails = parsedProfile.error.issues.reduce((acc, issue) => {
+    const errorDetails = parsedProfile.error.issues.reduce((acc: Record<string, string>, issue) => {
       acc[issue.path.join('.')] = issue.message;
       return acc;
     }, {} as Record<string, string>);
@@ -471,9 +452,9 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
 
   const { data, error } = await supabase
     .from('user_profiles')
-    .update(undefinedToNull(parsedProfile.data) as Record<string, unknown>)
+    .update(undefinedToNull(stripPrivilegedProfileFields(parsedProfile.data)) as Record<string, unknown>)
     .eq('user_id', user.id)
-    .select(PROFILE_SELECT_COLUMNS);
+    .select(OWNER_PROFILE_SELECT_COLUMNS);
 
   if (error) {
     logger.error('Error updating profile via PUT', error);
@@ -487,7 +468,7 @@ export const PUT = withErrorHandling(async (request: NextRequest) => {
   const updatedProfile = (data[0] ?? null) as ProfileRecord;
   logger.info('Profile updated successfully via PUT', { userId: user.id, profile: updatedProfile });
   return successResponse({
-    ...createProfilePayload(updatedProfile),
+    ...createOwnerProfilePayload(updatedProfile),
     message: 'Profile updated successfully',
   });
 });
@@ -607,10 +588,10 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
     return parsedBody.error;
   }
 
-  const parsedProfile = profileSchema.partial().safeParse(parsedBody.data);
+  const parsedProfile = parsePartialProfileOwnerUpdate(parsedBody.data);
   if (!parsedProfile.success) {
     logger.warn('Invalid profile data for PATCH', parsedProfile.error.issues);
-    const errorDetails = parsedProfile.error.issues.reduce((acc, issue) => {
+    const errorDetails = parsedProfile.error.issues.reduce((acc: Record<string, string>, issue) => {
       acc[issue.path.join('.')] = issue.message;
       return acc;
     }, {} as Record<string, string>);
@@ -619,9 +600,9 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
 
   const { data, error } = await supabase
     .from('user_profiles')
-    .update(undefinedToNull({ ...parsedProfile.data, updated_at: new Date().toISOString() }) as Record<string, unknown>)
+    .update(undefinedToNull(stripPrivilegedProfileFields({ ...parsedProfile.data, updated_at: new Date().toISOString() })) as Record<string, unknown>)
     .eq('user_id', user.id)
-    .select(PROFILE_SELECT_COLUMNS);
+    .select(OWNER_PROFILE_SELECT_COLUMNS);
 
   if (error) {
     logger.error('Error updating profile via PATCH', error);
@@ -635,7 +616,7 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
   const updatedProfile = (data[0] ?? null) as ProfileRecord;
   logger.info('Profile updated successfully via PATCH', { userId: user.id, profile: updatedProfile });
   return successResponse({
-    ...createProfilePayload(updatedProfile),
+    ...createOwnerProfilePayload(updatedProfile),
     message: 'Profile updated successfully',
   });
 });

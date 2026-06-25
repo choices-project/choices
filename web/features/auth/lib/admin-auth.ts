@@ -5,6 +5,11 @@
  * Only the service role (you) can grant admin access.
  */
 
+import {
+  createCsrfErrorResponse,
+  requiresCsrfProtection,
+  validateCsrfProtection,
+} from '@/app/api/auth/_shared';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 import { authError } from '@/lib/api';
@@ -12,7 +17,7 @@ import { env } from '@/lib/config/env';
 import { allowAdminE2EHarness } from '@/lib/security/deployment-bypass';
 import logger from '@/lib/utils/logger';
 
-import type { NextResponse } from 'next/server';
+import type { NextRequest, NextResponse } from 'next/server';
 
 
 
@@ -125,8 +130,16 @@ export async function requireAdmin(): Promise<void> {
   await requireAdminUser(); // will throw if not admin/authenticated
 }
 
-/** API helper that returns 401 response instead of throwing */
-export async function requireAdminOr401(): Promise<NextResponse | null> {
+/** API helper that returns 401/403 response instead of throwing. Pass `request` on mutations for CSRF. */
+export async function requireAdminOr401(
+  request?: NextRequest | Request,
+): Promise<NextResponse | null> {
+  if (request && requiresCsrfProtection(request.method)) {
+    if (!(await validateCsrfProtection(request))) {
+      return createCsrfErrorResponse();
+    }
+  }
+
   const harnessEnabled = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1';
 
   if (allowAdminE2EHarness(harnessEnabled)) {

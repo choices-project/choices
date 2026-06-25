@@ -28,12 +28,14 @@ test.describe('@smoke Minimal core pages', () => {
     ).toBeVisible({ timeout: 30_000 });
   });
 
-  test('poll create page renders form', async ({ page }) => {
+  test('poll create page renders form or sign-in gate', async ({ page }) => {
     await page.goto('/polls/create');
-    const authOrForm = page
-      .getByTestId('create-poll-form')
-      .or(page.getByTestId('login-form'));
-    await expect(authOrForm.first()).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page
+        .getByTestId('create-poll-form')
+        .or(page.getByRole('heading', { name: /create a poll/i }))
+        .first(),
+    ).toBeVisible({ timeout: 30_000 });
   });
 
   test('terms page renders', async ({ page }) => {

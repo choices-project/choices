@@ -1,6 +1,6 @@
 # Trust layer
 
-_Last updated: April 4, 2026_
+_Last updated: June 25, 2026_
 
 This document defines how **verification (trust tiers)** relates to **privacy**, **equal poll tabulation**, and **optional aggregate research**. Product copy and the [Privacy Policy](PRIVACY_POLICY.md) should stay consistent with it.
 
@@ -9,6 +9,23 @@ This document defines how **verification (trust tiers)** relates to **privacy**,
 1. **Reduce abuse** — Sybils, coordinated inauthentic behavior, and credential farming undermine civic tools. Optional verification raises the cost of large-scale manipulation.
 2. **Signal legitimacy** — Constituents and moderators may need to know whether an account completed a proportionate check without exposing unnecessary personal data.
 3. **Preserve clarity on votes** — Where the product promises **equal voting** in poll **results shown to users**, tallies must not silently apply pay-to-weight or undisclosed multipliers.
+
+## Who sets trust tier (server-only)
+
+**Users cannot change their own trust tier** via profile API, onboarding, or direct Supabase client writes. Enforcement:
+
+- API: [`web/lib/auth/profile-write-schema.ts`](../web/lib/auth/profile-write-schema.ts) rejects tier fields; onboarding does not promote tier.
+- Server writes: [`web/lib/auth/trust-tier-admin.ts`](../web/lib/auth/trust-tier-admin.ts) (`getSupabaseAdminClient` only).
+- Database: trigger `guard_user_profiles_privileged_columns` blocks `trust_tier*` for non–service-role callers.
+
+| Event | Typical tier | Mechanism |
+|-------|--------------|-----------|
+| User-JWT profile INSERT | **T0** | Trigger default |
+| Register / login profile bootstrap | **T1** | Admin client at account creation |
+| Passkey registered | **T2** (if higher than current) | `promoteUserTrustTierAdmin` after WebAuthn verify |
+| Future progression | T2+ | RPC / admin / batch jobs — never owner PATCH |
+
+Agent reference: [`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md) §3.
 
 ## Tiers (conceptual)
 
@@ -53,4 +70,4 @@ Canonical detail: **[`DATABASE_SCHEMA.md` § RPC Functions](DATABASE_SCHEMA.md#r
 
 - **Owner:** Core maintainer  
 - **Review:** When verification flows, poll math, or privacy policy changes  
-- **Last verified:** 2026-04-04 (documentation accuracy and codebase-reference review)
+- **Last verified:** 2026-06-25 (trust tier server-only policy + codebase references)

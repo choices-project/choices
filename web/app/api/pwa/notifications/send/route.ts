@@ -334,7 +334,7 @@ const getNotificationHistory = async (
 };
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(request);
   if (authGate) return authGate;
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()

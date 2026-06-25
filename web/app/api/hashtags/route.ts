@@ -110,8 +110,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       return validationError({ hashtagId: 'hashtagId is required' });
     }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session?.user) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return authError('Authentication required');
     }
 
@@ -138,8 +138,8 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   // Get moderation queue (requires authentication)
   if (action === 'moderation-queue') {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session?.user) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return authError('Authentication required');
     }
 
@@ -248,8 +248,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Supabase not configured', 500);
   }
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError || !session?.user) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
     return authError('Authentication required');
   }
 
@@ -284,7 +284,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           hashtag_id: sanitizeInput(hashtagValue),
           flag_type: 'inappropriate',
           reason: sanitizeInput(body.reason.trim()),
-          user_id: session.user.id,
+          user_id: user.id,
           status: 'pending'
         }])
         .select(HASHTAG_FLAG_SELECT_COLUMNS);
@@ -370,7 +370,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const updatePayload = {
       status: body.status,
       reviewed_at: now,
-      reviewed_by: session.user.id,
+      reviewed_by: user.id,
     };
 
     const { error: updateError } = await supabase

@@ -1,6 +1,8 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-import { withErrorHandling, successResponse, authError, errorResponse, forbiddenError, validationError, notFoundError } from '@/lib/api';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
+import { withErrorHandling, successResponse, errorResponse, validationError, notFoundError } from '@/lib/api';
 import { devLog } from '@/lib/utils/logger';
 
 import type { NextRequest} from 'next/server';
@@ -13,28 +15,11 @@ export const PATCH = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  const authGate = await requireAdminOr401(request);
+  if (authGate) return authGate;
+
   const { id } = await params;
   const supabaseClient = await getSupabaseServerClient();
-
-  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-  if (userError || !user) {
-    return authError('Authentication required');
-  }
-
-  const { data: userProfile, error: profileError } = await (supabaseClient as any)
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', String(user.id))
-    .single();
-
-  if (profileError) {
-    devLog('Error fetching user profile:', { error: profileError });
-    return errorResponse('Failed to verify user permissions', 500);
-  }
-
-  if (!userProfile.is_admin) {
-    return forbiddenError('Admin access required');
-  }
 
   const feedbackId = String(id);
   if (!feedbackId) {
@@ -75,7 +60,6 @@ export const PATCH = withErrorHandling(async (
   devLog('Feedback status updated successfully', { 
     feedbackId, 
     newStatus, 
-    updatedBy: user.id 
   });
 
   return successResponse({

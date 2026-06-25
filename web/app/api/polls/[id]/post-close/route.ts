@@ -44,17 +44,13 @@ export const POST = withErrorHandling(async (
       throw new Error('Supabase client not available');
     }
 
-  const [sessionResult, pollResult] = await Promise.all([
-    supabase.auth.getSession(),
+  const [authResult, pollResult] = await Promise.all([
+    supabase.auth.getUser(),
     supabase.from('polls').select('id, title, status, created_by, allow_post_close, baseline_at').eq('id', pollId).single(),
   ]);
 
-  const { data: { session }, error: sessionError } = sessionResult;
-  if (sessionError || !session?.user) {
-    return authError('Authentication required to modify post-close settings');
-  }
-  const user = session.user;
-  if (!user) {
+  const { data: { user }, error: userError } = authResult;
+  if (userError || !user) {
     return authError('Authentication required to modify post-close settings');
   }
 
@@ -129,14 +125,12 @@ export const DELETE = withErrorHandling(async (
     return errorResponse('Supabase client not available', 500);
   }
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  if (sessionError || !session?.user) {
-    return authError('Authentication required to modify post-close settings');
-  }
-
-  const user = session.user;
-  if (!user) {
+  if (userError || !user) {
     return authError('Authentication required to modify post-close settings');
   }
 

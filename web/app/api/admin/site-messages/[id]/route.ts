@@ -24,7 +24,7 @@ export const PATCH = withErrorHandling(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(request);
   if (authGate) return authGate;
 
   const { id } = await params;
@@ -99,7 +99,7 @@ export const DELETE = withErrorHandling(async (
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(_request);
   if (authGate) return authGate;
 
   const { id } = await params;

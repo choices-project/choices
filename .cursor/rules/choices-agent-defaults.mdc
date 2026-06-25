@@ -36,4 +36,4 @@ This is a **civic / productivity** product, not a generic marketing site. **Reus
 
 ## Where stack specifics live
 
-Next.js performance, Supabase/RLS, MCP usage, and deploy policy are in **`projectruleschoices.mdc`** and root **`AGENTS.md`**. Use the **Vercel React** and **Supabase Postgres** skills under **`.agents/skills/`** when editing those layers.
+Next.js performance, Supabase/RLS, MCP usage, and deploy policy are in **`projectruleschoices.mdc`** and root **`AGENTS.md`**. **Auth & security (mandatory for auth/profile/admin/RLS work):** [`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md). Use the **Vercel React** and **Supabase Postgres** skills under **`.agents/skills/`** when editing those layers.

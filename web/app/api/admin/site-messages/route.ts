@@ -87,7 +87,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
  * POST /api/admin/site-messages - Create a new site message
  */
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(request);
   if (authGate) return authGate;
 
   const supabase = await getSupabaseServerClient();

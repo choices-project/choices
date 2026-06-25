@@ -1,47 +1,70 @@
 import { NextResponse } from 'next/server';
 
+import {
+  createCsrfErrorResponse,
+  validateCsrfProtection,
+} from '@/app/api/auth/_shared';
 import { getSupabaseApiRouteClient } from '@/utils/supabase/api-route';
 
+import { authError, successResponse, withErrorHandling } from '@/lib/api';
 import { finalizeAuthCookiesOnResponse } from '@/lib/auth/finalize-auth-cookies';
 import {
   isCorruptAuthCookieError,
   sanitizeAuthCookiesForRoute,
 } from '@/lib/auth/request-auth-cookies';
-import { authError, successResponse, withErrorHandling } from '@/lib/api';
 import { logger } from '@/lib/utils/logger';
 
 import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+async function readValidatedSession(request: NextRequest, cookieCarrier: NextResponse) {
+  const supabase = await getSupabaseApiRouteClient(request, cookieCarrier);
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { session: null, userError: userError ?? new Error('Not authenticated') };
+  }
+
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !session) {
+    return { session: null, userError: sessionError ?? new Error('Not authenticated') };
+  }
+
+  return { session, userError: null };
+}
+
 /**
- * Read the httpOnly Supabase session on the server and return tokens so the
- * browser client can call `setSession`. Same-origin + credentials only.
+ * Mirror httpOnly Supabase cookies into the browser client (`setSession`).
+ * POST + CSRF only — tokens never returned on GET to reduce accidental leakage.
  */
-export const GET = withErrorHandling(async (request: NextRequest) => {
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  if (!(await validateCsrfProtection(request))) {
+    return createCsrfErrorResponse();
+  }
+
   const cookieCarrier = new NextResponse();
   sanitizeAuthCookiesForRoute(request, cookieCarrier);
 
   let session = null;
-  let sessionError: Error | null = null;
 
   try {
-    const supabase = await getSupabaseApiRouteClient(request, cookieCarrier);
-    const result = await supabase.auth.getSession();
-    session = result.data.session;
-    sessionError = result.error;
+    const result = await readValidatedSession(request, cookieCarrier);
+    session = result.session;
+    if (result.userError || !session) {
+      return authError('Not authenticated');
+    }
   } catch (err) {
     if (isCorruptAuthCookieError(err)) {
-      logger.warn('GET /api/auth/session: cleared corrupt auth cookies', { err });
+      logger.warn('POST /api/auth/session: cleared corrupt auth cookies', { err });
       const response = authError('Not authenticated');
       sanitizeAuthCookiesForRoute(request, response);
       return response;
     }
     throw err;
-  }
-
-  if (sessionError || !session) {
-    return authError('Not authenticated');
   }
 
   const response = successResponse({
@@ -62,4 +85,18 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 
   response.headers.set('Cache-Control', 'no-store, max-age=0');
   return response;
+});
+
+/** @deprecated Use POST with CSRF. */
+export const GET = withErrorHandling(async () => {
+  return NextResponse.json(
+    {
+      error: 'Method not allowed. Use POST /api/auth/session with X-CSRF-Token.',
+      code: 'METHOD_NOT_ALLOWED',
+    },
+    {
+      status: 405,
+      headers: { Allow: 'POST' },
+    },
+  );
 });

@@ -1,6 +1,6 @@
 # Documentation
 
-_Last updated: April 5, 2026_
+_Last updated: June 25, 2026_
 
 ## New here?
 
@@ -10,7 +10,7 @@ _Last updated: April 5, 2026_
 | Submit a PR or report a bug | [../CONTRIBUTING.md](../CONTRIBUTING.md), [../CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md), [../SECURITY.md](../SECURITY.md) |
 | Understand the codebase | [ARCHITECTURE.md](ARCHITECTURE.md) → [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) |
 | Keep docs accurate with code | [DOCUMENTATION_AUDIT_ROADMAP.md](DOCUMENTATION_AUDIT_ROADMAP.md), then `npm run verify:docs` (repo root) |
-| Cursor / MCP / AI assistants | [AGENT_SETUP.md](AGENT_SETUP.md), [agent-prompts/full-application-quality-pass.md](agent-prompts/full-application-quality-pass.md) |
+| Cursor / MCP / AI assistants | [AGENT_SETUP.md](AGENT_SETUP.md), [../.agents/AUTH_SECURITY_HANDOFF.md](../.agents/AUTH_SECURITY_HANDOFF.md), [../.agents/README.md](../.agents/README.md) |
 | Product feedback vs GitHub Issues | [FEEDBACK_AND_ISSUES.md](FEEDBACK_AND_ISSUES.md) |
 
 ## Getting Started
@@ -68,7 +68,7 @@ Requires **ripgrep** (`rg`) on `PATH` (CI installs it before `verify:docs`).
 |-------|-----|
 | Deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Release copy freeze (i18n) | [COPY_FREEZE.md](COPY_FREEZE.md) |
-| Security model | [SECURITY.md](SECURITY.md) |
+| Security model | [SECURITY.md](SECURITY.md) · agent rules: [../.agents/AUTH_SECURITY_HANDOFF.md](../.agents/AUTH_SECURITY_HANDOFF.md) |
 | WebAuthn / passkeys | [WEBAUTHN_DESIGN.md](WEBAUTHN_DESIGN.md) |
 | **Remaining work (single backlog)** | [REMAINING_WORK_ROADMAP.md](REMAINING_WORK_ROADMAP.md) |
 | Roadmap narrative, launch detail, completed history | [ROADMAP.md](ROADMAP.md) |

@@ -144,7 +144,9 @@ All **POST/PATCH/DELETE** rows above expect CSRF on the real site (see [SECURITY
 
 ## Trust Tier & Proof-of-Personhood (Feb 2026)
 
-Passkeys upgrade `user_profiles.trust_tier` to **T2 (Trusted)** when registered. The UI now surfaces this:
+Passkeys can raise `user_profiles.trust_tier` to **T2 (Trusted)** when registered. **Implementation:** server-only via [`promoteUserTrustTierAdmin`](../web/lib/auth/trust-tier-admin.ts) in the WebAuthn register verify route—not a user-scoped `.update()`. See [`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md) and [`docs/TRUST_LAYER.md`](../docs/TRUST_LAYER.md).
+
+The UI surfaces this:
 
 - **Profile Account & Security:** Shows "Trust tier: [Guest | Verified | Trusted | …]" with "(passkey verified)" for T2
 - **Biometric setup:** Trust benefit copy ("Adding a passkey raises your trust tier to Trusted and strengthens proof of personhood")

@@ -15,27 +15,27 @@ describe('resolveSyncSessionNavigation', () => {
   it('navigates on opaqueredirect using redirectTo when Location is hidden', () => {
     const result = resolveSyncSessionNavigation(
       mockResponse({ type: 'opaqueredirect', status: 0 }),
-      '/feed',
+      '/polls',
     );
-    expect(result).toEqual({ shouldNavigate: true, destination: '/feed' });
+    expect(result).toEqual({ shouldNavigate: true, destination: '/polls' });
   });
 
   it('navigates on 303 using Location when present', () => {
     const result = resolveSyncSessionNavigation(
       mockResponse({
         status: 303,
-        headers: new Headers({ Location: '/dashboard' }),
+        headers: new Headers({ Location: '/profile' }),
       }),
-      '/feed',
+      '/polls',
     );
-    expect(result).toEqual({ shouldNavigate: true, destination: '/dashboard' });
+    expect(result).toEqual({ shouldNavigate: true, destination: '/profile' });
   });
 
   it('does not navigate on 401', () => {
     const result = resolveSyncSessionNavigation(
       mockResponse({ status: 401 }),
-      '/feed',
+      '/polls',
     );
-    expect(result).toEqual({ shouldNavigate: false, destination: '/feed' });
+    expect(result).toEqual({ shouldNavigate: false, destination: '/polls' });
   });
 });

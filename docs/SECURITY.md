@@ -18,6 +18,18 @@ The Choices platform implements a comprehensive, multi-layered security model de
 4. **Least Privilege** - Minimal required permissions
 5. **Transparency** - Open security practices and auditability
 
+### Recent Security Hardening (June 2026)
+
+Auth and profile hardening (minimal core). **Agent handoff:** [`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md).
+
+- **Profile privilege** — Owner API uses strict Zod + `stripPrivilegedProfileFields`; responses via `createOwnerProfilePayload`; DB trigger blocks self-service `is_admin` / `is_active` / `trust_tier*`.
+- **Trust tier** — Server-managed only (`trust-tier-admin.ts`); users read tier but never write it; passkey registration promotes to T2 via admin client.
+- **Auth gates** — API routes use `getUser()` not `getSession()` (except session hydration after `getUser`).
+- **Logout CSRF** — POST `/api/auth/logout` with CSRF; GET clear-session returns 405.
+- **Login/register JSON** — No access/refresh tokens in response body.
+- **Admin CSRF** — `requireAdminOr401(request)` on admin mutations including PWA push send.
+- **Migrations** — `20260622120000` (admin/active guard), trust-tier migration (see handoff for remote version note).
+
 ### Recent Security Hardening (March 2026)
 
 The following security improvements were implemented across the application:
@@ -200,7 +212,7 @@ rg -l "getSupabaseAdminClient" web/app/api --glob '**/route.ts' | sort
 
 <!-- AUTO-GENERATED:ADMIN_CLIENT_ROUTE_SNAPSHOT -->
 
-_(Snapshot: **31** distinct `route.ts` files under `web/app/api` import `getSupabaseAdminClient`—re-run the `rg` command above after adding routes.)_
+_(Snapshot: **33** distinct `route.ts` files under `web/app/api` import `getSupabaseAdminClient`—re-run the `rg` command above after adding routes.)_
 
 <!-- END AUTO-GENERATED:ADMIN_CLIENT_ROUTE_SNAPSHOT -->
 

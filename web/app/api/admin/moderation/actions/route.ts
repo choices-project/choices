@@ -40,7 +40,7 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(request);
   if (authGate) return authGate;
 
   const adminUser = await getAdminUser();

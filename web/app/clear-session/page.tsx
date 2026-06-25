@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { clearAllCaches } from '@/features/pwa/lib/cache-strategies';
 import { unregisterAllServiceWorkers } from '@/features/pwa/lib/service-worker-registration';
 
+import { completeServerClearSession } from '@/lib/auth/client-logout';
+
 /**
  * Debug page to clear auth (including httpOnly cookies via API), service worker
  * caches, and local storage. Use when auth or cached redirects get stuck.
@@ -35,11 +37,11 @@ export default function ClearSessionPage() {
 
         if (!cancelled) {
           setStatus('Clearing server session...');
-          window.location.replace('/api/auth/clear-session');
+          await completeServerClearSession();
         }
       } catch {
         if (!cancelled) {
-          window.location.replace('/api/auth/clear-session');
+          await completeServerClearSession();
         }
       }
     }

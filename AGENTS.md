@@ -4,7 +4,7 @@
 
 ### Project overview
 
-Choices is a privacy-first participatory democracy platform (Next.js 14 App Router + Supabase). The main application lives in `web/`. The project is structured for **human contributors and collaborators**: see `README.md` (contributor table), `CONTRIBUTING.md`, and `CODE_OF_CONDUCT.md`. See `docs/GETTING_STARTED.md` for developer setup. For **Cursor MCP**, **project rules**, **skills**, the optional **[Vercel plugin for AI agents](https://vercel.com/docs/agent-resources/vercel-plugin)** (`npm run plugins:vercel` from repo root), and optional **Vercel AI Gateway** (CLI agents), see **`docs/AGENT_SETUP.md`**. For the **prioritized open backlog**, see **`docs/REMAINING_WORK_ROADMAP.md`**. When you touch **API routes**, **stores**, or **DB/schema docs**, follow **`docs/DOCUMENTATION_AUDIT_ROADMAP.md`** so inventories and contracts stay aligned. When you change the **feedback widget**, **`/api/feedback`**, **admin feedback**, or **GitHub issue templates**, keep **`docs/FEEDBACK_AND_ISSUES.md`** (§4 for admin API truth) aligned with the code.
+Choices is a privacy-first participatory democracy platform (Next.js 14 App Router + Supabase). The main application lives in `web/`. The project is structured for **human contributors and collaborators**: see `README.md` (contributor table), `CONTRIBUTING.md`, and `CODE_OF_CONDUCT.md`. See `docs/GETTING_STARTED.md` for developer setup. For **Cursor MCP**, **project rules**, **skills**, the optional **[Vercel plugin for AI agents](https://vercel.com/docs/agent-resources/vercel-plugin)** (`npm run plugins:vercel` from repo root), and optional **Vercel AI Gateway** (CLI agents), see **`docs/AGENT_SETUP.md`**. For **auth, profile, trust tier, admin, and RLS work**, read **`.agents/AUTH_SECURITY_HANDOFF.md`** first (backlog: `scratch/AUTH_OVERHAUL_PLAN.md`). For the **prioritized open backlog**, see **`docs/REMAINING_WORK_ROADMAP.md`**. When you touch **API routes**, **stores**, or **DB/schema docs**, follow **`docs/DOCUMENTATION_AUDIT_ROADMAP.md`** so inventories and contracts stay aligned. When you change the **feedback widget**, **`/api/feedback`**, **admin feedback**, or **GitHub issue templates**, keep **`docs/FEEDBACK_AND_ISSUES.md`** (§4 for admin API truth) aligned with the code.
 
 ### Runtime requirements
 
@@ -47,6 +47,7 @@ Refer to `web/package.json` scripts and `docs/TESTING.md` for the full list.
 ### Prompting and agent defaults (Cursor)
 
 - **Cursor rules:** `.cursor/rules/projectruleschoices.mdc` (stack, MCP, deploy) and `.cursor/rules/choices-agent-defaults.mdc` (grounding, when to edit vs explain, concision, UI tone) both use **`alwaysApply: true`**, so new chats inherit them automatically.
+- **Auth & security handoff:** `.agents/AUTH_SECURITY_HANDOFF.md` — mandatory for auth, profile, trust tier, admin, RLS, and security migrations.
 - **External reference:** [Anthropic — Prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) (clear goals, examples, structure, tool-use habits). The defaults file distills what matters for *this* repo without pasting the whole guide.
 
 ### Gotchas
@@ -59,4 +60,4 @@ Refer to `web/package.json` scripts and `docs/TESTING.md` for the full list.
 - Tests that require real Supabase (registration, poll creation with credentials) should `test.skip()` when `PLAYWRIGHT_USE_MOCKS=1`.
 - Security audit uses `scripts/audit-high.js` with documented allowlist for known Next.js 14 advisories (mitigated by Vercel deployment). Entries have expiration dates.
 - Some Jest test failures (e.g., in `tests/integration/feeds/`, `tests/unit/supabase/`) are pre-existing and not caused by environment setup.
-- **MCP servers** (LegisMCP, Playwright, US Gov Open Data): Run `cd .cursor/mcp-servers && npm install` after clone. If npx cache errors occur, use `npm_config_cache=/tmp/npm-mcp-cache npm install`. See `docs/archive/2026-03-consolidation/AGENT_SETUP.md`.
+- **MCP servers:** **Supabase** and **Vercel** hosted MCPs are configured in **`.cursor/mcp.json`**; OAuth in **Cursor → Settings → Tools & MCP**. Agents call them as **`project-0-Choices-supabase`** and **`project-0-Choices-vercel`** — see **`docs/AGENT_SETUP.md`** §2.0 for smoke tests and tool lists. Script-based MCPs (LegisMCP, Playwright, US Gov Open Data): run `cd .cursor/mcp-servers && npm install` after clone. If npx cache errors occur, use `npm_config_cache=/tmp/npm-mcp-cache npm install`.

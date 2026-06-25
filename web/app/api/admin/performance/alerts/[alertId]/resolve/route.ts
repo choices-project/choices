@@ -12,7 +12,7 @@ export const POST = withErrorHandling(async (
   { params }: { params: Promise<{ alertId: string }> }
 ) => {
   const { alertId } = await params;
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(_request);
   if (authGate) return authGate;
 
   const resolved = performanceMonitor.resolveAlert(alertId);

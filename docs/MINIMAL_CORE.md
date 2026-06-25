@@ -68,7 +68,9 @@ Feeds, dashboard, civics, contact, admin, analytics, onboarding wizard, passkeys
 2. **No new Zustand stores** — at most `userStore`, `pollsStore`, `votingStore`, `notificationStore`.
 3. **Server-first poll detail** — SSR in `features/polls/pages/[id]/page.tsx`.
 4. **Email/password auth only** in UI for v0.1.
-5. **Single-choice poll create** — `CreatePollForm`, not the multi-step wizard.
+5. **Trust tier is server-managed** — users read tier; changes only via admin/service paths ([`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md)).
+6. **Logout** — POST `/api/auth/logout` with CSRF (not GET clear-session).
+7. **Single-choice poll create** — `CreatePollForm`, not the multi-step wizard.
 
 ## Definition of done
 
@@ -110,3 +112,4 @@ Track regressions in GitHub issues labeled `minimal-core`. Initial Tier 2 routes
 - [GETTING_STARTED.md](./GETTING_STARTED.md) — local setup
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — contribution workflow
 - [web/lib/auth/README.md](../web/lib/auth/README.md) — auth architecture
+- [.agents/AUTH_SECURITY_HANDOFF.md](../.agents/AUTH_SECURITY_HANDOFF.md) — security rules for agents

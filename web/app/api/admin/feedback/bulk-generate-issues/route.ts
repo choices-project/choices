@@ -21,7 +21,7 @@ import type { NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(request);
   if (authGate) return authGate;
 
   const adminUser = await getAdminUser();

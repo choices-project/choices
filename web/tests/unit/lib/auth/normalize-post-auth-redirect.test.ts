@@ -23,25 +23,24 @@ describe('pickRedirectQueryParam', () => {
 });
 
 describe('normalizePostAuthRedirectPath', () => {
-  it('maps /login to /feed', () => {
-    expect(normalizePostAuthRedirectPath('/login')).toBe('/feed');
-    expect(normalizePostAuthRedirectPath('/login?foo=1')).toBe('/feed');
+  it('maps /login to /polls', () => {
+    expect(normalizePostAuthRedirectPath('/login')).toBe('/polls');
+    expect(normalizePostAuthRedirectPath('/login?foo=1')).toBe('/polls');
   });
 
-  it('maps /auth* to /feed', () => {
-    expect(normalizePostAuthRedirectPath('/auth')).toBe('/feed');
-    expect(normalizePostAuthRedirectPath('/auth/callback')).toBe('/feed');
+  it('maps /auth* to /polls', () => {
+    expect(normalizePostAuthRedirectPath('/auth')).toBe('/polls');
+    expect(normalizePostAuthRedirectPath('/auth/callback')).toBe('/polls');
   });
 
   it('rejects open redirects', () => {
-    expect(normalizePostAuthRedirectPath('//evil.com')).toBe('/feed');
-    expect(normalizePostAuthRedirectPath('https://evil.com')).toBe('/feed');
+    expect(normalizePostAuthRedirectPath('//evil.com')).toBe('/polls');
+    expect(normalizePostAuthRedirectPath('https://evil.com')).toBe('/polls');
   });
 
   it('preserves safe in-app paths', () => {
-    expect(normalizePostAuthRedirectPath('/feed')).toBe('/feed');
-    expect(normalizePostAuthRedirectPath('/dashboard')).toBe('/dashboard');
-    expect(normalizePostAuthRedirectPath('/onboarding')).toBe('/onboarding');
+    expect(normalizePostAuthRedirectPath('/polls')).toBe('/polls');
+    expect(normalizePostAuthRedirectPath('/profile')).toBe('/profile');
     expect(normalizePostAuthRedirectPath('/polls/abc')).toBe('/polls/abc');
   });
 });

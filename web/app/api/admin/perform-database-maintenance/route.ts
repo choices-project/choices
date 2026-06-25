@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
  * These operations improve query performance and reclaim disk space.
  */
 export const POST = withErrorHandling(async (_request: NextRequest) => {
-  const authGate = await requireAdminOr401();
+  const authGate = await requireAdminOr401(_request);
   if (authGate) {
     return authGate;
   }

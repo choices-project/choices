@@ -50,13 +50,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     return errorResponse('Supabase not configured', 500);
   }
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (sessionError || !session?.user) {
+  if (userError || !user) {
     return authError('User not authenticated');
   }
 
-    const user = session.user;
     const userId = user.id;
 
     logger.info('Data export requested', { userId });

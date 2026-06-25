@@ -33,7 +33,7 @@ describe('resolvePostAuthRedirect', () => {
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
-  it('sends users without a profile to onboarding', async () => {
+  it('sends users without a profile to polls in minimal core', async () => {
     const supabase = {
       from: jest.fn(() => ({
         select: jest.fn(() => ({
@@ -46,10 +46,10 @@ describe('resolvePostAuthRedirect', () => {
 
     await expect(
       resolvePostAuthRedirect(supabase, userId, { explicitPath: null }),
-    ).resolves.toBe('/onboarding');
+    ).resolves.toBe('/polls');
   });
 
-  it('sends users with a profile to feed when no explicit path', async () => {
+  it('sends users with a profile to polls when no explicit path', async () => {
     const supabase = {
       from: jest.fn(() => ({
         select: jest.fn(() => ({
@@ -65,6 +65,6 @@ describe('resolvePostAuthRedirect', () => {
 
     await expect(
       resolvePostAuthRedirect(supabase, userId, { explicitPath: null }),
-    ).resolves.toBe('/feed');
+    ).resolves.toBe('/polls');
   });
 });

@@ -48,19 +48,14 @@ export const POST = withErrorHandling(async (
 
   const admin = await getSupabaseAdminClient();
 
-  // Auth: try both getUser() and getSession() for better cookie handling
-  const [authResult, sessionResult] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase.auth.getSession(),
-  ]);
-  const sessionUser = sessionResult.data?.session?.user;
-  const { data: { user: authUser }, error: userError } = authResult;
-  const user = authUser ?? sessionUser;
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (userError || !user) {
     devLog('Close poll: auth failed', {
       getUserError: userError,
-      hasSession: !!sessionUser,
       pollId,
       hasCookies: !!request.headers.get('cookie'),
     });

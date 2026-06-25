@@ -230,8 +230,6 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
           created_at: profile.created_at,
           updated_at: profile.updated_at
         },
-        session: authData.session,
-        token: authData.session?.access_token
       }
     }
 
@@ -300,30 +298,10 @@ export const POST = withErrorHandling(async (request: NextRequest): Promise<Next
       )
     })
 
-    // If Supabase SSR didn't set the auth cookie, manually set it
-    // This is a fallback to ensure cookies are always set
     if (!hasAuthCookie && authData.session) {
-      const sessionData = {
-        access_token: authData.session.access_token,
-        refresh_token: authData.session.refresh_token,
-        expires_at: authData.session.expires_at,
-        expires_in: authData.session.expires_in,
-        token_type: authData.session.token_type,
-        user: authData.user
-      }
-
-      const maxAge = 60 * 60 * 24 * 7 // 7 days
-
-      finalResponse.cookies.set(authTokenCookieName, JSON.stringify(sessionData), {
-        ...authCookieOptions,
-        maxAge,
-      })
-
-      logger.info('Manually set auth cookie on final response', {
-        cookieName: authTokenCookieName,
+      logger.error('Auth cookie missing after signInWithPassword', {
         userId: authData.user.id,
-        secure: authCookieOptions.secure,
-        domain: authCookieOptions.domain,
+        expectedCookieName: authTokenCookieName,
       })
     }
 

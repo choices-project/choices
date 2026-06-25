@@ -14,7 +14,8 @@ import React, {
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session'
-import { PROFILE_SELECT_COLUMNS } from '@/lib/api/response-builders'
+import { completeServerLogout } from '@/lib/auth/client-logout'
+import { OWNER_PROFILE_SELECT_COLUMNS } from '@/lib/auth/profile-write-schema'
 import { env } from '@/lib/config/env'
 import {
   useSession,
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error } = await client
           .from('user_profiles')
-          .select(PROFILE_SELECT_COLUMNS)
+          .select(OWNER_PROFILE_SELECT_COLUMNS)
           .eq('user_id', userId)
           .single()
 
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        setProfileRef.current(data ?? null)
+        setProfileRef.current((data ?? null) as Parameters<typeof setProfileRef.current>[0])
         clearUserErrorRef.current()
       } catch (error) {
         logger.error('Unexpected error while hydrating user profile', error)
@@ -331,9 +332,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Private browsing / disabled storage
     }
 
-    // Server route clears httpOnly Supabase cookies, then redirects to `/`.
-    // A full navigation avoids races with onAuthStateChange re-hydrating cookies.
-    window.location.replace('/api/auth/clear-session')
+    await completeServerLogout()
   }, []) // Empty deps - uses refs for store actions
 
   const refreshSession = useCallback(async () => {
@@ -351,59 +350,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.error('Failed to refresh session:', error)
     }
   }, [applySession]) // applySession is stable
-
-  // Fallback: if a Supabase token exists in localStorage but context is empty, refresh.
-  const hasRefreshedFromStorageRef = useRef(false)
-  useEffect(() => {
-    if (
-      signOutInProgressRef.current ||
-      hasRefreshedFromStorageRef.current ||
-      session ||
-      loading ||
-      IS_E2E_HARNESS
-    ) {
-      return
-    }
-    if (typeof window === 'undefined') {
-      return
-    }
-    const hasToken = Object.keys(window.localStorage).some(
-      (key) => key.startsWith('sb-') && key.endsWith('auth-token'),
-    )
-    if (hasToken) {
-      hasRefreshedFromStorageRef.current = true
-      void refreshSession()
-    }
-  }, [session, loading, refreshSession])
-
-  // Fallback: if refresh fails to populate, hydrate from localStorage token shape.
-  useEffect(() => {
-    if (signOutInProgressRef.current || session || loading || IS_E2E_HARNESS) {
-      return
-    }
-    if (typeof window === 'undefined') {
-      return
-    }
-    const tokenKey = Object.keys(window.localStorage).find(
-      (key) => key.startsWith('sb-') && key.endsWith('auth-token'),
-    )
-    if (!tokenKey) {
-      return
-    }
-    try {
-      const raw = window.localStorage.getItem(tokenKey)
-      if (!raw) return
-      const parsed = JSON.parse(raw) as Session
-      if (!parsed?.user) return
-      setSession(parsed)
-      setUser(parsed.user)
-      initializeAuthRef.current(parsed.user, parsed, true)
-      setSessionAndDerivedRef.current(parsed)
-      setLoading(false)
-    } catch (error) {
-      logger.warn('AuthContext failed to hydrate from localStorage session', error)
-    }
-  }, [session, loading])
 
   const value = useMemo(
     () => ({
