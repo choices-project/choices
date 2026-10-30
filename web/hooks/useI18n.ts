@@ -33,6 +33,23 @@ function fallbackTranslate(key: string, params?: TranslationParams) {
   return interpolate(key, params);
 }
 
+function isMissingTranslation(
+  key: string,
+  result: string,
+  hasDefaultValue: boolean,
+): boolean {
+  if (result === key) {
+    return true;
+  }
+
+  if (!hasDefaultValue || !key.includes('.')) {
+    return false;
+  }
+
+  const lastSegment = key.slice(key.lastIndexOf('.') + 1);
+  return result.toLowerCase() === lastSegment.toLowerCase();
+}
+
 /**
  * Internationalization hook for translation and locale management.
  *
@@ -61,15 +78,15 @@ export const useI18n = () => {
           : undefined;
 
         const result = translateRef.current(key, safeParams);
-        
-        // If translation returns the key itself (missing translation), use fallback
-        if (result === key) {
+
+        // next-intl missing keys return the full key or the last segment ("Label").
+        if (isMissingTranslation(key, result, typeof params?.defaultValue === 'string')) {
           if (process.env.NODE_ENV === 'production' && !params?.defaultValue) {
             logger.warn(`[i18n] Missing translation for key "${key}"`);
           }
           return fallbackTranslate(key, params);
         }
-        
+
         return result;
       } catch (error) {
         // Always log in development, but be more careful in production

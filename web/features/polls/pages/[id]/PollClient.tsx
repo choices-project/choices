@@ -142,13 +142,21 @@ export default function PollClient({ poll }: PollClientProps) {
     unlisted: t('polls.view.privacy.unlisted'),
   }), [t]);
 
-  const VOTING_LABELS: Record<string, string> = useMemo(() => ({
-    single: t('polls.view.votingMethod.single'),
-    multiple: t('polls.view.votingMethod.multiple'),
-    approval: t('polls.view.votingMethod.approval'),
-    ranked: t('polls.view.votingMethod.ranked'),
-    quadratic: t('polls.view.votingMethod.quadratic'),
-  }), [t]);
+  const VOTING_LABELS: Record<string, string> = useMemo(() => {
+    const single = t('polls.view.votingMethod.single');
+    const multiple = t('polls.view.votingMethod.multiple');
+    const ranked = t('polls.view.votingMethod.ranked');
+    return {
+      single,
+      single_choice: single,
+      multiple,
+      multiple_choice: multiple,
+      approval: t('polls.view.votingMethod.approval'),
+      ranked,
+      ranked_choice: ranked,
+      quadratic: t('polls.view.votingMethod.quadratic'),
+    };
+  }, [t]);
   const {
     setBallots,
     setSelectedBallot,

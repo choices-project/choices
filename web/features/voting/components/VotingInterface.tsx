@@ -147,8 +147,8 @@ export default function VotingInterface({
     (message: string) => {
       addNotificationRef.current({
         type: 'success',
-        title: t('polls.voting.notifications.submitted.title') || 'Vote submitted',
-        message: message || (t('polls.voting.notifications.submitted.message') || 'Your vote has been recorded.'),
+        title: t('polls.voting.notifications.submitted.title', { defaultValue: 'Vote submitted' }),
+        message: message || t('polls.voting.notifications.submitted.message', { defaultValue: 'Your vote has been recorded.' }),
         duration: notificationSettings.duration,
       })
     },
@@ -159,8 +159,8 @@ export default function VotingInterface({
     (message: string) => {
       addNotificationRef.current({
         type: 'error',
-        title: t('polls.voting.notifications.failed.title') || 'Vote failed',
-        message: message || (t('polls.voting.notifications.failed.message') || 'Failed to submit vote'),
+        title: t('polls.voting.notifications.failed.title', { defaultValue: 'Vote failed' }),
+        message: message || t('polls.voting.notifications.failed.message', { defaultValue: 'Failed to submit vote' }),
         duration: notificationSettings.duration,
       })
     },

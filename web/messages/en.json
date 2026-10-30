@@ -1384,14 +1384,14 @@
   "polls": {
     "filters": {
       "search": {
-        "placeholder": "Search polls, hashtags, or topics...",
+        "placeholder": "Search polls...",
         "ariaLabel": "Search polls"
       },
       "hashtags": {
-        "label": "Filter by hashtags",
-        "remove": "Remove {hashtag} filter",
-        "addPlaceholder": "Add hashtags to filter polls...",
-        "addAria": "Add hashtag filter"
+        "label": "Hashtags",
+        "remove": "Remove {hashtag}",
+        "addPlaceholder": "Add hashtag",
+        "addAria": "Add hashtag"
       },
       "status": {
         "all": "All",
@@ -1401,12 +1401,12 @@
       },
       "categories": {
         "label": "Categories",
-        "all": "All Categories"
+        "all": "All"
       },
       "trending": {
-        "heading": "Trending Hashtags",
-        "headingWithCount": "Trending Hashtags ({count})",
-        "count": "{formattedCount} active {count, plural, one {trend} other {trends}}"
+        "heading": "Trending hashtags",
+        "headingWithCount": "Trending hashtags ({count})",
+        "count": "{formattedCount} trending hashtags"
       }
     },
     "card": {
@@ -1459,33 +1459,34 @@
     },
     "page": {
       "title": "Polls",
-      "subtitle": "Discover and participate in community polls",
+      "subtitle": "Explore what the community is voting on",
       "breadcrumbs": {
         "home": "Home",
         "polls": "Polls",
         "dashboard": "Dashboard"
       },
-      "descriptionFallback": "No description provided",
+      "descriptionFallback": "No description provided.",
       "trendingBadge": "Trending #{position}",
       "metadata": {
-        "votes": "{formattedCount} {count, plural, one {vote} other {votes}}",
-        "created": "Created on {date}"
+        "votes": "{formattedCount} votes",
+        "created": "Created {date}"
       },
       "empty": {
         "title": "No polls found",
-        "filters": "Try adjusting your filters or search terms",
-        "ctaMessage": "Be the first to create a poll!"
+        "filters": "Try adjusting your search or filters.",
+        "ctaMessage": "Be the first to create a poll."
       },
       "cta": {
-        "create": "Create Poll",
-        "view": "View Poll",
-        "results": "View Results"
+        "create": "Create",
+        "view": "View",
+        "results": "Results"
       },
       "pagination": {
-        "showing": "Showing {start}\u2013{end} of {total} polls",
+        "showing": "Showing {start}-{end} of {total}",
         "previous": "Previous",
         "next": "Next",
-        "pageLabel": "Page {current} of {total}"
+        "pageLabel": "Page {current} of {total}",
+        "loadMore": "Load more"
       },
       "results": {
         "heading": "Results",
@@ -1500,7 +1501,32 @@
     },
     "create": {
       "page": {
-        "title": "Create a poll"
+        "title": "Polls",
+        "subtitle": "Discover and participate in community polls",
+        "breadcrumbs": {
+          "home": "Home",
+          "dashboard": "Dashboard",
+          "polls": "Polls"
+        },
+        "empty": {
+          "title": "No polls found",
+          "filters": "No polls match your search or filter criteria. Try adjusting your filters.",
+          "ctaMessage": "Get started by creating your first poll!"
+        },
+        "cta": {
+          "create": "Create Poll",
+          "view": "View",
+          "results": "Results"
+        },
+        "metadata": {
+          "votes": "{count, plural, one {# vote} other {# votes}}"
+        },
+        "pagination": {
+          "showing": "Showing {start} to {end} of {total} polls",
+          "pageLabel": "Page {current} of {total}",
+          "previous": "Previous",
+          "next": "Next"
+        }
       },
       "form": {
         "title": "Create New Poll",
@@ -1585,19 +1611,36 @@
         }
       },
       "share": {
-        "dialog": {
-          "liveOpen": "Share dialog opened for {title}.",
-          "liveOpenFallback": "Share dialog opened."
+        "title": "Share This Poll",
+        "defaultTitle": "Check out this poll!",
+        "nativeShareText": "Check out this poll!",
+        "nativeShare": "Share via System",
+        "directLink": {
+          "label": "Direct Link"
         },
-        "notifications": {
-          "linkCopied": {
-            "title": "Link copied",
-            "message": "Share the link with your audience to start collecting votes."
-          },
-          "copyFailed": {
-            "title": "Unable to copy link",
-            "message": "Please copy the link manually."
-          }
+        "copy": "Copy",
+        "copied": "Copied!",
+        "social": {
+          "twitter": "Twitter",
+          "facebook": "Facebook",
+          "linkedin": "Linkedin",
+          "email": "Email"
+        },
+        "emailBody": "Check out this poll: {url}",
+        "qrCode": {
+          "title": "QR Code",
+          "show": "Show QR Code",
+          "hide": "Hide QR Code",
+          "alt": "QR Code for poll",
+          "generating": "Generating QR Code...",
+          "scanHint": "Scan to open poll on mobile device",
+          "download": "Download QR",
+          "copyLink": "Copy Link"
+        },
+        "embed": {
+          "title": "Embed Poll",
+          "codeLabel": "Embed Code",
+          "copyCode": "Copy Embed Code"
         }
       },
       "wizard": {
@@ -1623,52 +1666,9 @@
           "add": "Add option"
         },
         "audience": {
-          "category": {
-            "label": "Category",
-            "hint": "Categorize your poll so the right people can discover it."
-          },
-          "tags": {
-            "label": "Tags",
-            "hint": "Add keywords so your poll shows up in relevant searches.",
-            "placeholder": "Add a tag",
-            "add": "Add",
-            "maxHint": "You can add up to {max} tags.",
-            "removeAria": "Remove tag {tag}"
-          },
-          "settings": {
-            "legend": "Participation & privacy",
-            "allowMultipleVotes": {
-              "label": "Allow multiple votes",
-              "description": "Enable if voters should be able to support more than one option."
-            },
-            "allowAnonymousVotes": {
-              "label": "Allow anonymous votes",
-              "description": "Disable this if you need to know exactly who participated."
-            },
-            "requireAuthentication": {
-              "label": "Require sign-in to vote",
-              "description": "Ensure voters are authenticated before submitting a response."
-            },
-            "showResults": {
-              "label": "Show results in real time",
-              "description": "Disable to hide results until the poll closes."
-            },
-            "allowComments": {
-              "label": "Allow comments",
-              "description": "Collect qualitative feedback alongside quantitative votes."
-            },
-            "preventDuplicateVotes": {
-              "label": "Prevent duplicate votes",
-              "description": "Block users from voting multiple times on the same poll."
-            }
-          },
-          "privacy": {
-            "label": "Privacy level",
-            "hint": "Change who can discover and participate in this poll."
-          },
-          "votingMethod": {
-            "label": "Voting method",
-            "hint": "Choose the mechanics that best fit how you want to evaluate responses."
+          "votingPrivacySettings": {
+            "title": "Voting & privacy settings",
+            "description": "Decide how people participate and what they can see."
           }
         },
         "review": {
@@ -1702,84 +1702,8 @@
           "loading": "Loading representative information...",
           "fallback": "Representative #{id}"
         },
-        "audience": {
-          "votingPrivacySettings": {
-            "title": "Voting & privacy settings",
-            "description": "Decide how people participate and what they can see."
-          }
-        },
         "progress": {
           "ariaLabel": "Poll creation progress"
-        }
-      },
-      "page": {
-        "title": "Create a new poll",
-        "subtitle": "Guide your audience through a clear decision. Fill out each step to describe the poll, add options, and set participation rules.",
-        "errorSummary": {
-          "title": "Resolve these items before continuing"
-        },
-        "buttons": {
-          "previous": "Previous",
-          "next": "Next",
-          "publish": "Publish poll",
-          "creating": "Creating…"
-        }
-      },
-      "share": {
-        "dialog": {
-          "title": "Share your poll",
-          "description": "Help voters discover \"{title}\" by sharing the link below.",
-          "yourPoll": "your poll",
-          "pollTitle": "Poll title",
-          "privacy": "Privacy",
-          "votingMethod": "Voting method",
-          "category": "Category",
-          "nextMilestone": "Next milestone",
-          "milestoneVotes": "{count, plural, one {# vote} other {# votes}}",
-          "pollLink": "Poll link",
-          "copied": "Copied",
-          "copyLink": "Copy link",
-          "linkCopiedAria": "Share link copied to clipboard.",
-          "linkCopyHintAria": "Press copy to place the share link on your clipboard.",
-          "buttons": {
-            "viewPoll": "View poll",
-            "viewAnalytics": "View analytics",
-            "emailLink": "Email link",
-            "shareOnX": "Share on X",
-            "createAnother": "Create another poll",
-            "done": "Done",
-            "delete": "Delete Poll"
-          },
-          "delete": {
-            "confirm": {
-              "title": "Delete Poll",
-              "description": "Are you sure you want to delete \"{title}\"? This action cannot be undone and will permanently remove the poll and all associated votes.",
-              "cancel": "Cancel",
-              "delete": "Delete Poll",
-              "deleting": "Deleting..."
-            },
-            "success": {
-              "title": "Poll deleted",
-              "message": "Your poll has been deleted successfully."
-            },
-            "error": {
-              "title": "Delete failed",
-              "message": "Failed to delete poll"
-            }
-          },
-          "email": {
-            "subject": "Check out this poll"
-          },
-          "x": {
-            "tweet": "Vote now: {title} {url}"
-          },
-          "milestones": {
-            "title": "Milestone alerts",
-            "description": "Receive in-app alerts when your poll reaches key vote counts.",
-            "enabled": "{current}/{total} enabled",
-            "notifyAt": "Notify me at {count, plural, one {# vote} other {# votes}}",
-            "itemDescription": "Sends an alert when the poll crosses {count, plural, one {# vote} other {# votes}} so you can celebrate or share again."
-          }
         }
       },
       "view": {
@@ -1909,39 +1833,6 @@
           "lockPoll": "Lock Poll"
         }
       },
-      "share": {
-        "title": "Share This Poll",
-        "defaultTitle": "Check out this poll!",
-        "nativeShareText": "Check out this poll!",
-        "nativeShare": "Share via System",
-        "directLink": {
-          "label": "Direct Link"
-        },
-        "copy": "Copy",
-        "copied": "Copied!",
-        "social": {
-          "twitter": "Twitter",
-          "facebook": "Facebook",
-          "linkedin": "Linkedin",
-          "email": "Email"
-        },
-        "emailBody": "Check out this poll: {url}",
-        "qrCode": {
-          "title": "QR Code",
-          "show": "Show QR Code",
-          "hide": "Hide QR Code",
-          "alt": "QR Code for poll",
-          "generating": "Generating QR Code...",
-          "scanHint": "Scan to open poll on mobile device",
-          "download": "Download QR",
-          "copyLink": "Copy Link"
-        },
-        "embed": {
-          "title": "Embed Poll",
-          "codeLabel": "Embed Code",
-          "copyCode": "Copy Embed Code"
-        }
-      },
       "results": {
         "heading": "Results",
         "refreshing": "Refreshing poll results...",
@@ -1955,7 +1846,10 @@
           "title": "Error loading poll results",
           "retry": "Try Again"
         },
-        "empty": "No poll results available",
+        "empty": {
+          "title": "No poll results available",
+          "description": "Poll results are not yet available. Results may be processing or the poll may not have received any votes yet."
+        },
         "type": "Type: {type}",
         "totalVotes": "{count, plural, one {# total vote} other {# total votes}}",
         "uniqueVoters": "{count, plural, one {# unique voter} other {# unique voters}}",
@@ -1986,11 +1880,6 @@
         },
         "optionVotes": "{votes, number} votes ({percentage}%)",
         "optionSummary": "{option} received {votes, number} votes ({percentage}%), representing {uniqueVoters, plural, one {# unique voter} other {# unique voters}}",
-        "uniqueVoters": "{count, plural, one {# unique voter} other {# unique voters}}",
-        "empty": {
-          "title": "No poll results available",
-          "description": "Poll results are not yet available. Results may be processing or the poll may not have received any votes yet."
-        },
         "refresh": "Refresh Results",
         "refreshLabel": "Refresh poll results"
       },
@@ -2023,34 +1912,6 @@
         "actions": {
           "view": "View",
           "vote": "Vote"
-        }
-      },
-      "page": {
-        "title": "Polls",
-        "subtitle": "Discover and participate in community polls",
-        "breadcrumbs": {
-          "home": "Home",
-          "dashboard": "Dashboard",
-          "polls": "Polls"
-        },
-        "empty": {
-          "title": "No polls found",
-          "filters": "No polls match your search or filter criteria. Try adjusting your filters.",
-          "ctaMessage": "Get started by creating your first poll!"
-        },
-        "cta": {
-          "create": "Create Poll",
-          "view": "View",
-          "results": "Results"
-        },
-        "metadata": {
-          "votes": "{count, plural, one {# vote} other {# votes}}"
-        },
-        "pagination": {
-          "showing": "Showing {start} to {end} of {total} polls",
-          "pageLabel": "Page {current} of {total}",
-          "previous": "Previous",
-          "next": "Next"
         }
       },
       "filters": {
@@ -2204,6 +2065,120 @@
           "title": "Vote failed",
           "message": "Failed to submit vote"
         }
+      }
+    },
+    "view": {
+      "privacy": {
+        "public": "Public",
+        "private": "Private",
+        "unlisted": "Unlisted"
+      },
+      "votingMethod": {
+        "single": "Single choice",
+        "multiple": "Multiple choice",
+        "approval": "Approval voting",
+        "ranked": "Ranked choice",
+        "quadratic": "Quadratic voting"
+      },
+      "breadcrumbs": {
+        "home": "Home",
+        "dashboard": "Dashboard",
+        "polls": "Polls",
+        "pollDetail": "Poll details"
+      },
+      "errors": {
+        "loadResultsFailed": "Failed to load poll results. Please try again later.",
+        "loadDataFailed": "Failed to load poll data. Please try again later.",
+        "voteFailed": "Unable to submit your vote."
+      },
+      "loading": "Loading poll details…",
+      "comparison": {
+        "heading": "Compare top options",
+        "optionLabel": "Option {index}"
+      },
+      "leadingOption": {
+        "label": "Leading option",
+        "votes": "{votes} votes ({percentage}%) out of {total}"
+      },
+      "stats": {
+        "totalVotes": "Total votes",
+        "participation": "Participation",
+        "status": "Status"
+      },
+      "status": {
+        "active": {
+          "label": "Active"
+        },
+        "closed": {
+          "label": "Closed",
+          "title": "Poll closed",
+          "description": "This poll is closed. Results are available below."
+        },
+        "draft": {
+          "label": "Draft"
+        },
+        "notOpen": {
+          "title": "Poll not open",
+          "description": "Voting is not available for this poll yet."
+        },
+        "signInRequired": {
+          "title": "Sign in required",
+          "description": "Please sign in to vote in this poll."
+        },
+        "votingRestricted": {
+          "title": "Voting restricted",
+          "description": "You don’t have permission to vote in this poll."
+        }
+      },
+      "milestones": {
+        "label": "Milestones",
+        "empty": "No milestones selected yet.",
+        "tracking": "Tracking: {milestones}",
+        "nextUp": "Next up: {count} votes",
+        "achieved": "Achieved milestones",
+        "votesBadge": "{count} votes",
+        "itemLabel": "{count} votes",
+        "itemDescription": "Notify me when this poll reaches {count} votes",
+        "toggleAria": "Toggle milestone notifications for {count} votes"
+      },
+      "options": {
+        "fallback": "Option {number}",
+        "voteCount": "{votes} votes • {percentage}%"
+      },
+      "buttons": {
+        "share": "Share",
+        "analytics": "Analytics",
+        "printSummary": "Print summary",
+        "vote": "Vote",
+        "voted": "Voted",
+        "voting": "Voting…",
+        "compareToVote": "Compare to representative's vote"
+      },
+      "notifications": {
+        "voteRecorded": {
+          "title": "Vote recorded",
+          "message": "Thanks for voting! Your response has been counted."
+        },
+        "voteFailed": {
+          "title": "Vote failed",
+          "message": "We couldn’t record your vote. Please try again."
+        },
+        "linkCopied": {
+          "title": "Link copied",
+          "message": "Poll link copied to clipboard."
+        },
+        "copyFailed": {
+          "title": "Copy failed",
+          "message": "Unable to copy the link. Please try again."
+        }
+      },
+      "created": "Created {date}",
+      "participationProgress": {
+        "label": "Community engagement"
+      },
+      "activitySparkline": {
+        "label": "7-day activity",
+        "ariaLabel": "Vote activity over last 7 days"
       }
     }
   },
@@ -3992,183 +3967,6 @@
           "message": "Try installing again later or check your connection."
         }
       }
-    }
-  },
-  "polls": {
-    "view": {
-      "privacy": {
-        "public": "Public",
-        "private": "Private",
-        "unlisted": "Unlisted"
-      },
-      "votingMethod": {
-        "single": "Single choice",
-        "multiple": "Multiple choice",
-        "approval": "Approval voting",
-        "ranked": "Ranked choice",
-        "quadratic": "Quadratic voting"
-      },
-      "breadcrumbs": {
-        "home": "Home",
-        "dashboard": "Dashboard",
-        "polls": "Polls",
-        "pollDetail": "Poll details"
-      },
-      "errors": {
-        "loadResultsFailed": "Failed to load poll results. Please try again later.",
-        "loadDataFailed": "Failed to load poll data. Please try again later.",
-        "voteFailed": "Unable to submit your vote."
-      },
-      "loading": "Loading poll details…",
-      "comparison": {
-        "heading": "Compare top options",
-        "optionLabel": "Option {index}"
-      },
-      "leadingOption": {
-        "label": "Leading option",
-        "votes": "{votes} votes ({percentage}%) out of {total}"
-      },
-      "stats": {
-        "totalVotes": "Total votes",
-        "participation": "Participation",
-        "status": "Status"
-      },
-      "status": {
-        "active": {
-          "label": "Active"
-        },
-        "closed": {
-          "label": "Closed",
-          "title": "Poll closed",
-          "description": "This poll is closed. Results are available below."
-        },
-        "draft": {
-          "label": "Draft"
-        },
-        "notOpen": {
-          "title": "Poll not open",
-          "description": "Voting is not available for this poll yet."
-        },
-        "signInRequired": {
-          "title": "Sign in required",
-          "description": "Please sign in to vote in this poll."
-        },
-        "votingRestricted": {
-          "title": "Voting restricted",
-          "description": "You don’t have permission to vote in this poll."
-        }
-      },
-      "milestones": {
-        "label": "Milestones",
-        "empty": "No milestones selected yet.",
-        "tracking": "Tracking: {milestones}",
-        "nextUp": "Next up: {count} votes",
-        "achieved": "Achieved milestones",
-        "votesBadge": "{count} votes",
-        "itemLabel": "{count} votes",
-        "itemDescription": "Notify me when this poll reaches {count} votes",
-        "toggleAria": "Toggle milestone notifications for {count} votes"
-      },
-      "options": {
-        "fallback": "Option {number}",
-        "voteCount": "{votes} votes • {percentage}%"
-      },
-      "buttons": {
-        "share": "Share",
-        "analytics": "Analytics",
-        "printSummary": "Print summary",
-        "vote": "Vote",
-        "voted": "Voted",
-        "voting": "Voting…",
-        "compareToVote": "Compare to representative's vote"
-      },
-      "notifications": {
-        "voteRecorded": {
-          "title": "Vote recorded",
-          "message": "Thanks for voting! Your response has been counted."
-        },
-        "voteFailed": {
-          "title": "Vote failed",
-          "message": "We couldn’t record your vote. Please try again."
-        },
-        "linkCopied": {
-          "title": "Link copied",
-          "message": "Poll link copied to clipboard."
-        },
-        "copyFailed": {
-          "title": "Copy failed",
-          "message": "Unable to copy the link. Please try again."
-        }
-      },
-      "created": "Created {date}"
-    },
-    "page": {
-      "title": "Polls",
-      "subtitle": "Explore what the community is voting on",
-      "descriptionFallback": "No description provided.",
-      "trendingBadge": "Trending #{position}",
-      "cta": {
-        "create": "Create",
-        "view": "View",
-        "results": "Results"
-      },
-      "empty": {
-        "title": "No polls found",
-        "filters": "Try adjusting your search or filters.",
-        "ctaMessage": "Be the first to create a poll."
-      },
-      "metadata": {
-        "created": "Created {date}",
-        "votes": "{formattedCount} votes"
-      },
-      "breadcrumbs": {
-        "home": "Home",
-        "dashboard": "Dashboard",
-        "polls": "Polls"
-      },
-      "pagination": {
-        "showing": "Showing {start}-{end} of {total}",
-        "pageLabel": "Page {current} of {total}",
-        "previous": "Previous",
-        "next": "Next"
-      }
-    },
-    "filters": {
-      "search": {
-        "placeholder": "Search polls...",
-        "ariaLabel": "Search polls"
-      },
-      "hashtags": {
-        "label": "Hashtags",
-        "remove": "Remove {hashtag}",
-        "addPlaceholder": "Add hashtag",
-        "addAria": "Add hashtag"
-      },
-      "status": {
-        "all": "All",
-        "active": "Active",
-        "trending": "Trending",
-        "closed": "Closed"
-      },
-      "categories": {
-        "label": "Categories",
-        "all": "All"
-      },
-      "trending": {
-        "heading": "Trending hashtags",
-        "headingWithCount": "Trending hashtags ({count})",
-        "count": "{formattedCount} trending hashtags"
-      }
-    },
-    "categories": {
-      "general": "General",
-      "business": "Business",
-      "education": "Education",
-      "technology": "Technology",
-      "health": "Health",
-      "finance": "Finance",
-      "environment": "Environment",
-      "social": "Social"
     }
   },
   "harness": {
