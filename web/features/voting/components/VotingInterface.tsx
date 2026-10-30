@@ -67,6 +67,8 @@ type VotingInterfaceProps = {
   onVerify?: OnVerify;
   isVoting?: boolean;
   hasVoted?: boolean;
+  /** Hide the nested poll-title header when the page already shows it. */
+  embedded?: boolean;
   userVote?: number;
   userMultipleVote?: number[];
   userApprovalVote?: string[];
@@ -83,6 +85,7 @@ export default function VotingInterface({
   onVerify: _onVerify,
   isVoting = false,
   hasVoted = false,
+  embedded = false,
   userVote,
   userMultipleVote,
   userApprovalVote,
@@ -556,8 +559,8 @@ export default function VotingInterface({
 
   return (
     <div className="max-w-4xl mx-auto" data-testid="voting-form">
-      {/* Header with poll info and verification tier - Only show if title/description provided */}
-      {poll.title && (
+      {/* Header with poll info and verification tier - skip when the page already has it */}
+      {!embedded && poll.title && (
         <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">

@@ -969,8 +969,9 @@ export default function PollClient({ poll }: PollClientProps) {
             <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
             <CardDescription>Select your preferred option(s) below</CardDescription>
           </CardHeader>
-          <CardContent className="pt-6" data-testid="voting-form">
+          <CardContent className="pt-6">
             <VotingInterface
+              embedded
               poll={{
                 id: poll.id,
                 title: poll.title,

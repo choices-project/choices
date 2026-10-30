@@ -152,5 +152,18 @@ test.describe('@smoke Signed-in session shell', () => {
         .first(),
     ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole('link', { name: /sign in to vote/i })).toHaveCount(0);
+    await expect(page.getByText(/when to use single choice/i)).toHaveCount(0);
+    await expect(page.getByText(/voting instructions/i)).toHaveCount(0);
+
+    await page.getByTestId('logout-button').click();
+    await expect(page).toHaveURL(/loggedOut=1|\/$/, { timeout: 20_000 });
+    await expect(page.getByTestId('app-shell')).toHaveCount(0);
+    await expect(page.getByTestId('minimal-navigation')).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel(/name, office or committee/i)).toBeVisible();
+
+    await page.goto('/polls');
+    await expect(page.getByTestId('minimal-navigation')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('logout-button')).toHaveCount(0);
   });
 });
