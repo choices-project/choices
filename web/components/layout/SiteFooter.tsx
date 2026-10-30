@@ -37,6 +37,20 @@ export function SiteFooter() {
           >
             {t('footer.privacy')}
           </Link>
+          <Link
+            href="/"
+            prefetch={false}
+            className="font-medium transition-colors hover:text-primary/90 focus-visible:underline"
+          >
+            {t('footer.accountability')}
+          </Link>
+          <Link
+            href="/welcome"
+            prefetch={false}
+            className="font-medium transition-colors hover:text-primary/90 focus-visible:underline"
+          >
+            {t('footer.welcome')}
+          </Link>
         </nav>
       </div>
     </footer>

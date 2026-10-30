@@ -32,7 +32,7 @@ The Choices platform is a TypeScript/React application built with the Next.js Ap
                   ▼
 ┌──────────────────────────────────────────────────────┐
 │ Supabase                                             │
-│ ├─ PostgreSQL (~93 public tables, 7 views, ~63 RPCs)   │
+│ ├─ PostgreSQL (~103 public tables, 8 views, ~63 RPCs)   │
 │ ├─ Row Level Security policies                       │
 │ ├─ Auth (email, OAuth, WebAuthn/passkeys)            │
 │ ├─ Storage buckets                                   │
@@ -164,7 +164,7 @@ All API routes live under `web/app/api/*` and follow consistent patterns:
 
 ### Database
 
-- **~93 public tables** and **7 views** in generated types (`web/types/supabase.ts`); **~63 RPC** entries under `public.Functions` (exact JSON: `npm run docs:surface-counts`; diagram + this line vs types: `npm run verify:architecture-schema-counts` / `verify:docs`)
+- **~103 public tables** and **8 views** in generated types (`web/types/supabase.ts`); **~63 RPC** entries under `public.Functions` (exact JSON: `npm run docs:surface-counts`; diagram + this line vs types: `npm run verify:architecture-schema-counts` / `verify:docs`)
 - **RLS** on user-facing tables (see migrations and schema doc)
 - **Migrations** managed via `supabase/migrations/`
 - **Generated types** in `web/types/supabase.ts` (from `web/`: `npm run types:generate` after schema changes)

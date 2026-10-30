@@ -508,7 +508,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl, 308)
   }
 
-  // Minimal core v0.1: `/` is always the marketing home (no auto-redirect to /polls).
+  // Minimal core: `/` is the public money + office-contact record (no auto-redirect to /polls).
+  // Marketing copy remains at `/welcome`. `/landing` still consolidates to `/`.
   // Post-login still lands on /polls via resolve-post-auth-redirect; nav links polls for signed-in users.
   // Never cache `/` in the browser: a prior middleware build redirected signed-in users to
   // `/polls` with `Cache-Control: public, max-age=3600`, which trapped external browsers.

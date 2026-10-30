@@ -14,6 +14,520 @@ export type Database = {
   }
   public: {
     Tables: {
+      accountability_companies: {
+        Row: {
+          formerly: string | null
+          hq: string | null
+          id: string
+          name: string
+          pac_fec_id: string | null
+          pac_name: string | null
+          products: string | null
+          snapshot_id: number
+        }
+        Insert: {
+          formerly?: string | null
+          hq?: string | null
+          id: string
+          name: string
+          pac_fec_id?: string | null
+          pac_name?: string | null
+          products?: string | null
+          snapshot_id: number
+        }
+        Update: {
+          formerly?: string | null
+          hq?: string | null
+          id?: string
+          name?: string
+          pac_fec_id?: string | null
+          pac_name?: string | null
+          products?: string | null
+          snapshot_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_companies_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_contributions: {
+        Row: {
+          amount: number
+          channel: string
+          company: string
+          contributed_on: string | null
+          contribution_count: number | null
+          date_from: string | null
+          date_to: string | null
+          donor: string | null
+          donor_count: number | null
+          donor_role: string | null
+          id: number
+          official_id: string | null
+          organization_id: string | null
+          snapshot_id: number
+          source: string
+          source_url: string | null
+          via: string | null
+        }
+        Insert: {
+          amount: number
+          channel: string
+          company: string
+          contributed_on?: string | null
+          contribution_count?: number | null
+          date_from?: string | null
+          date_to?: string | null
+          donor?: string | null
+          donor_count?: number | null
+          donor_role?: string | null
+          id?: never
+          official_id?: string | null
+          organization_id?: string | null
+          snapshot_id: number
+          source: string
+          source_url?: string | null
+          via?: string | null
+        }
+        Update: {
+          amount?: number
+          channel?: string
+          company?: string
+          contributed_on?: string | null
+          contribution_count?: number | null
+          date_from?: string | null
+          date_to?: string | null
+          donor?: string | null
+          donor_count?: number | null
+          donor_role?: string | null
+          id?: never
+          official_id?: string | null
+          organization_id?: string | null
+          snapshot_id?: number
+          source?: string
+          source_url?: string | null
+          via?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_contributions_official_id_fkey"
+            columns: ["official_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_officials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accountability_contributions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accountability_contributions_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_coverage: {
+        Row: {
+          id: number
+          jurisdiction: string
+          level: string
+          note: string | null
+          snapshot_id: number
+          source: string
+          source_url: string | null
+          status: string
+        }
+        Insert: {
+          id?: never
+          jurisdiction: string
+          level: string
+          note?: string | null
+          snapshot_id: number
+          source: string
+          source_url?: string | null
+          status: string
+        }
+        Update: {
+          id?: never
+          jurisdiction?: string
+          level?: string
+          note?: string | null
+          snapshot_id?: number
+          source?: string
+          source_url?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_coverage_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_lobbying: {
+        Row: {
+          bills: string[]
+          company: string
+          filings: number
+          id: number
+          registrants: string[]
+          reported_amount: number
+          snapshot_id: number
+          source_url: string
+          top_issues: string[]
+          year: number
+        }
+        Insert: {
+          bills?: string[]
+          company: string
+          filings?: number
+          id?: never
+          registrants?: string[]
+          reported_amount?: number
+          snapshot_id: number
+          source_url: string
+          top_issues?: string[]
+          year: number
+        }
+        Update: {
+          bills?: string[]
+          company?: string
+          filings?: number
+          id?: never
+          registrants?: string[]
+          reported_amount?: number
+          snapshot_id?: number
+          source_url?: string
+          top_issues?: string[]
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_lobbying_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_official_votes: {
+        Row: {
+          official_id: string
+          position: string
+          roll_call_id: string
+        }
+        Insert: {
+          official_id: string
+          position: string
+          roll_call_id: string
+        }
+        Update: {
+          official_id?: string
+          position?: string
+          roll_call_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_official_votes_official_id_fkey"
+            columns: ["official_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_officials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accountability_official_votes_roll_call_id_fkey"
+            columns: ["roll_call_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_roll_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_officials: {
+        Row: {
+          address: string | null
+          ballotpedia: string | null
+          bioguide: string | null
+          contact_form: string | null
+          facebook: string | null
+          fec_ids: string[]
+          id: string
+          instagram: string | null
+          is_current: boolean | null
+          level: string
+          name: string
+          office: string | null
+          party: string | null
+          phone: string | null
+          representative_id: number | null
+          snapshot_id: number
+          state: string | null
+          total_axon: number
+          total_flock: number
+          total_received: number
+          twitter: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          ballotpedia?: string | null
+          bioguide?: string | null
+          contact_form?: string | null
+          facebook?: string | null
+          fec_ids?: string[]
+          id: string
+          instagram?: string | null
+          is_current?: boolean | null
+          level: string
+          name: string
+          office?: string | null
+          party?: string | null
+          phone?: string | null
+          representative_id?: number | null
+          snapshot_id: number
+          state?: string | null
+          total_axon?: number
+          total_flock?: number
+          total_received?: number
+          twitter?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          ballotpedia?: string | null
+          bioguide?: string | null
+          contact_form?: string | null
+          facebook?: string | null
+          fec_ids?: string[]
+          id?: string
+          instagram?: string | null
+          is_current?: boolean | null
+          level?: string
+          name?: string
+          office?: string | null
+          party?: string | null
+          phone?: string | null
+          representative_id?: number | null
+          snapshot_id?: number
+          state?: string | null
+          total_axon?: number
+          total_flock?: number
+          total_received?: number
+          twitter?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_officials_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accountability_officials_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_organizations: {
+        Row: {
+          id: string
+          kind: string | null
+          level: string | null
+          name: string
+          note: string | null
+          snapshot_id: number
+          state: string | null
+          total_axon: number
+          total_flock: number
+          total_received: number
+        }
+        Insert: {
+          id: string
+          kind?: string | null
+          level?: string | null
+          name: string
+          note?: string | null
+          snapshot_id: number
+          state?: string | null
+          total_axon?: number
+          total_flock?: number
+          total_received?: number
+        }
+        Update: {
+          id?: string
+          kind?: string | null
+          level?: string | null
+          name?: string
+          note?: string | null
+          snapshot_id?: number
+          state?: string | null
+          total_axon?: number
+          total_flock?: number
+          total_received?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_organizations_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_reported: {
+        Row: {
+          company: string
+          id: number
+          jurisdiction: string
+          snapshot_id: number
+          source: string
+          source_url: string
+          summary: string
+        }
+        Insert: {
+          company: string
+          id?: never
+          jurisdiction: string
+          snapshot_id: number
+          source: string
+          source_url: string
+          summary: string
+        }
+        Update: {
+          company?: string
+          id?: never
+          jurisdiction?: string
+          snapshot_id?: number
+          source?: string
+          source_url?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_reported_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_roll_calls: {
+        Row: {
+          bill: string
+          chamber: string
+          id: string
+          jurisdiction: string
+          lobbied_by: string[]
+          question: string
+          result: string | null
+          snapshot_id: number
+          source_url: string
+          tally_no: number
+          tally_other: number
+          tally_yes: number
+          title: string
+          topic: string
+          vote_date: string
+        }
+        Insert: {
+          bill: string
+          chamber: string
+          id: string
+          jurisdiction: string
+          lobbied_by?: string[]
+          question: string
+          result?: string | null
+          snapshot_id: number
+          source_url: string
+          tally_no?: number
+          tally_other?: number
+          tally_yes?: number
+          title: string
+          topic: string
+          vote_date: string
+        }
+        Update: {
+          bill?: string
+          chamber?: string
+          id?: string
+          jurisdiction?: string
+          lobbied_by?: string[]
+          question?: string
+          result?: string | null
+          snapshot_id?: number
+          source_url?: string
+          tally_no?: number
+          tally_other?: number
+          tally_yes?: number
+          title?: string
+          topic?: string
+          vote_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accountability_roll_calls_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accountability_snapshots: {
+        Row: {
+          contribution_count: number
+          generated_at: string
+          id: number
+          is_current: boolean
+          loaded_at: string
+          official_count: number
+          organization_count: number
+          source: string
+        }
+        Insert: {
+          contribution_count?: number
+          generated_at: string
+          id?: never
+          is_current?: boolean
+          loaded_at?: string
+          official_count?: number
+          organization_count?: number
+          source?: string
+        }
+        Update: {
+          contribution_count?: number
+          generated_at?: string
+          id?: never
+          is_current?: boolean
+          loaded_at?: string
+          official_count?: number
+          organization_count?: number
+          source?: string
+        }
+        Relationships: []
+      }
       admin_activity_log: {
         Row: {
           action: string
@@ -3084,8 +3598,8 @@ export type Database = {
           id: number
           is_primary: boolean | null
           is_verified: boolean | null
-          rejection_reason: string | null
           rejected_at: string | null
+          rejection_reason: string | null
           representative_id: number
           source: string | null
           submitted_by_user_id: string | null
@@ -3098,8 +3612,8 @@ export type Database = {
           id?: number
           is_primary?: boolean | null
           is_verified?: boolean | null
-          rejection_reason?: string | null
           rejected_at?: string | null
+          rejection_reason?: string | null
           representative_id: number
           source?: string | null
           submitted_by_user_id?: string | null
@@ -3112,8 +3626,8 @@ export type Database = {
           id?: number
           is_primary?: boolean | null
           is_verified?: boolean | null
-          rejection_reason?: string | null
           rejected_at?: string | null
+          rejection_reason?: string | null
           representative_id?: number
           source?: string | null
           submitted_by_user_id?: string | null
@@ -4701,6 +5215,30 @@ export type Database = {
           },
         ]
       }
+      user_profiles_public: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          display_name: string | null
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          display_name?: string | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          display_name?: string | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       user_voting_history: {
         Row: {
           created_at: string | null
@@ -4818,7 +5356,7 @@ export type Database = {
             }[]
           }
         | {
-            Args: { p_analysis_window?: unknown; p_poll_id: string }
+            Args: { p_analysis_window?: string; p_poll_id: string }
             Returns: Json
           }
       analyze_narrative_divergence: {
@@ -4839,10 +5377,7 @@ export type Database = {
               sentiment_score: number
             }[]
           }
-        | {
-            Args: { p_poll_id: string; p_time_window?: unknown }
-            Returns: Json
-          }
+        | { Args: { p_poll_id: string; p_time_window?: string }; Returns: Json }
       analyze_polls_table: {
         Args: never
         Returns: {
@@ -4880,7 +5415,7 @@ export type Database = {
             }[]
           }
         | {
-            Args: { p_analysis_window?: unknown; p_poll_id: string }
+            Args: { p_analysis_window?: string; p_poll_id: string }
             Returns: Json
           }
       calculate_trust_filtered_votes: {
@@ -4931,10 +5466,7 @@ export type Database = {
       }
       deactivate_non_current_openstates_reps: { Args: never; Returns: number }
       detect_bot_behavior:
-        | {
-            Args: { p_poll_id: string; p_time_window?: unknown }
-            Returns: Json
-          }
+        | { Args: { p_poll_id: string; p_time_window?: string }; Returns: Json }
         | { Args: { p_user_id: string }; Returns: Json }
       determine_status_from_active: {
         Args: {
@@ -4956,7 +5488,7 @@ export type Database = {
       }
       get_comprehensive_analytics:
         | {
-            Args: { p_analysis_window?: unknown; p_poll_id: string }
+            Args: { p_analysis_window?: string; p_poll_id: string }
             Returns: Json
           }
         | {
@@ -5053,7 +5585,7 @@ export type Database = {
         Returns: Json
       }
       get_real_time_analytics: {
-        Args: { p_poll_id: string; p_time_window?: unknown }
+        Args: { p_poll_id: string; p_time_window?: string }
         Returns: {
           engagement_score: number
           peak_activity_time: string
@@ -5094,7 +5626,7 @@ export type Database = {
         Args: never
         Returns: {
           details: string
-          execution_time: unknown
+          execution_time: string
           optimization_type: string
           status: string
         }[]
@@ -5198,12 +5730,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5227,11 +5759,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5252,11 +5784,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5277,11 +5809,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -5294,11 +5826,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

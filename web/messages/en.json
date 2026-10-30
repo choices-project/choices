@@ -4244,7 +4244,184 @@
     "rights": "All rights reserved",
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
-    "legalNav": "Legal"
+    "legalNav": "Legal",
+    "accountability": "Money in politics",
+    "welcome": "About Choices"
+  },
+  "accountability": {
+    "title": "Surveillance-industry money in politics",
+    "lede": "Political contributions from Axon (formerly TASER) and Flock Safety to elected officials, candidates and political organizations at the federal, state and local level, alongside how recipients voted on related bills.",
+    "updated": "Data compiled from public filings on {date}.",
+    "disclaimer": "This page is a read-only summary of public records. A contribution does not show that an official acted improperly or that money influenced a vote. Each figure links to the filing it came from; check the source before relying on it. Office phone numbers and sites come from Congress.gov legislators files and the Choices civics roster.",
+    "aboutPlatform": "About the Choices platform",
+    "summaryLabel": "Summary for current filters",
+    "stats": {
+      "officials": "Officials and candidates",
+      "toOfficials": "To officials and candidates",
+      "toOrganizations": "To parties, PACs and associations",
+      "orgHint": "Excludes company PACs and committees, whose gifts are counted under each recipient",
+      "jurisdictions": "States represented",
+      "rollCalls": "{count} roll-call votes tracked"
+    },
+    "downloads": {
+      "label": "Download the compiled records",
+      "intro": "Same data as this page. JSON is the full dataset; CSVs are spreadsheet-ready. Rank-and-file employees stay aggregated.",
+      "json": "Full dataset (JSON)",
+      "officials": "Officials (CSV)",
+      "organizations": "Organizations (CSV)",
+      "contributions": "Contributions (CSV)",
+      "votes": "Votes (CSV)",
+      "lobbying": "Lobbying (CSV)",
+      "contacts": "Office contact (CSV)"
+    },
+    "contact": {
+      "label": "Office contact",
+      "phone": "Call",
+      "form": "Write their office",
+      "website": "Website",
+      "twitter": "X / Twitter",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "ballotpedia": "Ballotpedia"
+    },
+    "filters": {
+      "label": "Filters",
+      "search": "Name, office or committee",
+      "searchPlaceholder": "Search…",
+      "state": "State",
+      "allStates": "All states",
+      "national": "National",
+      "level": "Level",
+      "allLevels": "All levels",
+      "company": "Company",
+      "bothCompanies": "Both companies",
+      "money": "Money type",
+      "moneyAll": "All, including employees",
+      "moneyDirect": "Company, PAC and executives only",
+      "sort": "Sort by",
+      "sortAmount": "Amount",
+      "sortName": "Name",
+      "sortState": "State",
+      "votedOnly": "Only show recipients with tracked votes",
+      "reset": "Reset filters"
+    },
+    "tabs": {
+      "officials": "Officials",
+      "organizations": "Organizations",
+      "votes": "Votes",
+      "lobbying": "Lobbying",
+      "about": "Sources and method"
+    },
+    "officialsIntro": "People who received money, directly or through a committee they control. Phone, office site and social links are from the public civics roster. Select a name for each itemized gift and its source filing.",
+    "organizationsIntro": "Party committees, PACs, ballot committees and officeholder associations (for example governors' or attorneys general associations) that received money.",
+    "votesIntro": "Roll-call votes on policing, surveillance and appropriations bills, plus Arizona's Axon headquarters bill. A company badge means the bill number appears in that company's federal lobbying reports for the same Congress.",
+    "lobbyingIntro": "Federal lobbying reported under the Lobbying Disclosure Act, where Axon, TASER or Flock is the client. Amounts are the sum of what each registrant reported; a company's in-house report can include fees it paid to outside firms, so yearly totals may overstate spending.",
+    "empty": "No records match these filters.",
+    "showMore": "Show more ({shown} of {total})",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "moneyRaised": "Company vehicle: money raised",
+    "recordCount": "{count, plural, one {# record} other {# records}}",
+    "voteCount": "{count, plural, one {# tracked vote} other {# tracked votes}}",
+    "via": "To:",
+    "employeeAggregate": "{donors, plural, one {# employee} other {# employees}} ({gifts, plural, one {# gift} other {# gifts}}; names withheld)",
+    "votesOnTracked": "Votes on tracked bills",
+    "lobbiedBy": "named in {companies} lobbying reports",
+    "lobbiedNote": "This bill number appears in {companies} federal lobbying reports filed during this Congress.",
+    "companyBill": "Bill concerning {companies} directly",
+    "companyBillNote": "This bill concerns {companies} directly.",
+    "tally": "Yes {yes} · No {no} · Other {other}",
+    "fundedVoters": "{count, plural, one {# recipient in this dataset voted} other {# recipients in this dataset voted}} (yes {yes}, no {no})",
+    "noFundedVoters": "No recipients in this dataset cast a vote on this roll call.",
+    "table": {
+      "caption": "Contributions",
+      "date": "Date",
+      "from": "From",
+      "amount": "Amount",
+      "source": "Source"
+    },
+    "companies": {
+      "axon": "Axon",
+      "flock": "Flock"
+    },
+    "channels": {
+      "pac": "Company PAC",
+      "corporate": "Company",
+      "company_committee": "Company-funded committee",
+      "executive": "Executive",
+      "lobbyist": "Company lobbyist",
+      "employees": "Employees"
+    },
+    "levels": {
+      "federal": "Federal",
+      "state": "State",
+      "local": "Local",
+      "association": "Association"
+    },
+    "orgKinds": {
+      "pac": "PAC",
+      "super_pac": "Super PAC",
+      "jfc": "Joint fundraising",
+      "party": "Party",
+      "association": "Association",
+      "ballot": "Ballot measure",
+      "committee": "Committee",
+      "company_committee": "Company-funded committee"
+    },
+    "vote": {
+      "yes": "Yes",
+      "no": "No",
+      "nv": "Did not vote",
+      "present": "Present"
+    },
+    "chamber": {
+      "house": "House",
+      "senate": "Senate"
+    },
+    "topics": {
+      "policing": "Policing",
+      "defense": "Defense",
+      "appropriations": "Appropriations",
+      "surveillance": "Surveillance",
+      "company-specific": "Company-specific"
+    },
+    "lobbying": {
+      "year": "Year",
+      "company": "Client",
+      "reported": "Reported",
+      "registrants": "Registrants",
+      "issues": "Top issues",
+      "bills": "Bills named",
+      "filings": "{count, plural, one {# filing} other {# filings}}"
+    },
+    "method": {
+      "title": "How this data was compiled",
+      "updated": "Last compiled {date}.",
+      "sources": "Sources: FEC itemized receipts and Axon PAC disbursements (2006–2026); Senate LDA lobbying filings; IRS Form 8872 political-organization reports; state bulk data from California, Texas, Colorado and Illinois; New York State, New York City, Los Angeles and Washington open-data portals; Florida Division of Elections; Arizona SeeTheMoney; roll-call records from the House Clerk, Voteview (UCLA) for the Senate, and the Arizona Legislature.",
+      "matching": "Gifts are matched by employer and organization name (Axon, TASER, Flock). A bare 'Axon' or 'Flock' employer outside the companies' home states is excluded because it often refers to unrelated businesses. Duplicate and amended filings are removed.",
+      "channels": "Each gift is labeled by channel: the company itself, its PAC, a company-funded committee, an executive, an in-house lobbyist, or rank-and-file employees.",
+      "privacy": "Executives and registered lobbyists are named because they act for the company. Other employees are counted and totaled per recipient but not named.",
+      "votes": "Vote positions come from official roll-call records and are matched to recipients by official member IDs. A vote listed next to a contribution shows timing only and is not evidence of cause.",
+      "contact": "Office phone, website, contact form and social accounts are joined from the unitedstates/congress-legislators files and the Choices representatives_core civics ingest (OpenStates / Congress). Missing contact means that official is not in the current roster, not that they have no office.",
+      "limits": "Federal law does not require itemizing gifts under $200, and many states and localities were not searched. Missing records mean the data was not found, not that no money was given. See the coverage table."
+    },
+    "reported": {
+      "title": "Reported in the news but not in the data above",
+      "description": "Items reported by journalists that we could not confirm in a machine-readable filing. They are not counted in any totals."
+    },
+    "coverage": {
+      "title": "Coverage",
+      "description": "Which jurisdictions and sources were searched. States not listed were not searched.",
+      "jurisdiction": "Jurisdiction",
+      "source": "Source",
+      "status": "Status",
+      "note": "Note",
+      "statuses": {
+        "searched": "Searched",
+        "partial": "Partial",
+        "not_searched": "Not searched",
+        "blocked": "Blocked"
+      }
+    }
   }
 }
-
