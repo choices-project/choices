@@ -1,7 +1,6 @@
 'use client';
 
 import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
-import Link from 'next/link';
 import React, { Suspense, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
@@ -12,6 +11,7 @@ import { EnhancedEmptyState } from '@/components/shared/EnhancedEmptyState';
 import { EnhancedErrorDisplay } from '@/components/shared/EnhancedErrorDisplay';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { useLiveAnnouncer } from '@/components/shared/LiveAnnouncer';
+import { PrefetchLink } from '@/components/shared/PrefetchLink';
 import { PollListSkeleton } from '@/components/shared/Skeletons';
 import { Button } from '@/components/ui/button';
 
@@ -414,14 +414,14 @@ function PollsPageContent() {
                 {tRef.current('polls.page.subtitle')}
               </p>
             </div>
-            <Link
+            <PrefetchLink
               href="/polls/create"
               className="inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap self-start sm:self-auto focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
               aria-label="Create a new poll"
             >
               <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               {tRef.current('polls.page.cta.create')}
-            </Link>
+            </PrefetchLink>
           </div>
         </div>
 
@@ -533,24 +533,22 @@ function PollsPageContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Link
+                  <PrefetchLink
                     href={`/polls/${poll.id}`}
-                    prefetch={false}
                     className="inline-flex items-center justify-center w-full px-4 py-2 min-h-[44px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     aria-label={`View poll: ${poll.title}`}
                   >
                     <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.view')}
-                  </Link>
-                  <Link
+                  </PrefetchLink>
+                  <PrefetchLink
                     href={`/polls/${poll.id}/results`}
-                    prefetch={false}
                     className="inline-flex items-center justify-center w-full px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     aria-label={`View results for poll: ${poll.title}`}
                   >
                     <BarChart3 className="h-4 w-4 mr-2" aria-hidden="true" />
                     {tRef.current('polls.page.cta.results')}
-                  </Link>
+                  </PrefetchLink>
                 </div>
                 </div>
               </AnimatedCard>

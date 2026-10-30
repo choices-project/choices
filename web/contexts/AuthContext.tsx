@@ -168,11 +168,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // no escape: isLoading stayed true forever.
     const GET_SESSION_HARD_TIMEOUT_MS = 10_000
 
-    const adoptSession = (session: Session | null, supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>) => {
+    const adoptSession = (
+      nextSession: Session | null,
+      supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>,
+      options?: { allowClear?: boolean },
+    ) => {
       if (!mounted || signOutInProgressRef.current) return
-      setSession(session)
-      setUser(session?.user ?? null)
-      applySession(supabase, session)
+      // A late null from getSession/hydrate must not wipe a sign-in that
+      // already landed in the user store while this bootstrap was racing.
+      if (!nextSession) {
+        if (options?.allowClear) {
+          setSession(null)
+          setUser(null)
+          applySession(supabase, null)
+        }
+        setStoreLoadingRef.current(false)
+        setLoading(false)
+        return
+      }
+      setSession(nextSession)
+      setUser(nextSession.user ?? null)
+      applySession(supabase, nextSession)
       setStoreLoadingRef.current(false)
       setLoading(false)
     }
@@ -204,12 +220,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 userId: nextSession?.user?.id,
               })
             }
+            if (event === 'SIGNED_OUT') {
+              adoptSession(null, supabase, { allowClear: true })
+              return
+            }
             adoptSession(nextSession, supabase)
           },
         )
 
         // Start in parallel with getSession — httpOnly cookies are invisible to the client until hydrated.
-        const serverHydrationPromise = hydrateBrowserSessionFromServer()
+        // Cap wait so a stuck CSRF/session fetch or setSession() lock cannot freeze chrome.
+        const HYDRATE_HARD_TIMEOUT_MS = 4_000
+        const serverHydrationPromise = Promise.race([
+          hydrateBrowserSessionFromServer(),
+          new Promise<Session | null>((resolve) => {
+            window.setTimeout(() => resolve(null), HYDRATE_HARD_TIMEOUT_MS)
+          }),
+        ])
 
         // Race getSession() against a hard timeout. On timeout we DO NOT
         // substitute a fake `{ session: null }` (previous attempts at that
@@ -237,7 +264,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           clientSession: Session | null,
         ): Promise<void> => {
           const session = clientSession ?? (await serverHydrationPromise)
-          adoptSession(session, supabase)
+          if (session) {
+            adoptSession(session, supabase)
+            return
+          }
+          setStoreLoadingRef.current(false)
+          setLoading(false)
         }
 
         if (raceResult.kind === 'resolved') {
@@ -351,16 +383,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applySession]) // applySession is stable
 
+  const resolvedUser = user ?? storeUser
+  const resolvedSession = session ?? storeSession
+
   const value = useMemo(
     () => ({
-      user,
-      session,
+      user: resolvedUser,
+      session: resolvedSession,
       loading,
       isLoading: loading,  // Alias for backward compatibility
       signOut,
       refreshSession,
     }),
-    [user, session, loading, signOut, refreshSession]
+    [resolvedUser, resolvedSession, loading, signOut, refreshSession]
   )
 
   return (

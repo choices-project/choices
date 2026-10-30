@@ -672,6 +672,11 @@ const nextConfig = {
       { source: '/polls/create/constituent-will', destination: '/polls/create', permanent: false },
       { source: '/polls/create/constituent-will/:path*', destination: '/polls/create', permanent: false },
       { source: '/candidates/:path*', destination: '/polls', permanent: false },
+      { source: '/login', destination: '/auth', permanent: false },
+      { source: '/login/:path*', destination: '/auth', permanent: false },
+      { source: '/register', destination: '/auth', permanent: false },
+      { source: '/register/:path*', destination: '/auth', permanent: false },
+      { source: '/auth/register', destination: '/auth', permanent: false },
     ]
   },
 
