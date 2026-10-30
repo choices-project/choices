@@ -474,13 +474,13 @@ function PollsPageContent() {
                 icon={<BarChart3 className="h-12 w-12 text-gray-400" />}
                 title={((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
                   ? 'No polls match your filters'
-                  : 'No polls yet'}
+                  : 'No community polls yet'}
                 description={((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
                   ? 'Try adjusting your search or filters to see more results.'
-                  : 'Be the first to create a poll and start engaging with your community.'}
+                  : 'Questions will appear here when they are published.'}
                 tip={((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all')
                   ? 'You can clear your filters to see all available polls.'
-                  : 'Polls help you gather opinions, make decisions, and engage with your community.'}
+                  : 'Create a poll to start a public question for your community.'}
                 primaryAction={(() => {
                   const isFiltered = ((search.query ?? '') || selectedCategory !== 'all' || activeFilter !== 'all');
                   const action: {
@@ -489,7 +489,7 @@ function PollsPageContent() {
                     onClick?: () => void;
                     icon: React.ReactNode;
                   } = {
-                    label: isFiltered ? 'Clear Filters' : 'Create Your First Poll',
+                    label: isFiltered ? 'Clear Filters' : 'Create a poll',
                     icon: <Plus className="h-4 w-4" />,
                   };
                   if (isFiltered) {
