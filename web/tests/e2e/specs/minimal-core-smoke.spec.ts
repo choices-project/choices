@@ -9,7 +9,13 @@ test.describe('@smoke Minimal core pages', () => {
     await page.goto('/');
     await expect(page.locator('body')).toBeVisible();
     await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
-    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel(/name, office or committee/i)).toBeVisible();
+  });
+
+  test('welcome marketing page still renders', async ({ page }) => {
+    await page.goto('/welcome');
+    await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('auth page renders login form', async ({ page }) => {
@@ -49,5 +55,11 @@ test.describe('@smoke Minimal core pages', () => {
     await page.goto('/privacy');
     await expect(page.locator('body')).toBeVisible();
     await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('accountability page renders', async ({ page }) => {
+    await page.goto('/accountability');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByLabel(/name, office or committee/i)).toBeVisible();
   });
 });

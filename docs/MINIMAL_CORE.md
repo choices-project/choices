@@ -49,8 +49,8 @@ Do **not** merge to `main` until you have validated the preview.
 
 | Area | Routes / behavior |
 |------|-------------------|
-| Landing | `/` |
-| Legal | `/terms`, `/privacy` |
+| Landing | `/` (money + office contact); marketing copy at `/welcome` |
+| Legal | `/terms`, `/privacy`, `/accountability` (same public filings as `/`) |
 | Auth | `/auth` — email/password + register only |
 | Polls | `/polls`, `/polls/[id]`, `/polls/[id]/results` — list, view, vote, results |
 | Poll create | `/polls/create` — single-choice one-page form |
@@ -99,13 +99,15 @@ Track regressions in GitHub issues labeled `minimal-core`. Initial Tier 2 routes
 
 | Route | Nav OK | Renders | Notes |
 |-------|--------|---------|-------|
-| `/` | — | | |
+| `/` | — | | money + office contact |
+| `/welcome` | — | | previous marketing page |
 | `/auth` | — | | |
 | `/polls` | | | |
 | `/polls/create` | | | |
 | `/profile` | | | |
 | `/terms` | | | |
 | `/privacy` | | | |
+| `/accountability` | | | |
 
 ## Related docs
 

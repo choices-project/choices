@@ -3743,12 +3743,190 @@
     "rights": "Todos los derechos reservados",
     "terms": "Términos de Servicio",
     "privacy": "Política de Privacidad",
-    "legalNav": "Avisos legales"
+    "legalNav": "Avisos legales",
+    "accountability": "Dinero en la política",
+    "welcome": "Acerca de Choices"
   },
   "pages": {
     "default": "Page",
     "pollDetails": "Poll details",
     "representative": "Representative",
     "civicAction": "Civic action"
+  },
+  "accountability": {
+    "title": "Dinero de la industria de vigilancia en la política",
+    "lede": "Contribuciones políticas de Axon (antes TASER) y Flock Safety a funcionarios electos, candidatos y organizaciones políticas a nivel federal, estatal y local, junto con cómo votaron los beneficiarios en proyectos de ley relacionados.",
+    "updated": "Datos compilados de registros públicos el {date}.",
+    "disclaimer": "Esta página es un resumen de solo lectura de registros públicos. Una contribución no demuestra que un funcionario actuó indebidamente ni que el dinero influyó en un voto. Cada cifra enlaza al registro de origen; verifique la fuente antes de usarla. Los teléfonos y sitios de oficina provienen de los archivos de legisladores de Congress.gov y del padrón cívico de Choices.",
+    "aboutPlatform": "Acerca de la plataforma Choices",
+    "summaryLabel": "Resumen según los filtros actuales",
+    "stats": {
+      "officials": "Funcionarios y candidatos",
+      "toOfficials": "A funcionarios y candidatos",
+      "toOrganizations": "A partidos, PAC y asociaciones",
+      "orgHint": "Excluye los PAC y comités de la empresa, cuyas contribuciones se cuentan en cada beneficiario",
+      "jurisdictions": "Estados representados",
+      "rollCalls": "{count} votaciones nominales registradas"
+    },
+    "downloads": {
+      "label": "Descargar los registros compilados",
+      "intro": "Los mismos datos que esta página. El JSON es el conjunto completo; los CSV sirven para hojas de cálculo. Los empleados de base siguen agregados.",
+      "json": "Conjunto completo (JSON)",
+      "officials": "Funcionarios (CSV)",
+      "organizations": "Organizaciones (CSV)",
+      "contributions": "Contribuciones (CSV)",
+      "votes": "Votaciones (CSV)",
+      "lobbying": "Cabildeo (CSV)",
+      "contacts": "Contacto de oficina (CSV)"
+    },
+    "contact": {
+      "label": "Contacto de oficina",
+      "phone": "Llamar",
+      "form": "Escribir a su oficina",
+      "website": "Sitio",
+      "twitter": "X / Twitter",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "ballotpedia": "Ballotpedia"
+    },
+    "filters": {
+      "label": "Filtros",
+      "search": "Nombre, cargo o comité",
+      "searchPlaceholder": "Buscar…",
+      "state": "Estado",
+      "allStates": "Todos los estados",
+      "national": "Nacional",
+      "level": "Nivel",
+      "allLevels": "Todos los niveles",
+      "company": "Empresa",
+      "bothCompanies": "Ambas empresas",
+      "money": "Tipo de dinero",
+      "moneyAll": "Todo, incluidos empleados",
+      "moneyDirect": "Solo empresa, PAC y ejecutivos",
+      "sort": "Ordenar por",
+      "sortAmount": "Monto",
+      "sortName": "Nombre",
+      "sortState": "Estado",
+      "votedOnly": "Mostrar solo beneficiarios con votos registrados",
+      "reset": "Restablecer filtros"
+    },
+    "tabs": {
+      "officials": "Funcionarios",
+      "organizations": "Organizaciones",
+      "votes": "Votaciones",
+      "lobbying": "Cabildeo",
+      "about": "Fuentes y método"
+    },
+    "officialsIntro": "Personas que recibieron dinero, directamente o mediante un comité que controlan. Teléfono, sitio de oficina y redes son del padrón cívico público. Seleccione un nombre para ver cada contribución y su registro de origen.",
+    "organizationsIntro": "Comités de partido, PAC, comités de iniciativas y asociaciones de funcionarios (por ejemplo, de gobernadores o fiscales generales) que recibieron dinero.",
+    "votesIntro": "Votaciones nominales sobre proyectos de policía, vigilancia y presupuesto, además del proyecto de ley de Arizona sobre la sede de Axon. Una insignia de empresa indica que el número del proyecto aparece en los informes federales de cabildeo de esa empresa en el mismo Congreso.",
+    "lobbyingIntro": "Cabildeo federal declarado bajo la Ley de Divulgación de Cabildeo, donde Axon, TASER o Flock es el cliente. Los montos suman lo declarado por cada registrante; el informe interno de una empresa puede incluir honorarios pagados a firmas externas, por lo que los totales anuales pueden sobrestimar el gasto.",
+    "empty": "Ningún registro coincide con estos filtros.",
+    "showMore": "Mostrar más ({shown} de {total})",
+    "showDetails": "Ver detalles",
+    "hideDetails": "Ocultar detalles",
+    "moneyRaised": "Vehículo de la empresa: dinero recaudado",
+    "recordCount": "{count, plural, one {# registro} other {# registros}}",
+    "voteCount": "{count, plural, one {# votación registrada} other {# votaciones registradas}}",
+    "via": "A:",
+    "employeeAggregate": "{donors, plural, one {# empleado} other {# empleados}} ({gifts, plural, one {# contribución} other {# contribuciones}}; nombres omitidos)",
+    "votesOnTracked": "Votos en proyectos registrados",
+    "lobbiedBy": "mencionado en informes de cabildeo de {companies}",
+    "lobbiedNote": "Este número de proyecto aparece en informes federales de cabildeo de {companies} presentados durante este Congreso.",
+    "companyBill": "Proyecto que concierne directamente a {companies}",
+    "companyBillNote": "Este proyecto concierne directamente a {companies}.",
+    "tally": "Sí {yes} · No {no} · Otros {other}",
+    "fundedVoters": "{count, plural, one {# beneficiario de este conjunto votó} other {# beneficiarios de este conjunto votaron}} (sí {yes}, no {no})",
+    "noFundedVoters": "Ningún beneficiario de este conjunto votó en esta votación.",
+    "table": {
+      "caption": "Contribuciones",
+      "date": "Fecha",
+      "from": "De",
+      "amount": "Monto",
+      "source": "Fuente"
+    },
+    "companies": {
+      "axon": "Axon",
+      "flock": "Flock"
+    },
+    "channels": {
+      "pac": "PAC de la empresa",
+      "corporate": "Empresa",
+      "company_committee": "Comité financiado por la empresa",
+      "executive": "Ejecutivo",
+      "lobbyist": "Cabildero de la empresa",
+      "employees": "Empleados"
+    },
+    "levels": {
+      "federal": "Federal",
+      "state": "Estatal",
+      "local": "Local",
+      "association": "Asociación"
+    },
+    "orgKinds": {
+      "pac": "PAC",
+      "super_pac": "Super PAC",
+      "jfc": "Recaudación conjunta",
+      "party": "Partido",
+      "association": "Asociación",
+      "ballot": "Iniciativa electoral",
+      "committee": "Comité",
+      "company_committee": "Comité financiado por la empresa"
+    },
+    "vote": {
+      "yes": "Sí",
+      "no": "No",
+      "nv": "No votó",
+      "present": "Presente"
+    },
+    "chamber": {
+      "house": "Cámara",
+      "senate": "Senado"
+    },
+    "topics": {
+      "policing": "Policía",
+      "defense": "Defensa",
+      "appropriations": "Presupuesto",
+      "surveillance": "Vigilancia",
+      "company-specific": "Específico de la empresa"
+    },
+    "lobbying": {
+      "year": "Año",
+      "company": "Cliente",
+      "reported": "Declarado",
+      "registrants": "Registrantes",
+      "issues": "Temas principales",
+      "bills": "Proyectos mencionados",
+      "filings": "{count, plural, one {# informe} other {# informes}}"
+    },
+    "method": {
+      "title": "Cómo se compilaron estos datos",
+      "updated": "Última compilación: {date}.",
+      "sources": "Fuentes: recibos detallados de la FEC y desembolsos del PAC de Axon (2006–2026); informes de cabildeo LDA del Senado; informes del formulario 8872 del IRS; datos masivos estatales de California, Texas, Colorado e Illinois; portales de datos abiertos del estado y la ciudad de Nueva York, Los Ángeles y Washington; División de Elecciones de Florida; SeeTheMoney de Arizona; registros de votaciones del Secretario de la Cámara, Voteview (UCLA) para el Senado y la Legislatura de Arizona.",
+      "matching": "Las contribuciones se vinculan por empleador y nombre de organización (Axon, TASER, Flock). Un empleador 'Axon' o 'Flock' sin más datos fuera de los estados sede de las empresas se excluye porque a menudo se refiere a negocios no relacionados. Se eliminan registros duplicados y enmendados.",
+      "channels": "Cada contribución se etiqueta por canal: la empresa, su PAC, un comité financiado por la empresa, un ejecutivo, un cabildero interno o empleados en general.",
+      "privacy": "Los ejecutivos y cabilderos registrados se nombran porque actúan en nombre de la empresa. Los demás empleados se cuentan y suman por beneficiario, sin nombres.",
+      "votes": "Las posiciones de voto provienen de registros oficiales y se vinculan a los beneficiarios mediante identificadores oficiales. Un voto junto a una contribución muestra solo la cronología y no es prueba de causa.",
+      "contact": "Teléfono, sitio, formulario y redes de la oficina se unen desde los archivos unitedstates/congress-legislators y el ingest civics de Choices (representatives_core / OpenStates). Si falta contacto, esa persona no está en el padrón actual, no que no tenga oficina.",
+      "limits": "La ley federal no exige detallar contribuciones menores de $200, y muchos estados y localidades no se buscaron. La ausencia de registros significa que no se encontraron datos, no que no hubo dinero. Consulte la tabla de cobertura."
+    },
+    "reported": {
+      "title": "Reportado en la prensa pero no en los datos anteriores",
+      "description": "Información publicada por periodistas que no pudimos confirmar en un registro legible por máquina. No se incluye en ningún total."
+    },
+    "coverage": {
+      "title": "Cobertura",
+      "description": "Qué jurisdicciones y fuentes se buscaron. Los estados no incluidos no se buscaron.",
+      "jurisdiction": "Jurisdicción",
+      "source": "Fuente",
+      "status": "Estado",
+      "note": "Nota",
+      "statuses": {
+        "searched": "Buscado",
+        "partial": "Parcial",
+        "not_searched": "No buscado",
+        "blocked": "Bloqueado"
+      }
+    }
   }
 }

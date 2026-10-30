@@ -5,9 +5,9 @@
 `npm run docs:public-schema-index`
 
 | Source file | `web/types/supabase.ts` |
-| Generated | 2026-04-04 |
-| Public tables | 93 |
-| Public views | 7 |
+| Generated | 2026-10-30 |
+| Public tables | 103 |
+| Public views | 8 |
 | Public RPCs (`Database['public']['Functions']`) | 63 |
 
 Cross-check counts: `npm run docs:surface-counts` (includes Next.js `route.ts` tally).
@@ -16,6 +16,16 @@ Cross-check counts: `npm run docs:surface-counts` (includes Next.js `route.ts` t
 
 ## Public tables (alphabetical)
 
+- `accountability_companies`
+- `accountability_contributions`
+- `accountability_coverage`
+- `accountability_lobbying`
+- `accountability_official_votes`
+- `accountability_officials`
+- `accountability_organizations`
+- `accountability_reported`
+- `accountability_roll_calls`
+- `accountability_snapshots`
 - `admin_activity_log`
 - `advanced_analytics_usage`
 - `agent_operations`
@@ -119,6 +129,7 @@ Cross-check counts: `npm run docs:surface-counts` (includes Next.js `route.ts` t
 - `openstates_people_primary_contacts_v`
 - `openstates_people_social_v`
 - `openstates_people_sources_v`
+- `user_profiles_public`
 - `user_voting_history`
 - `voter_registration_resources_view`
 

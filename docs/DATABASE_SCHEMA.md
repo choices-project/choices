@@ -1,6 +1,6 @@
 # Choices Platform - Database Schema Documentation
 
-**Last Updated**: April 4, 2026  
+**Last Updated**: October 29, 2026  
 **Source of Truth**: `/web/types/supabase.ts` (Supabase-generated types)  
 **Status**: ✅ Current (synced to latest generated types)
 
@@ -33,7 +33,7 @@ npm run docs:public-schema-index
 npm run docs:surface-counts   # optional: prints JSON counts + Next.js route tally
 ```
 
-**Counts** (as of last regeneration; **`npm run verify:docs`** asserts **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** matches **`web/types/supabase.ts`**; **`npm run docs:surface-counts`** prints JSON): **93** public tables, **7** public views, **63** RPC names under `Database['public']['Functions']`.
+**Counts** (as of last regeneration; **`npm run verify:docs`** asserts **`docs/DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`** matches **`web/types/supabase.ts`**; **`npm run docs:surface-counts`** prints JSON): **103** public tables, **8** public views, **63** RPC names under `Database['public']['Functions']`.
 
 For **`calculate_trust_weighted_votes`**: product policy forbids calling it—see [RPC Functions § `calculate_trust_weighted_votes`](#calculate_trust_weighted_votes-legacy--forbidden-for-product-use).
 
@@ -396,6 +396,25 @@ Tracks message delivery status.
 ---
 
 ## Representatives & Officials
+
+### Accountability (compiled Axon / Flock money)
+
+Public-read snapshot of the landing-page dataset. Migration: `supabase/migrations/20261029120000_accountability_public_read.sql`. Reload: `python3 scripts/accountability/load_supabase.py rest` after a current `accountability_snapshots` row exists. RLS is **SELECT only** for `anon` and `authenticated`; writes use `service_role`.
+
+| Table | Role |
+| --- | --- |
+| `accountability_snapshots` | Current compiled build (`generated_at`, row counts) |
+| `accountability_companies` | Axon and Flock Safety profiles |
+| `accountability_officials` | Recipients; optional `representative_id` → `representatives_core` |
+| `accountability_organizations` | Parties, PACs, associations |
+| `accountability_contributions` | Itemized / aggregated gifts (`official_id` xor `organization_id`) |
+| `accountability_roll_calls` | Tracked House / Senate / Arizona votes |
+| `accountability_official_votes` | Official × roll-call position |
+| `accountability_lobbying` | Federal LDA yearly totals |
+| `accountability_coverage` | Jurisdictions searched or skipped |
+| `accountability_reported` | News items excluded from totals |
+
+The home page still reads `web/lib/accountability/surveillance-money.json`. These tables are the queryable copy.
 
 ### `representatives_core`
 Canonical record for every active representative and elected official. Column lengths reflect the live Supabase schema (verified via `scripts/inspect-schema.ts`).
@@ -999,7 +1018,7 @@ Feature usage tracking.
 
 ## RPC Functions
 
-**Cardinality:** The generated Supabase client types expose **63** function names under `Database['public']['Functions']` in `web/types/supabase.ts`, alongside **93** public tables and **7** views. After regenerating types, refresh counts with `node scripts/doc-surface-counts.mjs` from the repository root.
+**Cardinality:** The generated Supabase client types expose **63** function names under `Database['public']['Functions']` in `web/types/supabase.ts`, alongside **103** public tables and **8** views. After regenerating types, refresh counts with `node scripts/doc-surface-counts.mjs` from the repository root.
 
 The **complete alphabetical list** of all **63** `public` RPC names is in [`DATABASE_SCHEMA_PUBLIC_INDEX.generated.md`](./DATABASE_SCHEMA_PUBLIC_INDEX.generated.md). The narrative subsections below highlight **commonly referenced** RPCs only; subsection headings are **not** sequential totals.
 
