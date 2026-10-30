@@ -64,7 +64,7 @@ When **Tools & MCP** shows both servers **Connected**, agents should use them **
 |--------|------|----------|
 | Supabase | `list_tables` (`schemas: ["public"]`) | Tables such as `polls`, `user_profiles`, `votes` with RLS enabled |
 | Supabase | `list_migrations` | Includes `20260622120000` (profile privilege guard) among applied migrations |
-| Supabase | `get_advisors` (`type: "security"`) | Review permissive RLS / SECURITY DEFINER warnings after DDL changes — see [`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md) and [`scratch/AUTH_OVERHAUL_PLAN.md`](../scratch/AUTH_OVERHAUL_PLAN.md) |
+| Supabase | `get_advisors` (`type: "security"`) | Review permissive RLS / SECURITY DEFINER warnings after DDL changes — see [`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md) |
 | Vercel | `list_teams` | Team containing this repo’s Vercel project |
 | Vercel | `get_project` | **`choices-platform`**, domains include **`www.choices-app.com`**, latest production deployment **READY** |
 
@@ -219,7 +219,6 @@ Repo config:
 | Location | Purpose |
 |----------|---------|
 | **[`.agents/AUTH_SECURITY_HANDOFF.md`](../.agents/AUTH_SECURITY_HANDOFF.md)** | **Canonical auth/security rules** for agents: `getUser`, trust tier server-only, profile strip, admin CSRF, MCP workflow, verification commands. |
-| **[`scratch/AUTH_OVERHAUL_PLAN.md`](../scratch/AUTH_OVERHAUL_PLAN.md)** | Implementation backlog + MCP audit items (§16). |
 | **[`.cursor/rules/projectruleschoices.mdc`](../.cursor/rules/projectruleschoices.mdc)** | Always-on: stack (Next/Supabase), **skills** to use, MCP preferences, **no `deploy_to_vercel`**, Vercel plugin. YAML `alwaysApply: true`. |
 | **[`.cursor/rules/choices-agent-defaults.mdc`](../.cursor/rules/choices-agent-defaults.mdc)** | Always-on: **prompting / behavior** defaults (ground in repo, parallel reads, when to implement vs explain, concise prose, UI fit). Aligns with [Anthropic prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices). |
 | **[`.agents/skills/vercel-react-best-practices/`](../.agents/skills/vercel-react-best-practices/)** | Vercel’s React/Next performance rules for agents (`AGENTS.md` + `SKILL.md`). Use for **App Router, RSC, client/server splits, data fetching**. |

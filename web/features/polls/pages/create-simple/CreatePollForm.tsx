@@ -13,7 +13,6 @@ import { createPollRequest } from '@/lib/polls/api';
 import type { PollCreatePayload } from '@/lib/polls/wizard/submission';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useI18n } from '@/hooks/useI18n';
 
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
@@ -48,7 +47,6 @@ function buildPayload(
 }
 
 export default function CreatePollForm() {
-  const { t } = useI18n();
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
