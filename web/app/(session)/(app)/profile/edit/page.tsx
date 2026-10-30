@@ -15,11 +15,14 @@ import { env } from '@/lib/config/env';
 import { useUser } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 
+import { useAuth } from '@/hooks/useAuth';
+
 export default function EditProfilePage() {
   const router = useRouter();
   const routerRef = useRef(router);
   useEffect(() => { routerRef.current = router; }, [router]);
   const user = useUser();
+  const { hasServerSession } = useAuth();
   const { profile, isLoading, error, refetch } = useProfile();
   const { isUpdating } = useProfileLoadingStates();
   const { setCurrentRoute, setBreadcrumbs, setSidebarActiveSection } = useAppActions();
@@ -67,12 +70,12 @@ export default function EditProfilePage() {
     }
     // Only redirect if we're certain user is not authenticated
     // Don't redirect while authentication state is still loading
-    if (!isLoading && !user) {
+    if (!isLoading && !user && !hasServerSession) {
       routerRef.current.replace('/auth?redirectTo=/profile/edit');
     }
-  }, [isLoading, user]);
+  }, [hasServerSession, isLoading, user]);
 
-  if (isLoading) {
+  if (isLoading || (!profile && !error)) {
     return (
       <div
         className="min-h-screen bg-muted flex items-center justify-center"

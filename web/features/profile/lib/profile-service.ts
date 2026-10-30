@@ -384,21 +384,10 @@ export function transformProfileUpdateToApi(data: ProfileUpdateData): Record<str
  * Fetches profile data from API endpoint
  */
 export async function getCurrentProfile(): Promise<ProfileActionResult> {
-  // #region agent log
-  if (process.env.NODE_ENV === 'development') {
-    // Debug logging removed for production
-  }
-  // #endregion
-  // Add timeout to prevent hanging requests
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
   try {
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      // Debug logging removed for production
-    }
-    // #endregion
     const response = await fetch('/api/profile', {
       signal: controller.signal,
       method: 'GET',
@@ -408,39 +397,14 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
       },
     });
 
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:371',message:'After fetch - response status',data:{status:response.status,statusText:response.statusText,ok:response.ok,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(() => undefined);
-    }
-    // #endregion
     if (!response.ok) {
-      // #region agent log
-      if (process.env.NODE_ENV === 'development') {
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:373',message:'Response not OK - throwing error',data:{status:response.status,statusText:response.statusText,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(() => undefined);
-      }
-      // #endregion
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const apiData = await response.json();
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:375',message:'API response received',data:{hasApiData:!!apiData,hasSuccess:!!(apiData as any)?.success,hasProfile:!!(apiData as any)?.profile,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(() => undefined);
-    }
-    // #endregion
     const profile = transformApiResponseToProfile(apiData);
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:376',message:'After transformApiResponseToProfile',data:{hasProfile:!!profile,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(() => undefined);
-    }
-    // #endregion
 
     if (!profile) {
-      // #region agent log
-      if (process.env.NODE_ENV === 'development') {
-        fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:379',message:'Profile transform returned null',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(() => undefined);
-      }
-      // #endregion
       clearTimeout(timeoutId);
       return {
         success: false,
@@ -448,8 +412,6 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
       };
     }
 
-    // Extract preferences from API response if available
-    // Handle both nested structure { data: { preferences: {...} } } and flat structure { preferences: {...} }
     const preferences = (
       (apiData as { data?: { preferences?: unknown } })?.data?.preferences ??
       (apiData as { preferences?: unknown })?.preferences ??
@@ -457,11 +419,6 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
     );
 
     clearTimeout(timeoutId);
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:390',message:'Returning success result',data:{hasProfile:!!profile,hasPreferences:!!preferences,timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(() => undefined);
-    }
-    // #endregion
     return {
       success: true,
       data: profile,
@@ -470,11 +427,6 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
 
   } catch (error) {
     clearTimeout(timeoutId);
-    // #region agent log
-    if (process.env.NODE_ENV === 'development') {
-      fetch('http://127.0.0.1:7242/ingest/6a732aed-2d72-4883-a63a-f3c892fc1216',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'profile-service.ts:397',message:'Error in getCurrentProfile',data:{errorName:error instanceof Error ? error.name : 'unknown',errorMessage:error instanceof Error ? error.message : String(error),timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(() => undefined);
-    }
-    // #endregion
 
     // Handle AbortError specifically (timeout or manual abort)
     if (error instanceof Error && error.name === 'AbortError') {

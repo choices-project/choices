@@ -27,6 +27,14 @@ describe('profile-write-schema', () => {
     });
   });
 
+  it('rejects participation_style in owner profile updates', () => {
+    const result = parsePartialProfileOwnerUpdate({
+      display_name: 'Test User',
+      participation_style: 'participant',
+    });
+    expect(result.success).toBe(false);
+  });
+
   it('rejects trust_tier in partial updates', () => {
     const result = parsePartialProfileOwnerUpdate({
       trust_tier: 'T2',

@@ -133,6 +133,15 @@ test.describe('@smoke Signed-in session shell', () => {
     await expect(page).toHaveURL(/\/profile/, { timeout: 15_000 });
     await expect(page.getByTestId('app-shell')).toBeVisible();
     await expect(page.getByText(/complete your profile|onboarding/i)).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /edit your profile/i })).toBeVisible({
+      timeout: 20_000,
+    });
+
+    await page.goto('/profile/edit');
+    await expect(page.getByRole('heading', { name: /edit profile/i })).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByLabel(/display name/i)).toBeVisible();
 
     await page.goto('/polls/adc33472-8b6a-48bd-8cc1-e399ed8485ac');
     await expect(page.getByTestId('logout-button')).toBeVisible({ timeout: 15_000 });

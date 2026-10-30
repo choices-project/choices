@@ -146,7 +146,7 @@ function ProfilePageContent() {
 
   // Middleware already vetted this route. Do not block the shell on auth
   // bootstrap — show a skeleton only while the profile query is in flight.
-  if (!isMounted || (profileLoading && !profile)) {
+  if (!isMounted || (profileLoading && !profile && !profileError && !loadingTimeout)) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="profile-loading" aria-label="Loading profile" aria-busy="true">
         <div className="max-w-6xl mx-auto">

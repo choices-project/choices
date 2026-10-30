@@ -102,13 +102,6 @@ const PRIMARY_CONCERNS_OPTIONS = [
   'National Security'
 ];
 
-const PARTICIPATION_OPTIONS: NonNullable<ProfileUpdateData['participation_style']>[] = [
-  'observer',
-  'participant',
-  'leader',
-  'organizer',
-];
-
 const basePrivacyDefaults: Partial<PrivacySettings> = {
   collectLocationData: false,
   collectVotingHistory: false,
@@ -160,13 +153,6 @@ const isProfileVisibility = (value: unknown): value is ProfileVisibilityOption =
   typeof value === 'string' &&
   PROFILE_VISIBILITY_OPTIONS.includes(value as ProfileVisibilityOption);
 
-const toParticipationStyle = (
-  value: unknown
-): ProfileUpdateData['participation_style'] =>
-  typeof value === 'string' && PARTICIPATION_OPTIONS.includes(value as NonNullable<ProfileUpdateData['participation_style']>)
-    ? (value as ProfileUpdateData['participation_style'])
-    : undefined;
-
 const parsePrivacySettings = (value: unknown): Partial<PrivacySettings> => {
   if (!isRecord(value)) {
     return { ...defaultPrivacySettings };
@@ -194,8 +180,6 @@ const parseDemographics = (value: unknown): ProfileDemographics => {
 const buildInitialFormData = (
   userProfile?: ProfileEditProps['profile'] | null,
 ): ProfileUpdateData => {
-  const participationStyle = toParticipationStyle(userProfile?.participation_style);
-
   return {
     display_name: userProfile?.display_name ?? '',
     bio: userProfile?.bio ?? '',
@@ -204,7 +188,6 @@ const buildInitialFormData = (
     community_focus: toStringArray(userProfile?.community_focus ?? []),
     privacy_settings: parsePrivacySettings(userProfile?.privacy_settings),
     demographics: parseDemographics(userProfile?.demographics),
-    ...(participationStyle ? { participation_style: participationStyle } : {}),
   };
 };
 
@@ -225,9 +208,6 @@ const buildProfileUpdatePayload = (draft: ProfileEditDraft): ProfileUpdateData =
   }
   if (draft.community_focus !== undefined) {
     payload.community_focus = draft.community_focus;
-  }
-  if (draft.participation_style !== undefined) {
-    payload.participation_style = draft.participation_style;
   }
   if (draft.privacy_settings !== undefined) {
     payload.privacy_settings = draft.privacy_settings;
