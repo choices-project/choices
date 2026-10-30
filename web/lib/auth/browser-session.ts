@@ -27,10 +27,10 @@ function sessionFromServerPayload(tokens: ServerSessionPayload): Session | null 
   return {
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
-    expires_at: tokens.expires_at,
     expires_in: tokens.expires_in ?? 0,
-    token_type: tokens.token_type ?? 'bearer',
+    token_type: 'bearer',
     user: tokens.user,
+    ...(typeof tokens.expires_at === 'number' ? { expires_at: tokens.expires_at } : {}),
   };
 }
 
