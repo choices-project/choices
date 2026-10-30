@@ -18,8 +18,9 @@ export function useAuth() {
     () => ({
       user: context.user,
       isLoading: context.isLoading,
+      hasServerSession: context.hasServerSession,
       logout: context.signOut, // Alias for backward compatibility
     }),
-    [context.user, context.isLoading, context.signOut]
+    [context.user, context.isLoading, context.hasServerSession, context.signOut]
   )
 }

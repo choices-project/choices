@@ -41,6 +41,15 @@ test.describe('@smoke Minimal core pages', () => {
     await expect(page.getByTestId('minimal-navigation')).toHaveCount(0);
   });
 
+  test('public poll page asks unsigned visitors to sign in', async ({ page }) => {
+    await page.goto('/polls/adc33472-8b6a-48bd-8cc1-e399ed8485ac');
+    await expect(page.getByRole('heading', { name: /core flow check/i })).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByTestId('voting-form')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /sign in to vote/i })).toBeVisible();
+  });
+
   test('polls list does not write default filters into the URL', async ({ page }) => {
     await page.goto('/polls');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
@@ -124,5 +133,15 @@ test.describe('@smoke Signed-in session shell', () => {
     await expect(page).toHaveURL(/\/profile/, { timeout: 15_000 });
     await expect(page.getByTestId('app-shell')).toBeVisible();
     await expect(page.getByText(/complete your profile|onboarding/i)).toHaveCount(0);
+
+    await page.goto('/polls/adc33472-8b6a-48bd-8cc1-e399ed8485ac');
+    await expect(page.getByTestId('logout-button')).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page
+        .getByTestId('voting-form')
+        .or(page.getByText(/you have already voted/i))
+        .first(),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('link', { name: /sign in to vote/i })).toHaveCount(0);
   });
 });

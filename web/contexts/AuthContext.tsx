@@ -32,6 +32,8 @@ type AuthContextType = {
   session: Session | null
   loading: boolean
   isLoading: boolean  // Alias for backward compatibility
+  /** Cookie hint for chrome only — API routes still use getUser(). */
+  hasServerSession: boolean
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
 }
@@ -41,7 +43,13 @@ const IS_E2E_HARNESS = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
 
 export { AuthContext }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+  hasServerSession = false,
+}: {
+  children: React.ReactNode
+  hasServerSession?: boolean
+}) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -423,10 +431,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session: resolvedSession,
       loading,
       isLoading: loading,  // Alias for backward compatibility
+      hasServerSession,
       signOut,
       refreshSession,
     }),
-    [resolvedUser, resolvedSession, loading, signOut, refreshSession]
+    [resolvedUser, resolvedSession, loading, hasServerSession, signOut, refreshSession]
   )
 
   return (

@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 import { haptic } from '@/lib/haptics';
+import { canCastVoteFromSession, shouldPromptSignInToVote } from '@/lib/polls/vote-ui';
 import { selectPollTotalVotes } from '@/lib/polls/voting-methods';
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -123,7 +124,11 @@ type NormalizedOption = {
 export default function PollClient({ poll }: PollClientProps) {
   const { t } = useI18n();
   const { announce } = useLiveAnnouncer();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, hasServerSession } = useAuth();
+  const canCastVote = canCastVoteFromSession({
+    userPresent: Boolean(user),
+    hasServerSession: Boolean(hasServerSession),
+  });
   const router = useRouter();
   const { trustTier } = useProfileDisplay();
   const { addNotification } = useNotificationActions();
@@ -533,8 +538,13 @@ export default function PollClient({ poll }: PollClientProps) {
       return { title, description };
     }
 
-    // Only show sign in required if auth has finished loading and user is still null
-    if (!authLoading && !user) {
+    if (
+      shouldPromptSignInToVote({
+        pollStatus,
+        userPresent: Boolean(user),
+        hasServerSession: Boolean(hasServerSession),
+      })
+    ) {
       return {
         title: t('polls.view.status.signInRequired.title'),
         description: t('polls.view.status.signInRequired.description'),
@@ -549,7 +559,7 @@ export default function PollClient({ poll }: PollClientProps) {
     }
 
     return null;
-  }, [authLoading, canVote, pollStatus, t, user]);
+  }, [canVote, hasServerSession, pollStatus, t, user]);
 
   const [hasVoted, setHasVoted] = useState(Boolean(poll.userVote));
 
@@ -557,7 +567,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const shareUrl = isMounted && typeof window !== 'undefined' ? `${window.location.origin}/polls/${poll.id}` : '';
 
   const handleVote = useCallback(async (submission: VoteSubmission): Promise<{ ok: boolean; id?: string; error?: string }> => {
-    if (!user || !canVote || pollStatus !== 'active' || storeIsVoting) {
+    if (!canCastVote || !canVote || pollStatus !== 'active' || storeIsVoting) {
       return { ok: false, error: 'Cannot vote at this time' };
     }
 
@@ -686,7 +696,7 @@ export default function PollClient({ poll }: PollClientProps) {
     } finally {
       setVoting(false);
     }
-  }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, announce, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
+  }, [canCastVote, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, announce, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
 
   const isSingleChoice = (poll.votingMethod ?? 'single') === 'single';
   const isApprovalOrMultiple =
@@ -935,7 +945,7 @@ export default function PollClient({ poll }: PollClientProps) {
           <AlertTitle className="text-foreground">{votingStatusMessage.title}</AlertTitle>
           <AlertDescription className="text-foreground/90 space-y-3">
             <p>{votingStatusMessage.description}</p>
-            {!authLoading && !user ? (
+            {!canCastVote ? (
               <Button asChild size="sm" variant="default">
                 <Link href={`/auth?redirectTo=${encodeURIComponent(pathname ?? `/polls/${poll.id}`)}`}>
                   Sign in to vote
@@ -953,7 +963,7 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       {/* Voting Interface - PRIORITY: Show first for active polls where user can vote */}
-      {pollStatus === 'active' && canVote && user && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && !(isApprovalOrMultiple && optimisticMultiData.userVote !== null) && normalizedOptions.length > 0 && (
+      {pollStatus === 'active' && canVote && canCastVote && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && !(isApprovalOrMultiple && optimisticMultiData.userVote !== null) && normalizedOptions.length > 0 && (
         <Card className="mb-6 border-2 border-primary/20">
           <CardHeader className="bg-primary/5">
             <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
@@ -1057,13 +1067,13 @@ export default function PollClient({ poll }: PollClientProps) {
           <CardHeader>
             <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
             <CardDescription>
-              {pollStatus === 'active' && canVote && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && user
+              {pollStatus === 'active' && canVote && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && canCastVote
                   ? 'View the options below'
                 : hasVoted || (isSingleChoice && optimisticData.userVote !== null) || (isApprovalOrMultiple && optimisticMultiData.userVote !== null) || (isApprovalOrMultiple && optimisticMultiData.userVote !== null)
                   ? 'You have already voted on this poll'
                   : pollStatus !== 'active'
                     ? 'This poll is closed'
-                    : !user
+                    : !canCastVote
                       ? 'Sign in to vote'
                       : !canVote
                         ? 'Voting is restricted for this poll'

@@ -29,10 +29,10 @@ const NAV_ITEMS: Array<{
 export default function MinimalNav() {
   const { t } = useI18n();
   const pathname = usePathname() ?? '';
-  const { user, logout } = useAuth();
+  const { user, logout, hasServerSession } = useAuth();
   const cookieAuthedRoute =
     pathname.startsWith('/polls/create') || pathname.startsWith('/profile');
-  const isAuthenticated = Boolean(user) || cookieAuthedRoute;
+  const isAuthenticated = Boolean(user) || hasServerSession || cookieAuthedRoute;
   const [loggingOut, setLoggingOut] = useState(false);
 
   const isActive = useCallback((path: string) => isNavItemActive(pathname, path), [pathname]);
