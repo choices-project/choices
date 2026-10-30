@@ -50,7 +50,6 @@ export default function EditProfilePage() {
     setSidebarActiveSectionRef.current('profile');
     setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
-      { label: 'Dashboard', href: '/dashboard' },
       { label: 'Profile', href: '/profile' },
       { label: 'Edit Profile', href: '/profile/edit' },
     ]);

@@ -1,6 +1,6 @@
 'use client';
 
-import { User, Pencil, Settings, Shield } from 'lucide-react';
+import { User, Pencil } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 import { PrefetchLink } from '@/components/shared/PrefetchLink';
@@ -10,8 +10,6 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/profile/edit', label: 'Edit', icon: Pencil },
-  { href: '/profile/preferences', label: 'Preferences', icon: Settings },
-  { href: '/account/privacy', label: 'Privacy & Data', icon: Shield },
 ] as const;
 
 export default function ProfileSubNav() {

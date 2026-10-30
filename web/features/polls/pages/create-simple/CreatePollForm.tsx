@@ -132,7 +132,7 @@ export default function CreatePollForm() {
     <form onSubmit={(e) => void handleSubmit(e)} className="mx-auto max-w-lg space-y-6" data-testid="create-poll-form">
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          {t('polls.create.page.title') || 'Create a poll'}
+          Create a poll
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Single-choice poll. You can add more voting methods in a future release.

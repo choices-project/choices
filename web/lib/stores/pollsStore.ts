@@ -1139,9 +1139,7 @@ export const usePollsStore = create<PollsStore>()(
         storage: createSafeStorage(),
         partialize: (state) => ({
           preferences: state.preferences,
-          filters: state.filters,
           search: {
-            query: state.search.query,
             recentSearches: state.search.recentSearches,
           },
           voteHistory: state.voteHistory,

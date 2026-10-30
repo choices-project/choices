@@ -11,18 +11,26 @@ import { logger } from '@/lib/utils/logger';
 type TranslationParamValue = string | number | boolean | null | undefined;
 type TranslationParams = Record<string, TranslationParamValue>;
 
-function fallbackTranslate(key: string, params?: TranslationParams) {
+function interpolate(template: string, params?: TranslationParams) {
   if (!params) {
-    return key;
+    return template;
   }
 
-  return key.replace(/\{(\w+)\}/g, (match, param) => {
+  return template.replace(/\{(\w+)\}/g, (match, param) => {
     const value = params[param];
     if (value === undefined || value === null) {
       return match;
     }
     return typeof value === 'string' ? value : String(value);
   });
+}
+
+function fallbackTranslate(key: string, params?: TranslationParams) {
+  const defaultValue = typeof params?.defaultValue === 'string' ? params.defaultValue : undefined;
+  if (defaultValue) {
+    return interpolate(defaultValue, params);
+  }
+  return interpolate(key, params);
 }
 
 /**
@@ -46,15 +54,19 @@ export const useI18n = () => {
       try {
         const safeParams = params
           ? Object.fromEntries(
-              Object.entries(params).map(([paramKey, value]) => [paramKey, String(value ?? '')]),
+              Object.entries(params)
+                .filter(([paramKey]) => paramKey !== 'defaultValue')
+                .map(([paramKey, value]) => [paramKey, String(value ?? '')]),
             )
           : undefined;
 
         const result = translateRef.current(key, safeParams);
         
         // If translation returns the key itself (missing translation), use fallback
-        if (result === key && process.env.NODE_ENV === 'production') {
-          logger.warn(`[i18n] Missing translation for key "${key}"`);
+        if (result === key) {
+          if (process.env.NODE_ENV === 'production' && !params?.defaultValue) {
+            logger.warn(`[i18n] Missing translation for key "${key}"`);
+          }
           return fallbackTranslate(key, params);
         }
         

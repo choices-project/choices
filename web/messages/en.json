@@ -4020,6 +4020,10 @@
         "voteFailed": "Unable to submit your vote."
       },
       "loading": "Loading poll details…",
+      "comparison": {
+        "heading": "Compare top options",
+        "optionLabel": "Option {index}"
+      },
       "leadingOption": {
         "label": "Leading option",
         "votes": "{votes} votes ({percentage}%) out of {total}"

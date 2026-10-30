@@ -6,7 +6,7 @@ _Last updated: April 4, 2026_
 
 | What | Where |
 |------|--------|
-| **Registry & defaults** | [`web/lib/core/feature-flags.ts`](../web/lib/core/feature-flags.ts) — `FEATURE_FLAGS`, `ALWAYS_ENABLED_FLAGS`, helpers |
+| **Registry & defaults** | [`web/lib/core/feature-flags.ts`](../web/lib/core/feature-flags.ts) — `FEATURE_FLAGS`, `MINIMAL_CORE_FLAGS`, `RESTORE_FLAGS`, helpers |
 | **Product / quarantine narrative** | [`docs/ROADMAP.md`](ROADMAP.md) |
 | **Runtime exposure to clients** | `GET /api/feature-flags` (implementation under `web/app/api/feature-flags/`) |
 | **In-app feedback vs GitHub Issues** | [`FEEDBACK_AND_ISSUES.md`](FEEDBACK_AND_ISSUES.md) (relates to **`FEEDBACK_WIDGET`** + **`NEXT_PUBLIC_DISABLE_FEEDBACK_WIDGET`**) |
@@ -15,7 +15,7 @@ There is **no** separate `FEATURE_STATUS.md` in active docs; archived copies may
 
 ## Mutable flags (`FEATURE_FLAGS`)
 
-These are the **runtime-togglable** entries in `FEATURE_FLAGS` (always-on capabilities live in `ALWAYS_ENABLED_FLAGS` in the same file):
+These are the **runtime-togglable** entries in `FEATURE_FLAGS` (minimal-core and restore capabilities are separate lists in the same file):
 
 <!-- AUTO-GENERATED:FEATURE_FLAGS_MUTABLE_TABLE -->
 
@@ -27,28 +27,37 @@ These are the **runtime-togglable** entries in `FEATURE_FLAGS` (always-on capabi
 | `SOCIAL_SHARING_CIVICS` | `false` | @deprecated @quarantined No civics-specific sharing surfaces. See docs/ROADMAP.md (quarantine / feature notes). |
 | `SOCIAL_SHARING_VISUAL` | `false` | @deprecated @quarantined No OG/visual pipeline. See docs/ROADMAP.md (quarantine / feature notes). |
 | `SOCIAL_SHARING_OG` | `false` | @deprecated @quarantined No OG/visual pipeline. See docs/ROADMAP.md (quarantine / feature notes). |
-| `CONTACT_INFORMATION_SYSTEM` | `true` | GA: RLS, rate limits, admin UI, My Submissions, bulk approve/reject |
+| `CONTACT_INFORMATION_SYSTEM` | `false` | restore: contact UI archived |
 | `CIVICS_TESTING_STRATEGY` | `false` | @deprecated @quarantined No automated civics validation. See docs/ROADMAP.md (quarantine / feature notes). |
-| `PUSH_NOTIFICATIONS` | `true` | ✅ ENABLED - Production ready (January 2025) |
-| `CIVIC_ENGAGEMENT_V2` | `true` | Shipped: API + UI on rep detail; CivicActionList with create/sign |
+| `PUSH_NOTIFICATIONS` | `false` | restore: PWA push UI archived |
+| `CIVIC_ENGAGEMENT_V2` | `false` | restore: civics UI archived |
 
 <!-- END AUTO-GENERATED:FEATURE_FLAGS_MUTABLE_TABLE -->
 
-## Always-on capabilities (`ALWAYS_ENABLED_FLAGS`)
+## Minimal core (always on — `MINIMAL_CORE_FLAGS`)
 
-`featureFlagManager` treats these as **always** `true`; they are not toggled via `FEATURE_FLAGS_OVERRIDE` or admin disable.
+Shipped in v0.1 UI/API; `featureFlagManager` treats these as **always** `true`.
 
-<!-- AUTO-GENERATED:ALWAYS_ENABLED_BODY -->
+<!-- AUTO-GENERATED:MINIMAL_CORE_BODY -->
+
+- `FEEDBACK_WIDGET`
+- `ENHANCED_PROFILE`
+- `ENHANCED_POLLS`
+- `ENHANCED_VOTING`
+- `ENHANCED_AUTH`
+
+<!-- END AUTO-GENERATED:MINIMAL_CORE_BODY -->
+
+## Restore backlog (default off — `RESTORE_FLAGS`)
+
+Full-platform capabilities; default **`false`** via `RESTORE_FEATURE_FLAGS` until UI is restored from `web/_archive/`. Override via `FEATURE_FLAGS_OVERRIDE` when testing restore.
+
+<!-- AUTO-GENERATED:RESTORE_FLAGS_BODY -->
 
 - `PWA`
 - `ADMIN`
-- `FEEDBACK_WIDGET`
 - `ENHANCED_ONBOARDING`
-- `ENHANCED_PROFILE`
-- `ENHANCED_AUTH`
 - `ENHANCED_DASHBOARD`
-- `ENHANCED_POLLS`
-- `ENHANCED_VOTING`
 - `CIVICS_ADDRESS_LOOKUP`
 - `CANDIDATE_ACCOUNTABILITY`
 - `CANDIDATE_CARDS`
@@ -57,7 +66,7 @@ These are the **runtime-togglable** entries in `FEATURE_FLAGS` (always-on capabi
 - `ANALYTICS`
 - `WEBAUTHN`
 
-<!-- END AUTO-GENERATED:ALWAYS_ENABLED_BODY -->
+<!-- END AUTO-GENERATED:RESTORE_FLAGS_BODY -->
 
 **When changing flags:** update `feature-flags.ts`, run **`npm run docs:feature-flags`** (repo root), then `docs/ROADMAP.md` (and release notes if user-visible). Run **`npm run verify:docs`** from repo root before pushing.
 

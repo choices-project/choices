@@ -19,6 +19,7 @@ import { useAppActions } from '@/lib/stores/appStore';
 import {
   useFilteredPollCards,
   usePollFilters,
+  usePollLastFetchedAt,
   usePollPagination,
   usePollSearch,
   usePollsActions,
@@ -57,6 +58,7 @@ function PollsPageContent() {
   const isLoading = usePollsLoading();
   const isLoadingMore = usePollsLoadingMore();
   const error = usePollsError();
+  const lastFetchedAt = usePollLastFetchedAt();
   const filters = usePollFilters();
   const search = usePollSearch();
   const pagination = usePollPagination();
@@ -234,7 +236,6 @@ function PollsPageContent() {
     setSidebarActiveSectionRef.current('polls');
     setBreadcrumbsRef.current([
       { label: tRef.current('polls.page.breadcrumbs.home'), href: '/' },
-      { label: tRef.current('polls.page.breadcrumbs.dashboard'), href: '/dashboard' },
       { label: tRef.current('polls.page.breadcrumbs.polls'), href: '/polls' },
     ]);
 
@@ -388,8 +389,8 @@ function PollsPageContent() {
     );
   }
 
-  // Show loading state if actually loading data
-  if (isLoading) {
+  // Persisted filters used to render "no matches" before the first fetch finished.
+  if (!lastFetchedAt && !error) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="polls-loading-data" role="status" aria-busy="true" aria-live="polite" aria-label="Loading polls">
         <div className="mt-6">

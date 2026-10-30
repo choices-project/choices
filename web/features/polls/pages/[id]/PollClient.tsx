@@ -185,7 +185,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const recordPollEvent = useRecordPollEvent(pollMetadataFactory)
 
   const [results, setResults] = useState<PollResultsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVoteAttempted, setHasVoteAttempted] = useState(false);
   const pollStatus = poll.status ?? 'active';
@@ -220,7 +220,6 @@ export default function PollClient({ poll }: PollClientProps) {
     setSidebarActiveSectionRef.current('polls');
     const crumbs = [
       { label: tRef.current('polls.view.breadcrumbs.home'), href: '/' },
-      { label: tRef.current('polls.view.breadcrumbs.dashboard'), href: '/dashboard' },
       { label: tRef.current('polls.view.breadcrumbs.polls'), href: '/polls' },
       { label: pollTitle ?? tRef.current('polls.view.breadcrumbs.pollDetail'), href: pollPath },
     ];
@@ -956,7 +955,7 @@ export default function PollClient({ poll }: PollClientProps) {
             <VotingInterface
               poll={{
                 id: poll.id,
-                // Don't duplicate title/description - they're already shown above
+                title: poll.title,
                 options: normalizedOptions.map((option) => ({
                   id: option.id,
                   text: option.text,

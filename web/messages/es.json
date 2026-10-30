@@ -2804,6 +2804,10 @@
         "voteFailed": "No se pudo enviar tu voto."
       },
       "loading": "Cargando detalles de la encuesta…",
+      "comparison": {
+        "heading": "Compara las opciones principales",
+        "optionLabel": "Opción {index}"
+      },
       "leadingOption": {
         "label": "Opción líder",
         "votes": "{votes} votos ({percentage}%) de {total}"

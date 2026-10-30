@@ -368,7 +368,6 @@ export function transformProfileUpdateToApi(data: ProfileUpdateData): Record<str
     username: data.username,
     primary_concerns: data.primary_concerns,
     community_focus: data.community_focus,
-    participation_style: data.participation_style,
     privacy_settings: data.privacy_settings,
     demographics: data.demographics,
   };
@@ -524,22 +523,32 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
       body: JSON.stringify(apiData),
     });
 
+    const result = await response.json().catch(() => null);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const apiError =
+        result && typeof result === 'object' && 'error' in result && typeof result.error === 'string'
+          ? result.error
+          : `Unable to update profile (${response.status})`;
+      return { success: false, error: apiError };
     }
 
-    const result = await response.json();
-
-    if (!result.success) {
+    if (!result?.success) {
       return {
         success: false,
-        error: result.error ?? 'Failed to update profile',
+        error: result?.error ?? 'Failed to update profile',
       };
     }
 
+    const profile =
+      result.profile ??
+      result.data?.profile ??
+      (result.data && typeof result.data === 'object' && !('profile' in result.data)
+        ? result.data
+        : undefined);
+
     return {
       success: true,
-      data: result.profile,
+      data: profile,
     };
 
   } catch (error) {

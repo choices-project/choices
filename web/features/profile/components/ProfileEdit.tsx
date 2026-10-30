@@ -42,6 +42,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import {
   useUserAvatarFile,
   useUserAvatarPreview,
@@ -641,7 +642,7 @@ export default function ProfileEdit({
           </CardContent>
         </Card>
 
-        {/* Interests and Concerns */}
+        {isFeatureEnabled('ENHANCED_ONBOARDING') && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -709,6 +710,7 @@ export default function ProfileEdit({
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Privacy Settings */}
         <Card>

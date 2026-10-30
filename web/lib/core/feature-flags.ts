@@ -11,18 +11,26 @@ if (typeof window !== 'undefined') {
   logger.info('[FEATURE_FLAGS] Module loading on client');
 }
 
-const ALWAYS_ENABLED_FLAGS = [
-  'PWA',
-  'ADMIN',
+/**
+ * Minimal core v0.1 — always on (see docs/PLATFORM_SCOPE_MATRIX.md).
+ */
+const MINIMAL_CORE_FLAGS = [
   'FEEDBACK_WIDGET',
-  'ENHANCED_ONBOARDING',
   'ENHANCED_PROFILE',
-  'ENHANCED_AUTH',
-  'ENHANCED_DASHBOARD',
   'ENHANCED_POLLS',
   'ENHANCED_VOTING',
+  'ENHANCED_AUTH',
+] as const;
+
+/**
+ * Full-platform restore — default off until UI is restored (override via FEATURE_FLAGS_OVERRIDE).
+ */
+const RESTORE_FLAGS = [
+  'PWA',
+  'ADMIN',
+  'ENHANCED_ONBOARDING',
+  'ENHANCED_DASHBOARD',
   'CIVICS_ADDRESS_LOOKUP',
-  // Legacy; no active gate. Representative detail shows campaign finance regardless.
   'CANDIDATE_ACCOUNTABILITY',
   'CANDIDATE_CARDS',
   'ALTERNATIVE_CANDIDATES',
@@ -31,8 +39,29 @@ const ALWAYS_ENABLED_FLAGS = [
   'WEBAUTHN',
 ] as const;
 
-type AlwaysEnabledFlag = typeof ALWAYS_ENABLED_FLAGS[number];
-const ALWAYS_ENABLED_SET = new Set<string>(ALWAYS_ENABLED_FLAGS);
+/** @deprecated Use MINIMAL_CORE_FLAGS + RESTORE_FLAGS */
+const ALWAYS_ENABLED_FLAGS = [...MINIMAL_CORE_FLAGS, ...RESTORE_FLAGS] as const;
+
+type MinimalCoreFlag = typeof MINIMAL_CORE_FLAGS[number];
+type RestoreFlag = typeof RESTORE_FLAGS[number];
+type AlwaysEnabledFlag = MinimalCoreFlag | RestoreFlag;
+const MINIMAL_CORE_SET = new Set<string>(MINIMAL_CORE_FLAGS);
+const RESTORE_SET = new Set<string>(RESTORE_FLAGS);
+
+/** Default-off restore capabilities (honest while UI is archived). */
+const RESTORE_FEATURE_FLAGS: Record<RestoreFlag, boolean> = {
+  PWA: false,
+  ADMIN: false,
+  ENHANCED_ONBOARDING: false,
+  ENHANCED_DASHBOARD: false,
+  CIVICS_ADDRESS_LOOKUP: false,
+  CANDIDATE_ACCOUNTABILITY: false,
+  CANDIDATE_CARDS: false,
+  ALTERNATIVE_CANDIDATES: false,
+  FEATURE_DB_OPTIMIZATION_SUITE: false,
+  ANALYTICS: false,
+  WEBAUTHN: false,
+};
 
 export const FEATURE_FLAGS = {
   /** @deprecated @quarantined No implementation. See docs/ROADMAP.md (quarantine / feature notes). */
@@ -45,11 +74,11 @@ export const FEATURE_FLAGS = {
   SOCIAL_SHARING_VISUAL: false,
   /** @deprecated @quarantined No OG/visual pipeline. See docs/ROADMAP.md (quarantine / feature notes). */
   SOCIAL_SHARING_OG: false,
-  CONTACT_INFORMATION_SYSTEM: true, // GA: RLS, rate limits, admin UI, My Submissions, bulk approve/reject
+  CONTACT_INFORMATION_SYSTEM: false, // restore: contact UI archived
   /** @deprecated @quarantined No automated civics validation. See docs/ROADMAP.md (quarantine / feature notes). */
   CIVICS_TESTING_STRATEGY: false,
-  PUSH_NOTIFICATIONS: true, // ✅ ENABLED - Production ready (January 2025)
-  CIVIC_ENGAGEMENT_V2: true, // Shipped: API + UI on rep detail; CivicActionList with create/sign
+  PUSH_NOTIFICATIONS: false, // restore: PWA push UI archived
+  CIVIC_ENGAGEMENT_V2: false, // restore: civics UI archived
 } as const;
 
 type MutableFlag = keyof typeof FEATURE_FLAGS;
@@ -97,7 +126,8 @@ const CATEGORY_ALIASES: Record<string, string> = {
 };
 
 const CATEGORY_MAP: Record<string, ReadonlyArray<FeatureFlagKey>> = {
-  core: ALWAYS_ENABLED_FLAGS,
+  core: MINIMAL_CORE_FLAGS,
+  restore: RESTORE_FLAGS,
   future: [
     'AUTOMATED_POLLS',
     'SOCIAL_SHARING',
@@ -149,7 +179,15 @@ function isMutableFlag(key: FeatureFlagKey | string): key is MutableFlag {
 }
 
 function isAlwaysEnabledFlag(key: FeatureFlagKey | string): key is AlwaysEnabledFlag {
-  return ALWAYS_ENABLED_SET.has(String(key));
+  return MINIMAL_CORE_SET.has(String(key)) || RESTORE_SET.has(String(key));
+}
+
+function isMinimalCoreFlag(key: FeatureFlagKey | string): key is MinimalCoreFlag {
+  return MINIMAL_CORE_SET.has(String(key));
+}
+
+function isRestoreFlag(key: FeatureFlagKey | string): key is RestoreFlag {
+  return RESTORE_SET.has(String(key));
 }
 
 function formatFlagName(flagId: FeatureFlagKey): string {
@@ -182,8 +220,11 @@ if (typeof process !== 'undefined' && env.FEATURE_FLAGS_OVERRIDE) {
     const overrides = JSON.parse(env.FEATURE_FLAGS_OVERRIDE) as Record<string, boolean>;
     for (const [key, value] of Object.entries(overrides)) {
       const resolved = normalize(key);
-      if (resolved && isMutableFlag(resolved) && typeof value === 'boolean') {
+      if (!resolved || typeof value !== 'boolean') continue;
+      if (isMutableFlag(resolved)) {
         mutableFlags[resolved] = value;
+      } else if (isRestoreFlag(resolved)) {
+        RESTORE_FEATURE_FLAGS[resolved] = value;
       }
     }
     logger.info('[FEATURE_FLAGS] Applied env overrides', { count: Object.keys(overrides).length });
@@ -197,8 +238,11 @@ let cachedSnapshot: Record<string, boolean> | null = null;
 function buildSnapshot(): Record<string, boolean> {
   if (!cachedSnapshot) {
     const snapshot: Record<string, boolean> = { ...mutableFlags };
-    ALWAYS_ENABLED_FLAGS.forEach((flag) => {
+    MINIMAL_CORE_FLAGS.forEach((flag) => {
       snapshot[flag] = true;
+    });
+    (RESTORE_FLAGS as readonly string[]).forEach((flag) => {
+      snapshot[flag] = RESTORE_FEATURE_FLAGS[flag as RestoreFlag] === true;
     });
     cachedSnapshot = snapshot;
   }
@@ -245,7 +289,10 @@ const toFeatureFlagDescriptor = (
 export function isFeatureEnabled<K extends string>(key: K): boolean {
   const normalizedKey = normalize(key);
   if (!normalizedKey) return false;
-  if (isAlwaysEnabledFlag(normalizedKey)) return true;
+  if (isMinimalCoreFlag(normalizedKey)) return true;
+  if (isRestoreFlag(normalizedKey)) {
+    return RESTORE_FEATURE_FLAGS[normalizedKey] === true;
+  }
   if (isMutableFlag(normalizedKey)) {
     return mutableFlags[normalizedKey] === true;
   }
@@ -258,8 +305,15 @@ export const featureFlagManager = {
   enable: (input: string | FeatureFlagKey): boolean => {
     const key = normalize(String(input));
     if (!key) return false;
-    if (isAlwaysEnabledFlag(key)) {
-      logger.info(`[FEATURE_FLAGS] '${key}' is always enabled and cannot be toggled.`);
+    if (isMinimalCoreFlag(key)) {
+      logger.info(`[FEATURE_FLAGS] '${key}' is minimal-core and always enabled.`);
+      return true;
+    }
+    if (isRestoreFlag(key)) {
+      if (!RESTORE_FEATURE_FLAGS[key]) {
+        RESTORE_FEATURE_FLAGS[key] = true;
+        notifySubscribers();
+      }
       return true;
     }
     if (!isMutableFlag(key)) return false;
@@ -272,9 +326,16 @@ export const featureFlagManager = {
   disable: (input: string | FeatureFlagKey): boolean => {
     const key = normalize(String(input));
     if (!key) return false;
-    if (isAlwaysEnabledFlag(key)) {
-      logger.warn(`[FEATURE_FLAGS] Attempted to disable always-on flag '${key}'.`);
+    if (isMinimalCoreFlag(key)) {
+      logger.warn(`[FEATURE_FLAGS] Attempted to disable minimal-core flag '${key}'.`);
       return false;
+    }
+    if (isRestoreFlag(key)) {
+      if (RESTORE_FEATURE_FLAGS[key]) {
+        RESTORE_FEATURE_FLAGS[key] = false;
+        notifySubscribers();
+      }
+      return true;
     }
     if (!isMutableFlag(key)) return false;
     if (mutableFlags[key]) {
@@ -286,8 +347,13 @@ export const featureFlagManager = {
   toggle: (input: string | FeatureFlagKey): boolean => {
     const key = normalize(String(input));
     if (!key) return false;
-    if (isAlwaysEnabledFlag(key)) {
-      logger.info(`[FEATURE_FLAGS] '${key}' is always enabled and cannot be toggled.`);
+    if (isMinimalCoreFlag(key)) {
+      logger.info(`[FEATURE_FLAGS] '${key}' is minimal-core and cannot be toggled.`);
+      return true;
+    }
+    if (isRestoreFlag(key)) {
+      RESTORE_FEATURE_FLAGS[key] = !RESTORE_FEATURE_FLAGS[key];
+      notifySubscribers();
       return true;
     }
     if (!isMutableFlag(key)) return false;
