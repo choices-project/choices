@@ -32,6 +32,8 @@ test.describe('@smoke Minimal core pages', () => {
         .or(page.locator('h1'))
         .first(),
     ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: /^polls$/i })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/e2e test poll|e2e production poll|core flow check|core create check|core vote chrome/i)).toHaveCount(0);
   });
 
   test('landing stays outside the signed-in shell', async ({ page }) => {
@@ -41,16 +43,15 @@ test.describe('@smoke Minimal core pages', () => {
     await expect(page.getByTestId('minimal-navigation')).toHaveCount(0);
   });
 
-  test('public poll page asks unsigned visitors to sign in', async ({ page }) => {
-    await page.goto('/polls/adc33472-8b6a-48bd-8cc1-e399ed8485ac');
-    await expect(page.getByRole('heading', { name: /core flow check/i })).toBeVisible({
+  test('polls list is empty and official for new visitors', async ({ page }) => {
+    await page.goto('/polls');
+    await expect(page.getByRole('heading', { name: /^polls$/i })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/no community polls yet|no polls yet/i)).toBeVisible({
       timeout: 20_000,
     });
+    await expect(page.getByRole('link', { name: /create a poll|create your first poll/i })).toBeVisible();
+    await expect(page.getByText(/e2e test poll|e2e production poll|core flow check|core create check|core vote chrome/i)).toHaveCount(0);
     await expect(page.getByTestId('voting-form')).toHaveCount(0);
-    await expect(page.getByRole('link', { name: /sign in to vote/i })).toBeVisible();
-    await expect(page.getByText(/community engagement/i)).toHaveCount(0);
-    await expect(page.getByText(/compare top options/i)).toHaveCount(0);
-    await expect(page.getByText(/verified results only/i)).toHaveCount(0);
   });
 
   test('polls list does not write default filters into the URL', async ({ page }) => {
@@ -146,20 +147,12 @@ test.describe('@smoke Signed-in session shell', () => {
     });
     await expect(page.getByLabel(/display name/i)).toBeVisible();
 
-    await page.goto('/polls/adc33472-8b6a-48bd-8cc1-e399ed8485ac');
+    await page.goto('/polls');
     await expect(page.getByTestId('logout-button')).toBeVisible({ timeout: 15_000 });
-    await expect(
-      page
-        .getByTestId('voting-form')
-        .or(page.getByText(/you have already voted/i))
-        .first(),
-    ).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole('link', { name: /sign in to vote/i })).toHaveCount(0);
-    await expect(page.getByText(/when to use single choice/i)).toHaveCount(0);
-    await expect(page.getByText(/voting instructions/i)).toHaveCount(0);
-    await expect(page.getByText(/community engagement/i)).toHaveCount(0);
-    await expect(page.getByText(/compare top options/i)).toHaveCount(0);
-    await expect(page.getByText(/verified results only/i)).toHaveCount(0);
+    await expect(page.getByText(/no community polls yet|no polls yet/i)).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByText(/e2e test poll|e2e production poll|core flow check|core create check|core vote chrome/i)).toHaveCount(0);
 
     await page.getByTestId('logout-button').click();
     await expect(page).toHaveURL(/loggedOut=1|\/$/, { timeout: 20_000 });
