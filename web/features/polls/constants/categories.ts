@@ -14,6 +14,10 @@ export const POLL_CATEGORIES: PollCategoryDefinition[] = [
   { id: 'finance', nameKey: 'polls.categories.finance', icon: '💰', color: 'bg-emerald-100 text-emerald-700' },
   { id: 'environment', nameKey: 'polls.categories.environment', icon: '🌱', color: 'bg-lime-100 text-lime-700' },
   { id: 'social', nameKey: 'polls.categories.social', icon: '👥', color: 'bg-teal-100 text-teal-700' },
+  { id: 'politics', nameKey: 'polls.categories.politics', icon: '🏛', color: 'bg-indigo-100 text-indigo-700' },
+  { id: 'civics', nameKey: 'polls.categories.civics', icon: '🗳', color: 'bg-sky-100 text-sky-700' },
+  { id: 'government', nameKey: 'polls.categories.government', icon: '⚖️', color: 'bg-slate-100 text-slate-700' },
+  { id: 'community', nameKey: 'polls.categories.community', icon: '🤝', color: 'bg-amber-100 text-amber-800' },
 ];
 
 export const getPollCategoryIcon = (category: string): string =>

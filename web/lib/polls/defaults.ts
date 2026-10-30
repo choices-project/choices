@@ -1,7 +1,7 @@
 import type { PollFilters, PollPreferences, PollWizardData, PollWizardSettings } from './types';
 
 export const createDefaultPollFilters = (): PollFilters => ({
-  status: ['active'],
+  status: [],
   category: [],
   tags: [],
   dateRange: {

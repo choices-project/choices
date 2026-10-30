@@ -1455,7 +1455,11 @@
       "health": "Health",
       "finance": "Finance",
       "environment": "Environment",
-      "social": "Social"
+      "social": "Social",
+      "politics": "Politics",
+      "civics": "Civics",
+      "government": "Government",
+      "community": "Community"
     },
     "page": {
       "title": "Polls",

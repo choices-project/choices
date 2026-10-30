@@ -3002,13 +3002,17 @@
     },
     "categories": {
       "general": "General",
-      "business": "Business",
-      "education": "Education",
-      "technology": "Technology",
-      "health": "Health",
-      "finance": "Finance",
-      "environment": "Environment",
-      "social": "Social"
+      "business": "Negocios",
+      "education": "Educación",
+      "technology": "Tecnología",
+      "health": "Salud",
+      "finance": "Finanzas",
+      "environment": "Medio ambiente",
+      "social": "Social",
+      "politics": "Política",
+      "civics": "Cívica",
+      "government": "Gobierno",
+      "community": "Comunidad"
     }
   },
   "contact": {

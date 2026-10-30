@@ -1137,6 +1137,22 @@ export const usePollsStore = create<PollsStore>()(
       {
         name: 'polls-store',
         storage: createSafeStorage(),
+        version: 2,
+        migrate: (persisted) => {
+          const snapshot = persisted && typeof persisted === 'object'
+            ? (persisted as Record<string, unknown>)
+            : {};
+          const search = snapshot.search && typeof snapshot.search === 'object'
+            ? (snapshot.search as Record<string, unknown>)
+            : {};
+          return {
+            preferences: snapshot.preferences,
+            search: {
+              recentSearches: Array.isArray(search.recentSearches) ? search.recentSearches : [],
+            },
+            voteHistory: snapshot.voteHistory,
+          };
+        },
         partialize: (state) => ({
           preferences: state.preferences,
           search: {

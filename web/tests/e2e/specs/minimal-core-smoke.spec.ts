@@ -41,6 +41,13 @@ test.describe('@smoke Minimal core pages', () => {
     await expect(page.getByTestId('minimal-navigation')).toHaveCount(0);
   });
 
+  test('polls list does not write default filters into the URL', async ({ page }) => {
+    await page.goto('/polls');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await page.waitForTimeout(1500);
+    await expect(page).toHaveURL(/\/polls\/?$/);
+  });
+
   test('polls shows primary nav chrome immediately', async ({ page }) => {
     await page.goto('/polls');
     await expect(page.getByTestId('minimal-navigation')).toBeVisible({ timeout: 15_000 });

@@ -3,7 +3,7 @@
 import { Plus, Users, BarChart3, Flame, Eye } from 'lucide-react';
 import React, { Suspense, useEffect, useCallback, useMemo, useRef } from 'react';
 
-import { getPollCategoryColor, getPollCategoryIcon } from '@/features/polls/constants/categories';
+import { getPollCategoryColor, getPollCategoryIcon, POLL_CATEGORIES } from '@/features/polls/constants/categories';
 
 import { AnimatedCard } from '@/components/shared/AnimatedCard';
 import { BackToTop } from '@/components/shared/BackToTop';
@@ -62,7 +62,10 @@ function PollsPageContent() {
   const filters = usePollFilters();
   const search = usePollSearch();
   const pagination = usePollPagination();
-  const urlFilters = useUrlFilters(POLLS_URL_FILTER_DEFAULTS);
+  const {
+    filters: urlFilterState,
+    setFilters: setUrlFilters,
+  } = useUrlFilters(POLLS_URL_FILTER_DEFAULTS);
   const {
     loadPolls,
     setFilters,
@@ -117,7 +120,7 @@ function PollsPageContent() {
   // Sync URL params -> store (on mount and when URL changes via back/forward)
   useEffect(() => {
     if (!isMounted) return;
-    const { filters: urlF } = urlFilters;
+    const urlF = urlFilterState;
     const hasUrlParams = urlF.status || urlF.category || urlF.trending || urlF.q;
     if (hasUrlParams) {
       const updates: { status?: string[]; category?: string[] } = {};
@@ -140,22 +143,40 @@ function PollsPageContent() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only run when URL changes, not when urlFilters object ref changes
-  }, [isMounted, urlFilters.filters]);
+  }, [isMounted, urlFilterState]);
 
   // Sync store -> URL when filters change (from PollFiltersPanel)
   useEffect(() => {
     if (!isMounted) return;
     const status =
       filters.trendingOnly ? 'trending' : filters.status[0] ?? 'all';
-    const category = filters.category[0] ?? undefined;
-    const q = search.query?.trim() || undefined;
-    urlFilters.setFilters({
+    const next = {
       status: status === 'all' ? undefined : status,
-      category,
+      category: filters.category[0] ?? undefined,
       trending: undefined,
-      q,
-    });
-  }, [isMounted, filters.status, filters.category, filters.trendingOnly, search.query, urlFilters]);
+      q: search.query?.trim() || undefined,
+    };
+    if (
+      (urlFilterState.status ?? undefined) === next.status &&
+      (urlFilterState.category ?? undefined) === next.category &&
+      (urlFilterState.trending ?? undefined) === next.trending &&
+      (urlFilterState.q ?? undefined) === next.q
+    ) {
+      return;
+    }
+    setUrlFilters(next);
+  }, [
+    isMounted,
+    filters.status,
+    filters.category,
+    filters.trendingOnly,
+    search.query,
+    setUrlFilters,
+    urlFilterState.status,
+    urlFilterState.category,
+    urlFilterState.trending,
+    urlFilterState.q,
+  ]);
 
   const selectedCategory = filters.category[0] ?? 'all';
 
@@ -272,7 +293,7 @@ function PollsPageContent() {
     // Use setTimeout to defer store updates until after React has completed the render cycle
     // This prevents store updates from blocking the initial render
     const hasUrlParams =
-      urlFilters.filters.status || urlFilters.filters.category || urlFilters.filters.trending || urlFilters.filters.q;
+      urlFilterState.status || urlFilterState.category || urlFilterState.trending || urlFilterState.q;
     setTimeout(() => {
       if (process.env.DEBUG_DASHBOARD === '1') {
         logger.debug('Polls page executing initialization in setTimeout');
@@ -520,7 +541,10 @@ function PollsPageContent() {
 
                 <div className="flex flex-wrap gap-2 mb-4">
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getPollCategoryColor(poll.category)}`}>
-                    {getPollCategoryIcon(poll.category)} {tRef.current(`polls.categories.${poll.category}`, { defaultValue: poll.category })}
+                    {getPollCategoryIcon(poll.category)}{' '}
+                    {POLL_CATEGORIES.some((item) => item.id === poll.category)
+                      ? tRef.current(`polls.categories.${poll.category}`)
+                      : poll.category}
                   </span>
                   {poll.tags?.slice(0, 3).map((tag, index) => (
                     <span

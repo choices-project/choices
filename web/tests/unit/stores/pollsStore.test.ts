@@ -32,7 +32,7 @@ describe('pollsStore', () => {
       expandedPollIds: [],
       votingInProgress: [],
     });
-    expect(state.filters.status).toEqual(['active']);
+    expect(state.filters.status).toEqual([]);
     expect(state.preferences.defaultView).toBe('list');
     expect(state.search.query).toBe('');
     expect(state.isLoading).toBe(false);
@@ -73,7 +73,7 @@ describe('pollsStore', () => {
     store.getState().setFilters({ status: ['closed'], trendingOnly: true });
     store.getState().clearFilters();
 
-    expect(store.getState().filters.status).toEqual(['active']);
+    expect(store.getState().filters.status).toEqual([]);
     expect(store.getState().filters.trendingOnly).toBe(false);
   });
 
