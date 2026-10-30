@@ -30,7 +30,9 @@ export default function MinimalNav() {
   const { t } = useI18n();
   const pathname = usePathname() ?? '';
   const { user, logout } = useAuth();
-  const isAuthenticated = Boolean(user);
+  const cookieAuthedRoute =
+    pathname.startsWith('/polls/create') || pathname.startsWith('/profile');
+  const isAuthenticated = Boolean(user) || cookieAuthedRoute;
   const [loggingOut, setLoggingOut] = useState(false);
 
   const isActive = useCallback((path: string) => isNavItemActive(pathname, path), [pathname]);

@@ -67,9 +67,12 @@ export function PrefetchLink({
 
       e.preventDefault();
       router.push(targetHref);
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-      }
+      window.setTimeout(() => {
+        const [nowPath] = window.location.pathname.split(/[?#]/);
+        if (nowPath !== targetPath) {
+          window.location.assign(targetHref);
+        }
+      }, 400);
     },
     [onClick, targetHref, pathname, router],
   );

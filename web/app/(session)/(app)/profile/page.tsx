@@ -20,10 +20,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
-import { env } from '@/lib/config/env';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { haptic } from '@/lib/haptics';
-import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
+import { useUser, useIsAuthenticated } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
@@ -39,7 +38,6 @@ function ProfilePageContent() {
   useEffect(() => { routerRef.current = router; }, [router]);
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
-  const isUserLoading = useUserLoading();
   const { profile, isLoading: profileLoading, profileError, refetch } = useProfileData();
   const { exportProfile, isExporting } = useProfileExport();
   const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
@@ -101,19 +99,6 @@ function ProfilePageContent() {
     };
   }, [isMounted]);
 
-  useEffect(() => {
-    // In E2E harness mode, authentication is mocked - don't redirect
-    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
-      return;
-    }
-    // Only redirect if we're certain user is not authenticated
-    // Don't redirect while authentication state is still loading
-    if (!isUserLoading && !isAuthenticated) {
-      logger.debug('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
-      routerRef.current.replace('/auth?redirectTo=/profile');
-    }
-  }, [isAuthenticated, isUserLoading]);
-
   const handleExportData = useCallback(async () => {
     setExportStatus(null);
     try {
@@ -159,23 +144,13 @@ function ProfilePageContent() {
     };
   }, [profileLoading, profile, profileError]);
 
-  // Show loading state until component is mounted or while loading
-  if (!isMounted || isUserLoading || profileLoading) {
+  // Middleware already vetted this route. Do not block the shell on auth
+  // bootstrap — show a skeleton only while the profile query is in flight.
+  if (!isMounted || (profileLoading && !profile)) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="profile-loading" aria-label="Loading profile" aria-busy="true">
         <div className="max-w-6xl mx-auto">
           <ProfileSkeleton />
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-foreground">Sign in to your account</h1>
-          <p className="text-muted-foreground">Please sign in to view your profile.</p>
         </div>
       </div>
     );

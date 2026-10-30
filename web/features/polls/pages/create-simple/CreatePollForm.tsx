@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -11,8 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { createPollRequest } from '@/lib/polls/api';
 import type { PollCreatePayload } from '@/lib/polls/wizard/submission';
-
-import { useAuth } from '@/hooks/useAuth';
 
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
@@ -48,7 +45,6 @@ function buildPayload(
 
 export default function CreatePollForm() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [options, setOptions] = useState(['', '']);
@@ -72,11 +68,6 @@ export default function CreatePollForm() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
-
-    if (!user) {
-      setError('Please sign in to create a poll.');
-      return;
-    }
 
     const filledOptions = options.map((o) => o.trim()).filter(Boolean);
     if (!title.trim()) {
@@ -103,28 +94,6 @@ export default function CreatePollForm() {
       setIsSubmitting(false);
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="mx-auto max-w-lg py-12 text-center text-sm text-muted-foreground" role="status">
-        Checking sign-in…
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="mx-auto max-w-lg space-y-4 py-8 text-center">
-        <h1 className="text-2xl font-bold text-foreground">Create a poll</h1>
-        <p className="text-sm text-muted-foreground">
-          Sign in to create a single-choice poll. Voting and creating polls require an account.
-        </p>
-        <Button asChild>
-          <Link href="/auth?redirectTo=%2Fpolls%2Fcreate">Sign in to continue</Link>
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="mx-auto max-w-lg space-y-6" data-testid="create-poll-form">
