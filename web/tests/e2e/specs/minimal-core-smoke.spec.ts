@@ -48,6 +48,9 @@ test.describe('@smoke Minimal core pages', () => {
     });
     await expect(page.getByTestId('voting-form')).toHaveCount(0);
     await expect(page.getByRole('link', { name: /sign in to vote/i })).toBeVisible();
+    await expect(page.getByText(/community engagement/i)).toHaveCount(0);
+    await expect(page.getByText(/compare top options/i)).toHaveCount(0);
+    await expect(page.getByText(/verified results only/i)).toHaveCount(0);
   });
 
   test('polls list does not write default filters into the URL', async ({ page }) => {
@@ -154,6 +157,9 @@ test.describe('@smoke Signed-in session shell', () => {
     await expect(page.getByRole('link', { name: /sign in to vote/i })).toHaveCount(0);
     await expect(page.getByText(/when to use single choice/i)).toHaveCount(0);
     await expect(page.getByText(/voting instructions/i)).toHaveCount(0);
+    await expect(page.getByText(/community engagement/i)).toHaveCount(0);
+    await expect(page.getByText(/compare top options/i)).toHaveCount(0);
+    await expect(page.getByText(/verified results only/i)).toHaveCount(0);
 
     await page.getByTestId('logout-button').click();
     await expect(page).toHaveURL(/loggedOut=1|\/$/, { timeout: 20_000 });
