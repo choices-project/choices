@@ -78,9 +78,13 @@ export default function AuthPageClient() {
       path: string,
       tokens?: { access_token: string; refresh_token: string } | null,
     ) => {
-      void completeSignIn(path, tokens);
+      void completeSignIn(path, tokens, {
+        navigate: (url) => {
+          router.replace(url);
+        },
+      });
     },
-    [],
+    [router],
   );
 
   const resetPasswordHref = `/auth/reset?redirectTo=${encodeURIComponent(redirectTarget)}`;

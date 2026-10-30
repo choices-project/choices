@@ -16,6 +16,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useState } from 'react';
 
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
 import { clearAllCaches } from '../lib/cache-strategies';
@@ -91,6 +92,21 @@ export function ServiceWorkerProvider({
   useEffect(() => {
     // Only run in browser and after mount to prevent hydration mismatch
     if (typeof window === 'undefined' || !isMounted) return;
+
+    if (!isFeatureEnabled('PWA')) {
+      logger.info('Skipping service worker registration; PWA flag is off');
+      void unregisterAllServiceWorkers()
+        .then(() => clearAllCaches())
+        .then((cleared) => {
+          if (cleared > 0) {
+            logger.info('Cleared service worker caches', { cleared });
+          }
+        })
+        .catch((error) => {
+          logger.warn('Failed to clear service worker state while PWA is off', { error });
+        });
+      return;
+    }
 
     if (process.env.NODE_ENV !== 'production' && !DEV_CONFIG.enableInDev) {
       logger.info('Skipping service worker registration in development');
@@ -207,8 +223,9 @@ export function ServiceWorkerProvider({
       {/* Update Available Banner - Always render container to prevent hydration mismatch */}
       <div
         className="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg z-50"
-        role="alert"
-        aria-live="polite"
+        role={isMounted && showUpdateBanner && isUpdateAvailable ? 'alert' : undefined}
+        aria-live={isMounted && showUpdateBanner && isUpdateAvailable ? 'polite' : 'off'}
+        aria-hidden={!(isMounted && showUpdateBanner && isUpdateAvailable)}
         style={{ display: isMounted && showUpdateBanner && isUpdateAvailable ? 'block' : 'none' }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">

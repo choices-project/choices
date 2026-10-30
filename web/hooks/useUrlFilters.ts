@@ -21,6 +21,17 @@ export function useUrlFilters<T extends FilterConfig>(defaults: T) {
     return result;
   }, [searchParams, defaults]);
 
+  const replaceIfChanged = useCallback(
+    (params: URLSearchParams) => {
+      const query = params.toString();
+      if (query === searchParams.toString()) {
+        return;
+      }
+      router.replace(`${pathname}${query ? `?${query}` : ''}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
   const setFilter = useCallback(
     (key: keyof T, value: string | undefined) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -29,10 +40,9 @@ export function useUrlFilters<T extends FilterConfig>(defaults: T) {
       } else {
         params.set(key as string, value);
       }
-      const query = params.toString();
-      router.replace(`${pathname}${query ? `?${query}` : ''}`, { scroll: false });
+      replaceIfChanged(params);
     },
-    [searchParams, pathname, router, defaults]
+    [searchParams, defaults, replaceIfChanged]
   );
 
   const setFilters = useCallback(
@@ -45,10 +55,9 @@ export function useUrlFilters<T extends FilterConfig>(defaults: T) {
           params.set(key, value as string);
         }
       }
-      const query = params.toString();
-      router.replace(`${pathname}${query ? `?${query}` : ''}`, { scroll: false });
+      replaceIfChanged(params);
     },
-    [searchParams, pathname, router, defaults]
+    [searchParams, defaults, replaceIfChanged]
   );
 
   const clearFilters = useCallback(() => {

@@ -2804,6 +2804,17 @@
         "voteFailed": "No se pudo enviar tu voto."
       },
       "loading": "Cargando detalles de la encuesta…",
+      "comparison": {
+        "heading": "Compara las opciones principales",
+        "optionLabel": "Opción {index}"
+      },
+      "participationProgress": {
+        "label": "Participación de la comunidad"
+      },
+      "activitySparkline": {
+        "label": "Actividad de 7 días",
+        "ariaLabel": "Actividad de votos de los últimos 7 días"
+      },
       "leadingOption": {
         "label": "Opción líder",
         "votes": "{votes} votos ({percentage}%) de {total}"
@@ -2910,7 +2921,8 @@
         "showing": "Mostrando {start}-{end} de {total}",
         "pageLabel": "Página {current} de {total}",
         "previous": "Anterior",
-        "next": "Siguiente"
+        "next": "Siguiente",
+        "loadMore": "Cargar más"
       }
     },
     "filters": {
@@ -2990,13 +3002,17 @@
     },
     "categories": {
       "general": "General",
-      "business": "Business",
-      "education": "Education",
-      "technology": "Technology",
-      "health": "Health",
-      "finance": "Finance",
-      "environment": "Environment",
-      "social": "Social"
+      "business": "Negocios",
+      "education": "Educación",
+      "technology": "Tecnología",
+      "health": "Salud",
+      "finance": "Finanzas",
+      "environment": "Medio ambiente",
+      "social": "Social",
+      "politics": "Política",
+      "civics": "Cívica",
+      "government": "Gobierno",
+      "community": "Comunidad"
     }
   },
   "contact": {

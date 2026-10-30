@@ -16,8 +16,10 @@ const mdPath = join(root, 'docs/FEATURE_FLAGS.md');
 
 const MARK_MUTABLE_START = '<!-- AUTO-GENERATED:FEATURE_FLAGS_MUTABLE_TABLE -->';
 const MARK_MUTABLE_END = '<!-- END AUTO-GENERATED:FEATURE_FLAGS_MUTABLE_TABLE -->';
-const MARK_ALWAYS_START = '<!-- AUTO-GENERATED:ALWAYS_ENABLED_BODY -->';
-const MARK_ALWAYS_END = '<!-- END AUTO-GENERATED:ALWAYS_ENABLED_BODY -->';
+const MARK_MINIMAL_START = '<!-- AUTO-GENERATED:MINIMAL_CORE_BODY -->';
+const MARK_MINIMAL_END = '<!-- END AUTO-GENERATED:MINIMAL_CORE_BODY -->';
+const MARK_RESTORE_START = '<!-- AUTO-GENERATED:RESTORE_FLAGS_BODY -->';
+const MARK_RESTORE_END = '<!-- END AUTO-GENERATED:RESTORE_FLAGS_BODY -->';
 
 function extractBlock(text, anchor, openCh, closeCh) {
   const start = text.indexOf(anchor);
@@ -124,15 +126,23 @@ function main() {
     process.exit(1);
   }
 
-  const alwaysBlock = extractBlock(ts, 'const ALWAYS_ENABLED_FLAGS = ', '[', ']');
-  const alwaysKeys = parseAlwaysEnabled(alwaysBlock);
-  if (alwaysKeys.length === 0) {
-    console.error('generate-feature-flags-doc: no ALWAYS_ENABLED_FLAGS parsed');
+  const minimalBlock = extractBlock(ts, 'const MINIMAL_CORE_FLAGS = ', '[', ']');
+  const minimalKeys = parseAlwaysEnabled(minimalBlock);
+  if (minimalKeys.length === 0) {
+    console.error('generate-feature-flags-doc: no MINIMAL_CORE_FLAGS parsed');
+    process.exit(1);
+  }
+
+  const restoreBlock = extractBlock(ts, 'const RESTORE_FLAGS = ', '[', ']');
+  const restoreKeys = parseAlwaysEnabled(restoreBlock);
+  if (restoreKeys.length === 0) {
+    console.error('generate-feature-flags-doc: no RESTORE_FLAGS parsed');
     process.exit(1);
   }
 
   const mutableBody = buildMutableTable(mutableRows);
-  const alwaysBody = buildAlwaysBody(alwaysKeys);
+  const minimalBody = buildAlwaysBody(minimalKeys);
+  const restoreBody = buildAlwaysBody(restoreKeys);
 
   let md = readFileSync(mdPath, 'utf8');
   let changed = false;
@@ -141,9 +151,13 @@ function main() {
   if (m1.prevInner !== m1.newInner) changed = true;
   md = m1.next;
 
-  const m2 = spliceDoc(md, MARK_ALWAYS_START, MARK_ALWAYS_END, alwaysBody);
+  const m2 = spliceDoc(md, MARK_MINIMAL_START, MARK_MINIMAL_END, minimalBody);
   if (m2.prevInner !== m2.newInner) changed = true;
   md = m2.next;
+
+  const m3 = spliceDoc(md, MARK_RESTORE_START, MARK_RESTORE_END, restoreBody);
+  if (m3.prevInner !== m3.newInner) changed = true;
+  md = m3.next;
 
   if (check) {
     if (changed) {

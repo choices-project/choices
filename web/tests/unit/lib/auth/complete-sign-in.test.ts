@@ -53,7 +53,7 @@ describe('completeSignIn', () => {
     expect(ok).toBe(true);
     expect(useUserStore.getState().isAuthenticated).toBe(true);
     expect(useUserStore.getState().user?.id).toBe('user-oauth');
-    expect(navigateAfterAuth).toHaveBeenCalledWith('/feed');
+    expect(navigateAfterAuth).toHaveBeenCalledWith('/polls');
   });
 
   it('returns false when hydration fails', async () => {
@@ -63,6 +63,17 @@ describe('completeSignIn', () => {
 
     expect(ok).toBe(false);
     expect(useUserStore.getState().isAuthenticated).toBe(false);
+    expect(navigateAfterAuth).not.toHaveBeenCalled();
+  });
+
+  it('uses client navigate when provided so the session shell can stay mounted', async () => {
+    hydrateBrowserSessionFromServer.mockResolvedValue(mockSession);
+    const navigate = jest.fn();
+
+    const ok = await completeSignIn('/polls', null, { navigate });
+
+    expect(ok).toBe(true);
+    expect(navigate).toHaveBeenCalledWith('/polls');
     expect(navigateAfterAuth).not.toHaveBeenCalled();
   });
 });

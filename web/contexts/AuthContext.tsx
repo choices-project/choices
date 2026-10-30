@@ -15,6 +15,7 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import { hydrateBrowserSessionFromServer } from '@/lib/auth/browser-session'
 import { completeServerLogout } from '@/lib/auth/client-logout'
+import { syncClientAuthSession } from '@/lib/auth/sync-client-auth-session'
 import { OWNER_PROFILE_SELECT_COLUMNS } from '@/lib/auth/profile-write-schema'
 import { env } from '@/lib/config/env'
 import {
@@ -31,6 +32,8 @@ type AuthContextType = {
   session: Session | null
   loading: boolean
   isLoading: boolean  // Alias for backward compatibility
+  /** Cookie hint for chrome only — API routes still use getUser(). */
+  hasServerSession: boolean
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
 }
@@ -40,7 +43,13 @@ const IS_E2E_HARNESS = env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1'
 
 export { AuthContext }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+  hasServerSession = false,
+}: {
+  children: React.ReactNode
+  hasServerSession?: boolean
+}) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -124,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Identity is already established by the session; the profile is an
         // enrichment the rest of the UI can render around.
         void hydrateProfile(supabaseClient, nextSession.user.id)
-      } else {
+      } else if (!nextSession) {
         initializeAuthRef.current(null, null, false)
         storeSignOutRef.current()
       }
@@ -168,11 +177,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // no escape: isLoading stayed true forever.
     const GET_SESSION_HARD_TIMEOUT_MS = 10_000
 
-    const adoptSession = (session: Session | null, supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>) => {
+    const adoptSession = (
+      nextSession: Session | null,
+      supabase: Awaited<ReturnType<typeof getSupabaseBrowserClient>>,
+      options?: { allowClear?: boolean },
+    ) => {
       if (!mounted || signOutInProgressRef.current) return
-      setSession(session)
-      setUser(session?.user ?? null)
-      applySession(supabase, session)
+      // A late null from getSession/hydrate must not wipe a sign-in that
+      // already landed in the user store while this bootstrap was racing.
+      if (!nextSession?.user) {
+        if (!nextSession && options?.allowClear) {
+          setSession(null)
+          setUser(null)
+          applySession(supabase, null)
+        }
+        setStoreLoadingRef.current(false)
+        setLoading(false)
+        return
+      }
+      setSession(nextSession)
+      setUser(nextSession.user)
+      applySession(supabase, nextSession)
       setStoreLoadingRef.current(false)
       setLoading(false)
     }
@@ -186,6 +211,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       try {
         setStoreLoadingRef.current(true)
+        // Cookie hydrate must not wait on the browser client. createBrowserClient
+        // + getSession can sit on navigator.locks; the session route already
+        // validated httpOnly cookies.
+        const serverHydrationPromise = hydrateBrowserSessionFromServer()
+        void serverHydrationPromise.then((hydrated) => {
+          if (!mounted || signOutInProgressRef.current || !hydrated?.user) return
+          setSession(hydrated)
+          setUser(hydrated.user)
+          setStoreLoadingRef.current(false)
+          setLoading(false)
+          syncClientAuthSession(hydrated)
+        })
         const supabase = await getSupabaseBrowserClient()
 
         if (!mounted) return undefined
@@ -204,12 +241,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 userId: nextSession?.user?.id,
               })
             }
+            if (event === 'SIGNED_OUT') {
+              adoptSession(null, supabase, { allowClear: true })
+              return
+            }
+            if (!nextSession?.user) return
             adoptSession(nextSession, supabase)
           },
         )
 
-        // Start in parallel with getSession — httpOnly cookies are invisible to the client until hydrated.
-        const serverHydrationPromise = hydrateBrowserSessionFromServer()
+        void serverHydrationPromise.then((session) => {
+          if (session) {
+            adoptSession(session, supabase)
+          }
+        })
 
         // Race getSession() against a hard timeout. On timeout we DO NOT
         // substitute a fake `{ session: null }` (previous attempts at that
@@ -236,8 +281,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const adoptWithServerFallback = async (
           clientSession: Session | null,
         ): Promise<void> => {
-          const session = clientSession ?? (await serverHydrationPromise)
-          adoptSession(session, supabase)
+          const session = clientSession?.user ? clientSession : (await serverHydrationPromise)
+          if (session) {
+            adoptSession(session, supabase)
+            return
+          }
+          setStoreLoadingRef.current(false)
+          setLoading(false)
         }
 
         if (raceResult.kind === 'resolved') {
@@ -275,9 +325,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         logger.error('Failed to initialize Supabase client:', error)
         if (mounted) {
-          // Always set loading to false, even on error, to prevent UI from being stuck
           setLoading(false)
-          initializeAuthRef.current(null, null, false)
           setStoreLoadingRef.current(false)
         }
         return undefined
@@ -302,6 +350,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStoreLoadingRef.current(false)
     setLoading(false)
   }, [session, storeSession, storeUser])
+
+  // Layout AuthProvider survives in-app navigations. If the first bootstrap
+  // lost a lock race, retry cookie hydrate so create/profile chrome can catch up.
+  useEffect(() => {
+    if (user || loading || signOutInProgressRef.current) {
+      return
+    }
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      void hydrateBrowserSessionFromServer().then((hydrated) => {
+        if (cancelled || signOutInProgressRef.current || !hydrated?.user) return
+        setSession(hydrated)
+        setUser(hydrated.user)
+        setStoreLoadingRef.current(false)
+        setLoading(false)
+        syncClientAuthSession(hydrated)
+      })
+    }, 250)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [user, loading])
 
   const signOut = useCallback(async () => {
     if (signOutInProgressRef.current) {
@@ -351,16 +422,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applySession]) // applySession is stable
 
+  const resolvedUser = user ?? storeUser
+  const resolvedSession = session ?? storeSession
+
   const value = useMemo(
     () => ({
-      user,
-      session,
+      user: resolvedUser,
+      session: resolvedSession,
       loading,
       isLoading: loading,  // Alias for backward compatibility
+      hasServerSession,
       signOut,
       refreshSession,
     }),
-    [user, session, loading, signOut, refreshSession]
+    [resolvedUser, resolvedSession, loading, hasServerSession, signOut, refreshSession]
   )
 
   return (

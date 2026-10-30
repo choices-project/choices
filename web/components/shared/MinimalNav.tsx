@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
+import { PrefetchLink } from '@/components/shared/PrefetchLink';
 import ThemeSelector from '@/components/shared/ThemeSelector';
 import { Button } from '@/components/ui/button';
 
@@ -28,8 +29,10 @@ const NAV_ITEMS: Array<{
 export default function MinimalNav() {
   const { t } = useI18n();
   const pathname = usePathname() ?? '';
-  const { user, isLoading, logout } = useAuth();
-  const isAuthenticated = Boolean(user);
+  const { user, logout, hasServerSession } = useAuth();
+  const cookieAuthedRoute =
+    pathname.startsWith('/polls/create') || pathname.startsWith('/profile');
+  const isAuthenticated = Boolean(user) || hasServerSession || cookieAuthedRoute;
   const [loggingOut, setLoggingOut] = useState(false);
 
   const isActive = useCallback((path: string) => isNavItemActive(pathname, path), [pathname]);
@@ -44,32 +47,28 @@ export default function MinimalNav() {
     }
   }, [loggingOut, logout]);
 
-  if (isLoading) {
-    return (
-      <nav className="bg-card shadow-sm border-b border-border" data-testid="minimal-nav-loading">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center">
-          <div className="h-8 w-8 bg-muted animate-pulse rounded" />
-        </div>
-      </nav>
-    );
-  }
-
   return (
     <>
       <header className="sticky top-0 z-[60] bg-card shadow-sm border-b border-border" data-testid="minimal-navigation">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Primary navigation">
           <div className="flex items-center justify-between h-14">
-            <Link href={isAuthenticated ? '/polls' : '/'} prefetch={false} className="flex items-center gap-2 shrink-0">
-              <Vote className="h-7 w-7 text-primary" aria-hidden="true" />
-              <span className="text-lg font-bold text-foreground hidden sm:inline">Choices</span>
-            </Link>
+            {isAuthenticated ? (
+              <PrefetchLink href="/polls" className="flex items-center gap-2 shrink-0">
+                <Vote className="h-7 w-7 text-primary" aria-hidden="true" />
+                <span className="text-lg font-bold text-foreground hidden sm:inline">Choices</span>
+              </PrefetchLink>
+            ) : (
+              <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0">
+                <Vote className="h-7 w-7 text-primary" aria-hidden="true" />
+                <span className="text-lg font-bold text-foreground hidden sm:inline">Choices</span>
+              </Link>
+            )}
 
             <div className="hidden md:flex items-center gap-1">
               {NAV_ITEMS.map((item) => (
-                <Link
+                <PrefetchLink
                   key={item.href}
                   href={item.href}
-                  prefetch={false}
                   data-testid={item.testId}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.href)
@@ -79,7 +78,7 @@ export default function MinimalNav() {
                   aria-current={isActive(item.href) ? 'page' : undefined}
                 >
                   {t(item.labelKey) || item.fallback}
-                </Link>
+                </PrefetchLink>
               ))}
             </div>
 
@@ -98,7 +97,7 @@ export default function MinimalNav() {
                 </Button>
               ) : (
                 <Button asChild variant="default" size="sm">
-                  <Link href="/auth" prefetch={false}>
+                  <Link href="/auth">
                     {t('navigation.login') || 'Sign in'}
                   </Link>
                 </Button>
@@ -118,10 +117,9 @@ export default function MinimalNav() {
             const active = isActive(item.href);
             const Icon = item.isCreate ? Plus : item.href === '/profile' ? User : Vote;
             return (
-              <Link
+              <PrefetchLink
                 key={item.href}
                 href={item.href}
-                prefetch={false}
                 data-testid={`mobile-${item.testId}`}
                 className={`flex flex-col items-center justify-center flex-1 min-w-0 py-1 ${
                   active ? 'text-primary' : 'text-muted-foreground'
@@ -138,7 +136,7 @@ export default function MinimalNav() {
                     <span className="text-[10px] mt-0.5">{t(item.labelKey) || item.fallback}</span>
                   </>
                 )}
-              </Link>
+              </PrefetchLink>
             );
           })}
         </div>

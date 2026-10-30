@@ -1,6 +1,6 @@
 'use client'
 
-import { User, Shield, Download, Edit, Settings, CheckCircle, MapPin, RefreshCw, Fingerprint, ArrowRight } from 'lucide-react';
+import { User, Shield, Download, Edit, CheckCircle, MapPin, RefreshCw, Fingerprint, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 
@@ -20,9 +20,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
-import { env } from '@/lib/config/env';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { haptic } from '@/lib/haptics';
-import { useUser, useIsAuthenticated, useUserLoading } from '@/lib/stores';
+import { useUser, useIsAuthenticated } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { useProfileDisplay, useProfileStats } from '@/lib/stores/profileStore';
@@ -38,7 +38,6 @@ function ProfilePageContent() {
   useEffect(() => { routerRef.current = router; }, [router]);
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
-  const isUserLoading = useUserLoading();
   const { profile, isLoading: profileLoading, profileError, refetch } = useProfileData();
   const { exportProfile, isExporting } = useProfileExport();
   const [exportStatus, setExportStatus] = useState<'success' | 'error' | null>(null);
@@ -48,7 +47,7 @@ function ProfilePageContent() {
   const { displayName, isAdmin } = useProfileDisplay();
   const { isProfileComplete } = useProfileStats();
   const onboardingIsCompleted = useOnboardingStore((state) => state.isCompleted);
-  useInitializeBiometricState({ fetchCredentials: true });
+  useInitializeBiometricState({ fetchCredentials: isFeatureEnabled('WEBAUTHN') });
   const hasCredentials = useBiometricCredentials();
 
   // Refs for stable app store actions
@@ -77,14 +76,6 @@ function ProfilePageContent() {
     routerRef.current.push('/profile/edit');
   }, []);
 
-  const handleSettings = useCallback(() => {
-    routerRef.current.push('/profile/preferences');
-  }, []);
-
-  const handlePrivacySettings = useCallback(() => {
-    routerRef.current.push('/account/privacy');
-  }, []);
-
   const handleBiometricSetup = useCallback(() => {
     routerRef.current.push('/profile/biometric-setup');
   }, []);
@@ -99,7 +90,6 @@ function ProfilePageContent() {
     setSidebarActiveSectionRef.current('profile');
     setBreadcrumbsRef.current([
       { label: 'Home', href: '/' },
-      { label: 'Dashboard', href: '/dashboard' },
       { label: 'Profile', href: '/profile' },
     ]);
 
@@ -108,19 +98,6 @@ function ProfilePageContent() {
       setBreadcrumbsRef.current([]);
     };
   }, [isMounted]);
-
-  useEffect(() => {
-    // In E2E harness mode, authentication is mocked - don't redirect
-    if (env.NEXT_PUBLIC_ENABLE_E2E_HARNESS === '1') {
-      return;
-    }
-    // Only redirect if we're certain user is not authenticated
-    // Don't redirect while authentication state is still loading
-    if (!isUserLoading && !isAuthenticated) {
-      logger.debug('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
-      routerRef.current.replace('/auth?redirectTo=/profile');
-    }
-  }, [isAuthenticated, isUserLoading]);
 
   const handleExportData = useCallback(async () => {
     setExportStatus(null);
@@ -167,8 +144,9 @@ function ProfilePageContent() {
     };
   }, [profileLoading, profile, profileError]);
 
-  // Show loading state until component is mounted or while loading
-  if (!isMounted || isUserLoading || profileLoading) {
+  // Middleware already vetted this route. Do not block the shell on auth
+  // bootstrap — show a skeleton only while the profile query is in flight.
+  if (!isMounted || (profileLoading && !profile && !profileError && !loadingTimeout)) {
     return (
       <div className="container mx-auto px-4 py-8" data-testid="profile-loading" aria-label="Loading profile" aria-busy="true">
         <div className="max-w-6xl mx-auto">
@@ -178,21 +156,11 @@ function ProfilePageContent() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-foreground">Sign in to your account</h1>
-          <p className="text-muted-foreground">Please sign in to view your profile.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if profile doesn't exist (user needs onboarding) OR if onboarding not completed
-  // Allow admin users to complete onboarding even if profile exists
-  const needsOnboarding = (isAuthenticated && !profileLoading && !profile && !profileError) ||
-                          (!onboardingIsCompleted && profile); // Profile exists but onboarding not completed
+  // Onboarding is archived in minimal core; do not block profile behind it.
+  const needsOnboarding =
+    isFeatureEnabled('ENHANCED_ONBOARDING') &&
+    ((isAuthenticated && !profileLoading && !profile && !profileError) ||
+      (!onboardingIsCompleted && Boolean(profile)));
 
   if (needsOnboarding) {
     return (
@@ -228,11 +196,11 @@ function ProfilePageContent() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        routerRef.current.push('/dashboard');
+                        routerRef.current.push('/polls');
                       }}
                       className="border-border text-foreground hover:bg-muted"
                     >
-                      Go to Dashboard
+                      Back to polls
                     </Button>
                   )}
                 </div>
@@ -326,8 +294,8 @@ function ProfilePageContent() {
                 icon: <RefreshCw className="h-4 w-4" />,
               }}
               secondaryAction={{
-                label: 'Go to Dashboard',
-                href: '/dashboard',
+                label: 'Back to polls',
+                href: '/polls',
               }}
             />
           )}
@@ -368,21 +336,11 @@ function ProfilePageContent() {
                     <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                     Edit Profile
                   </Button>
-                  <Button
-                    onClick={() => { haptic('light'); handleSettings(); }}
-                    variant="outline"
-                    className="border-border text-foreground hover:bg-muted"
-                    aria-label="Open settings"
-                  >
-                    <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Settings
-                  </Button>
                 </div>
               </CardHeader>
             </Card>
 
-            {/* Onboarding Reminder (if not completed) */}
-            {!onboardingIsCompleted && (
+            {isFeatureEnabled('ENHANCED_ONBOARDING') && !onboardingIsCompleted && (
               <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between gap-4">
@@ -469,41 +427,44 @@ function ProfilePageContent() {
                       </div>
                     </div>
                   )}
-                  <Button
-                    onClick={() => { haptic('light'); handleBiometricSetup(); }}
-                    variant="outline"
-                    className="w-full justify-start border-border text-foreground hover:bg-muted mt-4"
-                    aria-label={hasCredentials ? 'Manage passkeys' : 'Set up biometric authentication'}
-                  >
-                    <Fingerprint className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {hasCredentials ? 'Manage Passkeys' : 'Set Up Biometric Login'}
-                  </Button>
-                  <TrustScoreCard />
+                  {isFeatureEnabled('WEBAUTHN') && (
+                    <Button
+                      onClick={() => { haptic('light'); handleBiometricSetup(); }}
+                      variant="outline"
+                      className="w-full justify-start border-border text-foreground hover:bg-muted mt-4"
+                      aria-label={hasCredentials ? 'Manage passkeys' : 'Set up biometric authentication'}
+                    >
+                      <Fingerprint className="h-4 w-4 mr-2" aria-hidden="true" />
+                      {hasCredentials ? 'Manage Passkeys' : 'Set Up Biometric Login'}
+                    </Button>
+                  )}
+                  {isFeatureEnabled('ANALYTICS') && <TrustScoreCard />}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Location Settings */}
-            <Card className="bg-card dark:bg-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center text-lg text-foreground">
-                  <MapPin className="h-5 w-5 mr-2 text-muted-foreground" />
-                  Your District
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Find your congressional district to see relevant representatives and civic content.
-                  We only store your district, never your full address.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AddressLookup
-                  autoSave={true}
-                  onDistrictSaved={() => {
-                    void refetchRef.current();
-                  }}
-                />
-              </CardContent>
-            </Card>
+            {isFeatureEnabled('CIVICS_ADDRESS_LOOKUP') && (
+              <Card className="bg-card dark:bg-card border-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-lg text-foreground">
+                    <MapPin className="h-5 w-5 mr-2 text-muted-foreground" />
+                    Your District
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground">
+                    Find your congressional district to see relevant representatives and civic content.
+                    We only store your district, never your full address.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AddressLookup
+                    autoSave={true}
+                    onDistrictSaved={() => {
+                      void refetchRef.current();
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Quick Actions - Streamlined */}
             <Card className="bg-card dark:bg-card border-border">
@@ -515,15 +476,6 @@ function ProfilePageContent() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Button
-                    onClick={() => { haptic('light'); handlePrivacySettings(); }}
-                    variant="outline"
-                    className="justify-start border-border text-foreground hover:bg-muted"
-                    aria-label="Open privacy settings"
-                  >
-                    <Shield className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Privacy Settings
-                  </Button>
                   <Button
                     onClick={() => { haptic('light'); handleExportData(); }}
                     variant="outline"

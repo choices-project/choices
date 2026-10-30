@@ -34,7 +34,7 @@ async function readValidatedSession(request: NextRequest, cookieCarrier: NextRes
     return { session: null, userError: sessionError ?? new Error('Not authenticated') };
   }
 
-  return { session, userError: null };
+  return { session: { ...session, user: session.user ?? user }, userError: null };
 }
 
 /**

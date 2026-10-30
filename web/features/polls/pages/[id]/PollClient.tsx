@@ -10,8 +10,6 @@ import { IntegrityBadge } from '@/features/polls/components/IntegrityBadge';
 import { PollActivitySparkline } from '@/features/polls/components/PollActivitySparkline';
 import { PollOptionComparison } from '@/features/polls/components/PollOptionComparison';
 import { useRecordPollEvent } from '@/features/polls/hooks/usePollAnalytics';
-// Vote Milestones - Commented out per user request
-// import { usePollMilestoneNotifications, POLL_MILESTONES, type PollMilestone } from '@/features/polls/hooks/usePollMilestones';
 import VotingInterface, { type VoteSubmission } from '@/features/voting/components/VotingInterface';
 import {
   createBallotFromPoll,
@@ -31,7 +29,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { haptic } from '@/lib/haptics';
+import { canCastVoteFromSession, shouldPromptSignInToVote } from '@/lib/polls/vote-ui';
 import { selectPollTotalVotes } from '@/lib/polls/voting-methods';
 import { useNotificationActions } from '@/lib/stores';
 import { useAppActions } from '@/lib/stores/appStore';
@@ -123,7 +123,11 @@ type NormalizedOption = {
 export default function PollClient({ poll }: PollClientProps) {
   const { t } = useI18n();
   const { announce } = useLiveAnnouncer();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, hasServerSession } = useAuth();
+  const canCastVote = canCastVoteFromSession({
+    userPresent: Boolean(user),
+    hasServerSession: Boolean(hasServerSession),
+  });
   const router = useRouter();
   const { trustTier } = useProfileDisplay();
   const { addNotification } = useNotificationActions();
@@ -142,13 +146,21 @@ export default function PollClient({ poll }: PollClientProps) {
     unlisted: t('polls.view.privacy.unlisted'),
   }), [t]);
 
-  const VOTING_LABELS: Record<string, string> = useMemo(() => ({
-    single: t('polls.view.votingMethod.single'),
-    multiple: t('polls.view.votingMethod.multiple'),
-    approval: t('polls.view.votingMethod.approval'),
-    ranked: t('polls.view.votingMethod.ranked'),
-    quadratic: t('polls.view.votingMethod.quadratic'),
-  }), [t]);
+  const VOTING_LABELS: Record<string, string> = useMemo(() => {
+    const single = t('polls.view.votingMethod.single');
+    const multiple = t('polls.view.votingMethod.multiple');
+    const ranked = t('polls.view.votingMethod.ranked');
+    return {
+      single,
+      single_choice: single,
+      multiple,
+      multiple_choice: multiple,
+      approval: t('polls.view.votingMethod.approval'),
+      ranked,
+      ranked_choice: ranked,
+      quadratic: t('polls.view.votingMethod.quadratic'),
+    };
+  }, [t]);
   const {
     setBallots,
     setSelectedBallot,
@@ -185,7 +197,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const recordPollEvent = useRecordPollEvent(pollMetadataFactory)
 
   const [results, setResults] = useState<PollResultsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasVoteAttempted, setHasVoteAttempted] = useState(false);
   const pollStatus = poll.status ?? 'active';
@@ -220,7 +232,6 @@ export default function PollClient({ poll }: PollClientProps) {
     setSidebarActiveSectionRef.current('polls');
     const crumbs = [
       { label: tRef.current('polls.view.breadcrumbs.home'), href: '/' },
-      { label: tRef.current('polls.view.breadcrumbs.dashboard'), href: '/dashboard' },
       { label: tRef.current('polls.view.breadcrumbs.polls'), href: '/polls' },
       { label: pollTitle ?? tRef.current('polls.view.breadcrumbs.pollDetail'), href: pollPath },
     ];
@@ -511,6 +522,7 @@ export default function PollClient({ poll }: PollClientProps) {
   }, [poll.totalVotes, poll.totalvotes, results, initialVoteTotal, totalRecordedVotes]);
 
   const integrityInfo = results?.integrity;
+  const showPollAnalytics = isFeatureEnabled('ANALYTICS');
 
   // pollStatus and canVote are already defined above
   const participationCount = typeof poll.participation === 'number' ? poll.participation : 0;
@@ -526,8 +538,13 @@ export default function PollClient({ poll }: PollClientProps) {
       return { title, description };
     }
 
-    // Only show sign in required if auth has finished loading and user is still null
-    if (!authLoading && !user) {
+    if (
+      shouldPromptSignInToVote({
+        pollStatus,
+        userPresent: Boolean(user),
+        hasServerSession: Boolean(hasServerSession),
+      })
+    ) {
       return {
         title: t('polls.view.status.signInRequired.title'),
         description: t('polls.view.status.signInRequired.description'),
@@ -542,7 +559,7 @@ export default function PollClient({ poll }: PollClientProps) {
     }
 
     return null;
-  }, [authLoading, canVote, pollStatus, t, user]);
+  }, [canVote, hasServerSession, pollStatus, t, user]);
 
   const [hasVoted, setHasVoted] = useState(Boolean(poll.userVote));
 
@@ -550,7 +567,7 @@ export default function PollClient({ poll }: PollClientProps) {
   const shareUrl = isMounted && typeof window !== 'undefined' ? `${window.location.origin}/polls/${poll.id}` : '';
 
   const handleVote = useCallback(async (submission: VoteSubmission): Promise<{ ok: boolean; id?: string; error?: string }> => {
-    if (!user || !canVote || pollStatus !== 'active' || storeIsVoting) {
+    if (!canCastVote || !canVote || pollStatus !== 'active' || storeIsVoting) {
       return { ok: false, error: 'Cannot vote at this time' };
     }
 
@@ -679,7 +696,7 @@ export default function PollClient({ poll }: PollClientProps) {
     } finally {
       setVoting(false);
     }
-  }, [user, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, announce, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
+  }, [canCastVote, canVote, pollStatus, storeIsVoting, poll.id, pollDetailsForBallot, t, addNotification, announce, recordPollEvent, fetchPollData, addVotingRecord, isMounted, setVoting, setError, setHasVoted, setHasVoteAttempted, clearVotingError, setVotingError, router]);
 
   const isSingleChoice = (poll.votingMethod ?? 'single') === 'single';
   const isApprovalOrMultiple =
@@ -841,7 +858,7 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       {/* Quick Stats - Compact summary */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
+      <div className={cn('grid grid-cols-1 gap-4 mb-6', showPollAnalytics ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.totalVotes')}</p>
           <p className="mt-2 text-2xl font-bold text-foreground">
@@ -851,12 +868,14 @@ export default function PollClient({ poll }: PollClientProps) {
             <p className="mt-1 text-xs text-muted-foreground">No votes yet</p>
           )}
         </div>
-        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-          <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.participation')}</p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">
-            {isMounted ? participationCount.toLocaleString() : participationCount.toString()}
-          </p>
-        </div>
+        {showPollAnalytics ? (
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+            <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.participation')}</p>
+            <p className="mt-2 text-2xl font-semibold text-foreground">
+              {isMounted ? participationCount.toLocaleString() : participationCount.toString()}
+            </p>
+          </div>
+        ) : null}
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <p className="text-xs uppercase font-semibold text-foreground/80">{t('polls.view.stats.status')}</p>
           <p className={cn('mt-2 text-2xl font-semibold capitalize', pollStatus === 'closed' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}>
@@ -865,8 +884,8 @@ export default function PollClient({ poll }: PollClientProps) {
         </div>
       </div>
 
-      {/* Participation progress - social-style engagement indicator */}
-      {pollStatus === 'active' && displayTotalVotes > 0 && (() => {
+      {/* Participation progress - restore analytics chrome */}
+      {showPollAnalytics && pollStatus === 'active' && displayTotalVotes > 0 && (() => {
         const milestones = [25, 50, 100, 250, 500, 1000];
         const nextMilestone = milestones.find((m) => displayTotalVotes < m) ?? 1000;
         const progress = Math.min(100, (displayTotalVotes / nextMilestone) * 100);
@@ -904,8 +923,8 @@ export default function PollClient({ poll }: PollClientProps) {
         );
       })()}
 
-      {/* Leading Option - Only show if there are votes */}
-      {topOption && totalRecordedVotes > 0 && (
+      {/* Leading Option - restore analytics chrome */}
+      {showPollAnalytics && topOption && totalRecordedVotes > 0 && (
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 shadow-sm mb-6">
           <div className="flex items-start gap-3">
             <div className="rounded-full bg-amber-500/20 p-2">
@@ -928,7 +947,7 @@ export default function PollClient({ poll }: PollClientProps) {
           <AlertTitle className="text-foreground">{votingStatusMessage.title}</AlertTitle>
           <AlertDescription className="text-foreground/90 space-y-3">
             <p>{votingStatusMessage.description}</p>
-            {!authLoading && !user ? (
+            {!canCastVote ? (
               <Button asChild size="sm" variant="default">
                 <Link href={`/auth?redirectTo=${encodeURIComponent(pathname ?? `/polls/${poll.id}`)}`}>
                   Sign in to vote
@@ -946,17 +965,18 @@ export default function PollClient({ poll }: PollClientProps) {
       )}
 
       {/* Voting Interface - PRIORITY: Show first for active polls where user can vote */}
-      {pollStatus === 'active' && canVote && user && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && !(isApprovalOrMultiple && optimisticMultiData.userVote !== null) && normalizedOptions.length > 0 && (
+      {pollStatus === 'active' && canVote && canCastVote && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && !(isApprovalOrMultiple && optimisticMultiData.userVote !== null) && normalizedOptions.length > 0 && (
         <Card className="mb-6 border-2 border-primary/20">
           <CardHeader className="bg-primary/5">
             <CardTitle data-testid="voting-section-title">Cast Your Vote</CardTitle>
             <CardDescription>Select your preferred option(s) below</CardDescription>
           </CardHeader>
-          <CardContent className="pt-6" data-testid="voting-form">
+          <CardContent className="pt-6">
             <VotingInterface
+              embedded
               poll={{
                 id: poll.id,
-                // Don't duplicate title/description - they're already shown above
+                title: poll.title,
                 options: normalizedOptions.map((option) => ({
                   id: option.id,
                   text: option.text,
@@ -1031,32 +1051,34 @@ export default function PollClient({ poll }: PollClientProps) {
       {/* Poll Options Display - Show after voting interface */}
       {displayOptions.length > 0 && (
         <>
-          <PollOptionComparison
-            options={[...displayOptions]
-              .sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0))
-              .map((opt) => ({
-                optionId: opt.id,
-                option: opt.text,
-                label: opt.text,
-                voteCount: opt.votes ?? 0,
-                votes: opt.votes ?? 0,
-                votePercentage: getVotePercentage(opt.votes ?? 0),
-                percentage: getVotePercentage(opt.votes ?? 0),
-              }))}
-            totalVotes={displayTotalVotes}
-            className="mb-6"
-          />
+          {showPollAnalytics ? (
+            <PollOptionComparison
+              options={[...displayOptions]
+                .sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0))
+                .map((opt) => ({
+                  optionId: opt.id,
+                  option: opt.text,
+                  label: opt.text,
+                  voteCount: opt.votes ?? 0,
+                  votes: opt.votes ?? 0,
+                  votePercentage: getVotePercentage(opt.votes ?? 0),
+                  percentage: getVotePercentage(opt.votes ?? 0),
+                }))}
+              totalVotes={displayTotalVotes}
+              className="mb-6"
+            />
+          ) : null}
           <Card className="mb-6">
           <CardHeader>
             <CardTitle data-testid="poll-options-title">Poll Options</CardTitle>
             <CardDescription>
-              {pollStatus === 'active' && canVote && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && user
+              {pollStatus === 'active' && canVote && !hasVoted && !(isSingleChoice && optimisticData.userVote !== null) && canCastVote
                   ? 'View the options below'
                 : hasVoted || (isSingleChoice && optimisticData.userVote !== null) || (isApprovalOrMultiple && optimisticMultiData.userVote !== null) || (isApprovalOrMultiple && optimisticMultiData.userVote !== null)
                   ? 'You have already voted on this poll'
                   : pollStatus !== 'active'
                     ? 'This poll is closed'
-                    : !user
+                    : !canCastVote
                       ? 'Sign in to vote'
                       : !canVote
                         ? 'Voting is restricted for this poll'
@@ -1107,75 +1129,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
       <Separator className="my-6" />
 
-      {/* Secondary Information - Moved to bottom */}
-
-      {/* Milestones - Collapsible and less prominent (collapsed by default) */}
-      {/* Vote Milestones - Commented out per user request (unnecessary visual clutter)
-      <details className="rounded-lg border border-border/40 bg-muted/20 mb-4" open={false}>
-        <summary className="cursor-pointer p-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors">
-          <div className="flex items-center justify-between">
-            <span>{t('polls.view.milestones.label')}</span>
-            {enabledMilestones.length > 0 && (
-              <span className="text-xs text-foreground/70 font-normal">
-                {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => isMounted ? milestone.toLocaleString() : milestone.toString()).join(', ') })}
-              </span>
-            )}
-          </div>
-        </summary>
-        <div className="border-t border-border/40 p-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              {enabledMilestones.length === 0 ? (
-                <p className="text-sm font-medium text-foreground/80">
-                  {t('polls.view.milestones.empty')}
-                </p>
-              ) : (
-                <p className="text-sm font-medium text-foreground/80">
-                  {t('polls.view.milestones.tracking', { milestones: enabledMilestones.map((milestone) => isMounted ? milestone.toLocaleString() : milestone.toString()).join(', ') })}
-                </p>
-              )}
-              {nextMilestone && (
-                <p className="mt-3 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                  {t('polls.view.milestones.nextUp', { count: nextMilestone })}
-                </p>
-              )}
-              {reachedMilestones.length > 0 && (
-                <div className="mt-3 text-sm">
-                  <p className="font-semibold text-foreground">{t('polls.view.milestones.achieved')}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {reachedMilestones.map((milestone) => (
-                      <Badge key={`reached-${milestone}`} variant="secondary">
-                        {t('polls.view.milestones.votesBadge', { count: milestone })}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="space-y-3">
-              {POLL_MILESTONES.map((milestone) => (
-                <div
-                  key={`milestone-pref-${milestone}`}
-                  className="flex items-center justify-between rounded-md border border-border/40 bg-background/50 px-3 py-2"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{t('polls.view.milestones.itemLabel', { count: milestone })}</p>
-                    <p className="text-xs font-medium text-foreground/70">{t('polls.view.milestones.itemDescription', { count: milestone })}</p>
-                  </div>
-                  <Switch
-                    checked={Boolean(milestonePreferences[milestone])}
-                    onCheckedChange={(checked: boolean) => handleMilestoneToggle(milestone, checked)}
-                    aria-label={t('polls.view.milestones.toggleAria', { count: milestone })}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </details>
-      */}
-
-      {integrityInfo && (
+      {showPollAnalytics && integrityInfo && (
         <div className="mt-4 space-y-3">
           <div className="flex items-center gap-2">
             <Checkbox

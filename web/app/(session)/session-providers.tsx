@@ -5,13 +5,23 @@ import React, { useState } from 'react';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 
-import { AppShell } from '@/components/shared/AppShell';
-import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import FontProvider from '@/components/shared/FontProvider';
 
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+type SessionProvidersProps = {
+  children: React.ReactNode;
+  hasServerSession: boolean;
+};
+
+/**
+ * Shared session providers for /auth and the signed-in app. Chrome
+ * (AppShell) stays on the (app) segment so `/` and `/auth` stay light.
+ */
+export default function SessionProviders({
+  children,
+  hasServerSession,
+}: SessionProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -32,12 +42,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <FontProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <UserStoreProvider>
-            <AppShell>
-              <ErrorBoundary>{children}</ErrorBoundary>
-            </AppShell>
-          </UserStoreProvider>
+        <AuthProvider hasServerSession={hasServerSession}>
+          <UserStoreProvider>{children}</UserStoreProvider>
         </AuthProvider>
       </QueryClientProvider>
     </FontProvider>
